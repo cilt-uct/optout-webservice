@@ -1,0 +1,12 @@
+
+###> symfony/framework-bundle ###
+/.env
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+.env.dist
+composer.lock
+symfony.lock
+bin/
+src/Controller/.gitignore
