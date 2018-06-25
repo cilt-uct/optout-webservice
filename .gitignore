@@ -10,3 +10,4 @@ composer.lock
 symfony.lock
 bin/
 src/Controller/.gitignore
+public/
