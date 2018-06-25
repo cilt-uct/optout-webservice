@@ -1,7 +1,3 @@
 #index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
-
-app_optout:
-    path: /opt-out/dept
-    controller: App\Controller\DeptartmentController::body
