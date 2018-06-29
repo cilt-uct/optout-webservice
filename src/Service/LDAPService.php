@@ -28,7 +28,7 @@ class LDAPService
     public function search($filter) {
         $ldapSearch = \ldap_search($this->ldapConn, 'o=uct', $filter);
         if ($ldapSearch != false) {
-            $ldapSearchArray = ldap_get_entries($this->ldapConn, $ldapSearch);
+            $ldapSearchArray = \ldap_get_entries($this->ldapConn, $ldapSearch);
             if (!$ldapSearchArray['count']) {
                 throw new \Exception("no such user");
             }

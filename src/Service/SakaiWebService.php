@@ -20,7 +20,7 @@ class SakaiWebService
     public function __construct() {
         //Get environment variables
         $dotenv = new Dotenv();
-        $dotenv->load('/usr/local/uct/obsapi.env');
+        $dotenv->load('.env');
 
         //Get credentials
         $this->host = getenv('VULA_HOST');
@@ -44,17 +44,19 @@ class SakaiWebService
         $this->uctEndpoint = new \SoapClient($uctSoapUrl, array('exceptions' => 0, 'trace' => 1, 'stream_context' => $ssl_context));
 
         //Connect to Vula DB
-        $dbhost = getenv('SAKAI_DB_HOST');
-        $dbport =3306;
-        $dbname = getenv('SAKAI_DB_NAME');
-        $dbuser = getenv('SAKAI_DB_USER');
-        $dbpass = getenv('SAKAI_DB_PASSWORD');
+        $dbhost = getenv('DB_HOST');
+        $dbport = 33306;
+        $dbname = getenv('DB_NAME');
+        $dbuser = getenv('DB_USER');
+        $dbpass = getenv('DB_PASS');
         $dbopts = [
             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
         ];
         try {
             $this->dbh = new \PDO("mysql:host=$dbhost;dbname=$dbname;port=$dbport;charset=utf8mb4", $dbuser, $dbpass, $dbopts);
         } catch (\PDOException $e) {
+            var_dump($e);
+            echo "cant connect to db";
             $this->dbh = null;
         }
 
@@ -82,6 +84,39 @@ class SakaiWebService
         }
 
         return $details;
+    }
+
+    public function getSiteByProviderId(string $courseCode, string $year) {
+        $qry = "select A.SITE_KEY, B.SITE_ID, B.TITLE from vula_archive.SAKAI_SITE_PROVIDER_LINK A
+                  join vula_archive.SAKAI_SITE_ARCHIVE B on A.SITE_KEY = B.KEY
+                  join vula_archive.SAKAI_SITE C on B.SITE_ID = C.SITE_ID and C.PUBLISHED = 1
+                where A.PROVIDER_ID = :providerId";
+
+        try {
+            $stmt = $this->dbh->prepare($qry);
+            $stmt->execute([
+                ':providerId' => "$courseCode,$year"
+            ]);
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            var_dump($e);
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    public function hasProviderId(string $courseCode, string $year) {
+        $providers = $this->getSiteByProviderId($courseCode, $year);
+
+
+        $checkQry = "select SITE_KEY from vula_archive.SAKAI_SITE_PROVIDER_LINK where SITE_KEY = :key";
+        $stmt = $this->dbh->prepare($checkQry);
+        $providers = array_filter($providers, function($provider) use ($stmt) {
+                       //filter out those sites which are providers to plenty of dept courses
+                       $stmt->execute([':key' => $provider['SITE_KEY']]);
+                       return $stmt->rowCount() < 3;
+                     });
+
+        return sizeof($providers) > 0;
     }
 
     public function getUserByEmail(string $email) {
