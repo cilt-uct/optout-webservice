@@ -24,7 +24,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
     private $secret;
     private $fullHash;
 
-    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = true) {
+    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = false) {
         $this->entityCode = $this->courseCode = $entityCode;
         $this->hash = $hash;
         $this->year = !empty($year) ? $year : date('Y');

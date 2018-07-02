@@ -20,7 +20,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
     public $courses;
     private $fullHash;
 
-    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = true) {
+    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = false) {
         $this->entityCode = $entityCode;
         $this->hash = $hash;
         $this->year = !empty($year) ? $year : date('Y');
