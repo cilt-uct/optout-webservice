@@ -5,6 +5,7 @@ namespace App\Service;
 use Symfony\Component\Dotenv\Dotenv;
 use App\Service\SakaiWebService;
 use App\Service\OCRestService;
+use App\Entity\HashableInterface;
 
 class Utilities
 {
@@ -76,8 +77,24 @@ class Utilities
         }
     }
 
-    public function updateVulaSites() {
-        
+    public function userVisibleHash(HashableInterface $hashable) {
+        return substr($hashable->getFullHash(), 0, 6);
+    }
+
+    public function getUserEmail($eid) {
+        try {
+            $emailQry = "select EMAIL from vula_archive.SAKAI_USER_ARCHIVE where EID = :eid limit 1";
+            $stmt = $this->dbh->prepare($emailQry);
+            $stmt->execute([':eid' => $eid]);
+            if ($stmt->rowCount() === 0) {
+                throw new Exception("no such user");
+            }
+
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $result[0]['EMAIL'];
+        } catch (\PDOException $e) {
+            throw new Exception($e->getMessage());
+        }
     }
 
     private function connectLocally() {

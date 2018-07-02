@@ -4,28 +4,30 @@ namespace App\Entity;
 
 use Symfony\Component\Dotenv\Dotenv;
 use App\Entity\Course;
+use App\Service\Utilities;
 
-class Department
+class Department extends AbstractOrganisationalEntity implements HashableInterface
 {
     private $dbh = null;
 
-    private $deptCode;
+    private $entityCode;
     private $hash;
     private $year;
-    private $skipCheck;
+    private $skipHashCheck;
 
     private $deptName;
     private $hod;
-    private $courses;
-    private $generatedHash;
+    public $courses;
+    private $fullHash;
 
-    public function __construct($deptCode, $hash, $year = '', $skipCheck = false) {
-        $this->deptCode = $deptCode;
+    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = true) {
+        $this->entityCode = $entityCode;
         $this->hash = $hash;
         $this->year = !empty($year) ? $year : date('Y');
-        $this->skipCheck = $skipCheck;
+        $this->skipHashCheck = $skipHashCheck;
 
-        $this->fetchDetails();
+        parent::__construct($entityCode, $hash, $year, $skipHashCheck);
+
         $this->fetchCourses();
     }
 
@@ -36,12 +38,13 @@ class Department
 
         $qry = "select A.*, B.secret from uct_dept A join dept_secrets B on A.dept = B.dept where A.dept = :dept and B.acadyear = :year order by B.acadyear desc limit 1";
         $stmt = $this->dbh->prepare($qry);
-        $stmt->execute([':dept' => $this->deptCode, ':year' => $this->year]);
+        $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {
             throw new \Exception("no such dept");
         }
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        if (!$this->skipCheck && substr(hash('sha256', $this->deptCode . "." . $result[0]['secret']), 0, 6) !== $this->hash) {
+        $this->fullHash = hash('sha256', $this->entityCode . "." . $result[0]['secret']);
+        if (!$this->skipHashCheck && substr(hash('sha256', $this->entityCode . "." . $result[0]['secret']), 0, 6) !== $this->hash) {
             throw new \Exception("invalid hash");
         }
         $this->deptName = $result[0]['name'];
@@ -50,8 +53,7 @@ class Department
                          return !is_null($val) && !empty($val);
                        })
                      );
-        $this->generatedHash = substr(hash('sha256', $this->deptCode . "." . $result[0]['secret']), 0, 6);
-   }
+    }
 
     public function fetchCourses() {
         if (!$this->dbh) {
@@ -60,29 +62,57 @@ class Department
 
         $qry = "select A.course_code from ps_courses A join course_optout B on A.course_code = B.course_code where A.dept = :dept and A.term = :year";
         $stmt = $this->dbh->prepare($qry);
-        $stmt->execute([':dept' => $this->deptCode, ':year' => $this->year]);
+        $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {
             throw new \Exception("no courses in dept");
         }
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         $year = $this->year;
         $this->courses = array_map(function($course) use ($year) {
-                           $courseInfo = new Course($course['course_code'], null, $year, true);
-                           return $courseInfo->getDetails();
+                           return new Course($course['course_code'], null, $year, true);
                          }, $result);
     }
 
     public function getDetails() {
         return [
-            'dept' => $this->deptCode,
+            'dept' => $this->entityCode,
             'name' => $this->deptName,
             'hod' => $this->hod,
-            'courses' => $this->courses
+            'courses' => array_map(function($course) {
+                             return $course->getDetails();
+                         }, $this->courses)
         ];
     }
 
     public function getHash() {
-        return $this->generatedHash;
+        $utils = new Utilities();
+        return $utils->userVisibleHash($this);
+    }
+
+    public function getFullHash() {
+        return $this->fullHash;
+    }
+
+    public function updateOptoutStatus($user, $data) {
+        if (!$user) {
+            throw new \Exception("Authorisation required");
+        }
+
+        $updateQry = "replace into dept_optout (dept, is_optout, modified_by, optout_date, acadyear)
+                      values (:dept, :status, :user,  now(), :acadyear)";
+
+        try {
+            $updateStmt = $this->dbh->prepare($updateQry);
+            $updateStmt->execute([
+                ':dept' => $this->entityCode,
+                ':status' => $data['status'],
+                ':user' => $user,
+                ':acadyear' => $this->year
+            ]);
+            return $updateStmt->rowCount();
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
+        }
     }
 
     private function connectLocally() {

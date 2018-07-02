@@ -7,8 +7,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Entity\Department;
 use App\Entity\Course;
+use App\Entity\Department;
+use App\Entity\OrganisationalEntityFactory;
+use App\Entity\User;
 use App\Service\LDAPService;
 use App\Service\OCRestService;
 use App\Service\SakaiWebService;
@@ -20,10 +22,18 @@ class ApiController extends Controller
   /**
    * @Route("/search/{searchStr}")
    */
-  public function search($searchStr) {
+  public function search($searchStr, Request $request) {
     $ldap = new LDAPService();
     try {
       $result = $ldap->match($searchStr);
+      $utils = new Utilities();
+      $result = array_map(function($r) use ($utils, $searchStr, $request) {
+          $ret = [
+              'ldap' => $r,
+              'vula' => (new User($searchStr, $request->getClientIp()))->getDetails()
+          ];
+          return $ret;
+      }, $result);
       return new Response(
         json_encode($result),
         200,
@@ -32,6 +42,7 @@ class ApiController extends Controller
         ]
       );
     } catch (\Exception $e) {
+      var_dump($e);
       $response = [
         "text" => "Server error",
         "statusCode" => 500,
@@ -50,6 +61,14 @@ class ApiController extends Controller
   }
 
   /**
+   * @Route ("/me")
+   */
+  public function me(Request $request) {
+    $session = $request->hasSession() ? $request->getSession() : new Session();
+    return new Response(json_encode($session->all()), 200, ['Content-Type' => 'application/json']);
+  }
+
+  /**
    * @Route("/authenticate")
    */
   public function auth(Request $request) {
@@ -64,21 +83,31 @@ class ApiController extends Controller
   }
 
   /**
-   * @Route("/dept")
+   * @Route("/api/v0/dept/{deptName}")
    */
-  public function getDepartments(Request $request) {
-  }
-
-  /**
-   * @Route("/dept/{deptName}")
-   */
-  public function getDepartment($deptName, Request $request) {
+  public function departmentEndpoint($deptName, Request $request) {
     $session = new Session();
     $session->start();
 
     $username = $session->get('username');
-    $deptHash = urldecode($request->headers->get('x-department'));
 
+    switch ($request->getMethod()) {
+        case 'PUT':
+            return $this->updateDeptOptoutStatus($deptName, $request);
+            break;
+
+        case 'PATCH':
+            return $this->updateDeptCourses($deptName, $request);
+            break;
+
+        default:
+            return $this->getDepartmentInfo($deptName, $request);
+            break;
+    }
+  }
+
+  private function getDepartmentInfo($deptName, Request $request) {
+    $deptHash = urldecode($request->headers->get('x-entity-hash'));
     try {
       $department = new Department($deptName, $deptHash);
     } catch (\Exception $e) {
@@ -97,6 +126,115 @@ class ApiController extends Controller
     }
 
     return new Response(json_encode($department->getDetails()), 200, ['Content-Type' => 'application/json']);
+  }
+
+  private function updateDeptCourses($deptName, $request) {
+    $session = $request->hasSession() ? $request->getSession() : new Session();
+    if (!$session->get('username')) {
+      return new Response("Please login to make changes", 401, ['Content-Type' => 'text/plain']);
+    }
+
+    $deptHash = urldecode($request->headers->get('x-entity-hash'));
+    $data = json_decode($request->getContent(), true);
+
+    $conflicts = [];
+    $someSuccess = false;
+
+    if (!is_array($data)) {
+      return new Response("Please supply changes as a JSON array", 400, ['Content-Type' => 'text/plain']);
+    }
+
+    try {
+      $dept = new Department($deptName, $deptHash, null, false);
+      $courseCodesToUpdate = array_map(function($change) {
+        return $change['course'];
+      }, $data);
+      $coursesToUpdate = array_filter($dept->courses, function($course) use ($courseCodesToUpdate) {
+        return in_array($course->courseCode, $courseCodesToUpdate);
+      });
+      $coursesToUpdate = array_reduce($coursesToUpdate, function($result, $course) {
+        $result[$course->courseCode] = $course;
+        return $result;
+      }, []);
+
+      foreach ($data as $index => $update) {
+        if (!isset($coursesToUpdate[$update['course']])) {
+          continue;
+        }
+
+        try {
+            $coursesToUpdate[$update['course']]->updateCourse($update['changes'], $session->get('username'));
+            $someSuccess = true;
+        } catch (\Exception $e) {
+            switch($e->getMessage()) {
+                case 'conflict':
+                    $coursesToUpdate[$update['course']]->fetchDetails();
+                    $conflicts[] = $coursesToUpdate[$update['course']]->getDetails();
+                    break;
+                default:
+                    throw new \Exception($e->getMessage());
+            }
+        }
+      }
+    } catch (\Exception $e) {
+      $statusCode = 500;
+      switch($e->getMessage()) {
+          case 'Authorisation required':
+              $statusCode = 401;
+              break;
+      }
+      return new Response($e->getMessage(), $statusCode, ['Content-Type' => 'text/plain']);
+    }
+
+    if (sizeof($conflicts) === 0) {
+      return new Response('', 204);
+    }
+    else if ($someSuccess) {
+      return new Response(json_encode($conflicts), 200, ['Content-Type' => 'application/json']);
+    }
+    else {
+      return new Response(json_encode($conflicts), 409, ['Content-Type' => 'application/json']);
+    }
+  }
+
+  private function updateDeptOptoutStatus($deptName, Request $request) {
+    $session = $request->hasSession() ? $request->getSession() : new Session();
+    $deptHash = urldecode($request->headers->get('x-entity-hash'));
+    $data = json_decode($request->getContent(), true);
+
+    try {
+      $dept = new Department($deptName, $deptHash, null, false);
+      $updateStatus = $dept->updateOptoutStatus($session->get('username'), $data);
+    } catch(\Exception $e) {
+      $statusCode = 500;
+      switch($e->getMessage()) {
+          case 'Authorisation required':
+              $statusCode = 401;
+              break;
+      }
+      return new Response($e->getMessage(), $statusCode, ['Content-Type' => 'text/plain']);
+    }
+    return new Response($updateStatus, 201);
+  }
+
+  private function updateCourseOptoutStatus($courseCode, Request $request) {
+    $session = $request->hasSession() ? $request->getSession() : new Session();
+    $courseHash = urldecode($request->headers->get('x-entity-hash'));
+    $data = json_decode($request->getContent(), true);
+
+    try {
+      $course = new Course($courseCode, $courseHash, null, false);
+      $updateStatus = $course->updateOptoutStatus($session->get('username'), $data);
+    } catch(\Exception $e) {
+      $statusCode = 500;
+      switch($e->getMessage()) {
+          case 'Authorisation required':
+              $statusCode = 401;
+              break;
+      }
+      return new Response($e->getMessage(), $statusCode, ['Content-Type' => 'text/plain']);
+    }
+    return new Response($updateStatus, 201);
   }
 
   /**
@@ -123,17 +261,16 @@ class ApiController extends Controller
   }
 
   /**
-   * @Route("/dept/{deptName}/hash");
+   * @Route("/api/v0/{entityType}/{entityName}/hash");
    */
-  public function getDepartmentHash($deptName, Request $request) {
+  public function getEntityHash($entityType, $entityName, Request $request) {
     $session = new Session();
     $session->start();
 
     $username = $session->get('username');
-    $deptHash = urldecode($request->headers->get('x-department'));
 
     try {
-      $department = new Department($deptName, null, null, true);
+      $entity = OrganisationalEntityFactory::getEntity($entityType, $entityName);
     } catch (\Exception $e) {
       switch($e->getMessage()) {
         case 'no such dept':
@@ -149,19 +286,41 @@ class ApiController extends Controller
       }
     }
 
-    return new Response($department->getHash(), 200, ['Content-Type' => 'text/plain']);
+    return new Response($entity->getHash(), 200, ['Content-Type' => 'text/plain']);
   }
+
+  /**
+   * @Route("/api/v0/{entityType}/{entityName}");
+  public function updateOptout($entityType, $entityName, Request $request) {
+    $session = $request->hasSession() ? $request->getSession() : new Session();
+  }
+   */
 
 
   /**
-   * @Route("/course/{courseCode}")
+   * @Route("/api/v0/course/{courseCode}")
    */
-  public function getCourse($courseCode, Request $request) {
+  public function courseEndpoint($courseCode, Request $request) {
+    switch ($request->getMethod()) {
+      case 'GET':
+        return $this->getCourse($courseCode, $request);
+
+      case 'PUT':
+        return $this->updateCourseOptoutStatus($courseCode, $request);
+
+      default:
+        return new Response('Method not implemented', 405, ['Content-Type' => 'text/plain']);
+
+    }
+  }
+
+  private function getCourse($courseCode, Request $request) {
+    $courseHash = urldecode($request->headers->get('x-entity-hash'));
     $year = date('Y');
     $vula = new SakaiWebService();
     $ocService = new OCRestService();
     try {
-      $course = new Course($courseCode, null, null, true);
+      $course = new Course($courseCode, $courseHash, $year, false);
       $response = $course->getDetails();
       $response['hasVulaSite'] = $vula->hasProviderId($courseCode, $year);
       $response['hasOCSeries'] = $ocService->hasOCSeries($courseCode, $year);
@@ -178,12 +337,17 @@ class ApiController extends Controller
 
     try {
       if ($ldap->authenticate($user, $password)) {
+        $details = $ldap->match($user);
+        $session = new Session();
+        $session->start();
+        $session->set('username', $details[0]['cn']);
         return new Response("OK", 200);
       }
 
       return new Response("Invalid username/password combination", 401);
 
     } catch (\Exception $e) {
+      var_dump($e);
       $response = [
         "text" => "Server error",
         "statusCode" => 500,
