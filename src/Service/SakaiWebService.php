@@ -45,7 +45,7 @@ class SakaiWebService
 
         //Connect to Vula DB
         $dbhost = getenv('DB_HOST');
-        $dbport = 33306;
+        $dbport = getenv('DB_PORT');
         $dbname = getenv('DB_NAME');
         $dbuser = getenv('DB_USER');
         $dbpass = getenv('DB_PASS');
