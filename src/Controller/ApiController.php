@@ -117,7 +117,7 @@ class ApiController extends Controller
           break;
 
         case 'invalid hash':
-          return new Response('Authorisation required', 401, ['Content-Type' => 'text/plain']);
+          return new Response('invalid hash', 401, ['Content-Type' => 'text/plain']);
           break;
 
         default:
