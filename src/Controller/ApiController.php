@@ -384,4 +384,33 @@ class ApiController extends Controller
       return new Response(json_encode($result), 201);
   }
 
+  /**
+   * @Route("/process/mail")
+   */
+  public function processMail(Request $request, \Swift_Mailer $mailer) {
+
+    //$transport = new \Swift_SendmailTransport('/usr/sbin/exim -bs');
+    //$mailer = new \Swift_Mailer($transport);
+
+    $message = (new \Swift_Message('Automated Setup of Lecture Recording: Department Opt-Out process'))
+        ->setFrom(['help@vula.uct.ac.za' => 'Lecture Recording Team'])
+        ->setTo('corne.oosthuizen@uct.ac.za')
+        ->setBody(
+            $this->renderView(
+                'department_mail.html.twig',
+                array('dept' => 'ZZZ',
+                      'out_link' => 'http://srvslscet001.uct.ac.za/optout/dept',
+                      'view_link' => 'http://srvslscet001.uct.ac.za/optout/dept')
+            )
+        );
+
+    $message->setReturnPath('help@vula.uct.ac.za'); // bounces will be sent to this address
+    $result = $mailer->send($message, $failures);
+
+    if (!$result) {
+      return new Response($failures, 201);
+    }
+    return new Response('email sent successfully', 201);  
+  }
+
 }

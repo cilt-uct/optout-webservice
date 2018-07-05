@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automatic Timetable Schedule: Opt-Out</title>
+    <title>Lecture Recording Automated Setup</title>
     <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/bootstrap/fonts/font-awesome.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/user.css') }}">
@@ -17,44 +17,24 @@
                 <img src="{{ asset('assets/img/uct.svg') }}" alt="University of Cape Town" class="navbar-brand"/>
             </div>
         </nav>
-        <!--nav class="navbar navbar-default">
-            
-                <div class="navbar-header">
-                    <a class="navbar-brand navbar-link" href="#">
-                        <i class="fa fa-calendar-o"></i>
-                        <span class="text-title">Automatic Timetable Schedule</span>
-                    </a>
-                    <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
-                </div>
-                <div class="collapse navbar-collapse" id="navcol-1">
-                    <ul class="nav navbar-nav navbar-right">
-                        <li class="active" role="presentation"><a href="http://www.cilt.uct.ac.za/cilt/lecture-recording">Lecture Recording</a></li>
-                        <li role="presentation"><a href="http://www.cilt.uct.ac.za/cilt/lecture-recording/lecturers">Scheduling</a></li>
-                        <li role="presentation">
-                            <a href="mailto:help@vula.uct.ac.za?subject=Automatic-Scheduling for [department]">Contact Us</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav-->
     </header>
     <div class="container post">
         <div class="row post-body">
             <div class="col-md-12 post-title">
-                <h3>Automatic Timetable Scheduling <small>opt-out</small></h3>
-                <p class="author"><span class="text-muted">[date of creation]</span></p>
+                <h3><span style="color: #5caad2;">Lecture Recording</span> Automated Setup</h3>
+                <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
+                <p>{{hash}} {{dept}}</p>
                 <br/>
-                <p>Hallo,<br/>
-                This page enables you to decide which courses in your department/faculty will have their lecture recordings automatically scheduled according to the timetable at the start of the semester.</p>
-                <p>Please select the courses for which the course convenor will manage their own scheduled recording:</p>
+                <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the following courses would have automated lecture recording set up.</p>
+                <p>Please check and update the course convenor details below. A course-level opt-out email will be sent to all course convenors by <strong>{{date_course|date("l, d F")}}</strong>. Should the course convener information not be available for a particular course, the course opt-out email will default to the Head of Department.</p>
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>Course</th>
                                 <th>Convenor</th>
-                                <th>Vula Site</th>
-                                <th>Lecture Recording</th>
+                                <!--th>Vula Site</th>
+                                <th>Lecture Recording</th-->
                             </tr>
                         </thead>
                         <tbody>
@@ -71,12 +51,12 @@
                                     <input type="text" placeholder="Course Convenor">
                                     <input type="text" placeholder="convenor@uct.ac.za">
                                 </td>
-                                <td>
+                                <!--td>
                                     Yes/No
                                 </td>
                                 <td>
                                     Not Scheduled / Scheduled
-                                </td>
+                                </td-->
                             </tr>
                         </tbody>
                     </table>
@@ -86,13 +66,10 @@
                     <div class="col-sm-6">
                         <div class="card bg-light mb-3">
                             <div class="card-body">
-                                <form>
-                                    <label>
-                                        <input type="checkbox" checked="false">
-                                        <u>All</u> the courses will manage their own lecture recording schedule
-                                    </label>
-                                    <button type="submit" class="btn btn-success" disabled>Confirm</button>
-                                </form>
+                                <p>If your department as a whole chooses to opt-out from automated setup of lecture recording, please click the link below:</p>
+                                <div style="text-align:center;">
+                                    <button class="btn btn-danger">Opt-out for the department</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -101,8 +78,21 @@
         </div>
     </div>
     <footer>
-        <span>Automatic Timetable Scheduling, 2018</span>
-        <a title="Centre for Innovation in Learning and Teaching" href="http://www.cilt.uct.ac.za/">Centre for Innovation in Learning and Teaching</a>
+        <div class="container">
+            <p style="font-size: 14px;"><strong>UCT Lecture Recording Team</strong></p>
+            <div class="row justify-content-center">
+                <div class="col-sm-5">
+                    <a title="Centre for Innovation in Learning and Teaching" href="http://www.cilt.uct.ac.za/">Centre for Innovation in Learning and Teaching</a>
+                    <br/>
+                    <span>Email: </span><a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording for {{dept}}" title="Help at Vula">help@vula.uct.ac.za</a>
+                    <br/>
+                    <span>Phone: 021-650-5500</span>
+                </div>
+                <div class="col-sm-5">
+                    <a title="ICTS Classroom Support Services" href="http://www.icts.uct.ac.za/">ICTS Classroom Support Services</a>
+                </div>
+            </div>
+        </div>
     </footer>
     <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
