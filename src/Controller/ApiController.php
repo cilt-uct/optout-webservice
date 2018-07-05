@@ -87,11 +87,6 @@ class ApiController extends Controller
    * @Route("/api/v0/dept/{deptName}")
    */
   public function departmentEndpoint($deptName, Request $request) {
-    $session = new Session();
-    $session->start();
-
-    $username = $session->get('username');
-
     switch ($request->getMethod()) {
         case 'PUT':
             return $this->updateDeptOptoutStatus($deptName, $request);
@@ -265,11 +260,6 @@ class ApiController extends Controller
    * @Route("/api/v0/{entityType}/{entityName}/hash");
    */
   public function getEntityHash($entityType, $entityName, Request $request) {
-    $session = new Session();
-    $session->start();
-
-    $username = $session->get('username');
-
     try {
       $entity = OrganisationalEntityFactory::getEntity($entityType, $entityName);
     } catch (\Exception $e) {
@@ -339,8 +329,7 @@ class ApiController extends Controller
     try {
       if ($ldap->authenticate($user, $password)) {
         $details = $ldap->match($user);
-        $session = new Session();
-        $session->start();
+        $session = $request->hasSession() ? $request->getSession() : new Session();
         $session->set('username', $details[0]['cn']);
         return new Response("OK", 200);
       }
