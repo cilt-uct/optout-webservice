@@ -97,6 +97,28 @@ class Utilities
         }
     }
 
+    public function getMail($hash) {
+        $result = [ 'success' => 1, 'result' => null ];
+        try {
+            $query = "select mail.dept, mail.course, mail.state, mail.created_at,
+                        `workflow`.`year`, `workflow`.`status`, `workflow`.`date_start`, `workflow`.`date_dept`, `workflow`.`date_course`, `workflow`.`date_schedule` 
+                        from uct_workflow_email mail 
+                        left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`  
+                        where hash = :hash limit 1";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':hash' => $hash]);
+            if ($stmt->rowCount() === 0) {
+                $result = [ 'success' => 0, 'err' => 'No email found'];
+            }
+
+            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        return $result;
+    }
+
     private function connectLocally() {
         $dotenv = new DotEnv();
         $dotenv->load('.env');
