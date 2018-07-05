@@ -31,7 +31,7 @@ class Utilities
                          (date_add(curdate(), interval 2 week) < :this_year_half and ps_courses.end_date < :this_year_half)
                         )
                     and campus_code in ('UPPER','MIDDLE')
-                    and sn_timetable_versioned.course_code not in (select course_code from course_optout where acadyear = :year)
+                    and sn_timetable_versioned.course_code not in (select course_code from course_optout where year = :year)
                     order by course_code";
 
             $yearHalf = date('Y-m-d', strtotime(date("Y") . "-07-01"));
@@ -41,8 +41,8 @@ class Utilities
                 ':this_year_half' => $yearHalf
             ]);
 
-            $optoutQry = "insert into course_optout (course_code, acadyear, dept) values (:course, :year, :dept) on duplicate key update course_code = :course, dept = :dept";
-            $secretsQry = "insert into course_secrets (course_code, acadyear, secret) values (:course, :year, :secret) on duplicate key update course_code = :course";
+            $optoutQry = "insert into course_optout (course_code, year, dept) values (:course, :year, :dept) on duplicate key update course_code = :course, dept = :dept";
+            $secretsQry = "insert into course_secrets (course_code, year, secret) values (:course, :year, :secret) on duplicate key update course_code = :course";
             $optoutStmt = $this->dbh->prepare($optoutQry);
             $secretsStmt = $this->dbh->prepare($secretsQry);
 

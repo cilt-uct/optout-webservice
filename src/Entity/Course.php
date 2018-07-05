@@ -10,6 +10,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
     private $dbh = null;
 
     private $entityCode;
+    private $parentEntityCode;
     private $hash;
     private $year;
     private $skipHashCheck;
@@ -40,13 +41,12 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
 
         $utils = new Utilities();
 
-        $qry = "select A.course_code, A.acadyear, A.secret, B.start_date, B.end_date, ifnull(C.convenor_name, B.convenor_name) as convenor_name,
-                ifnull(C.convenor_eid, B.convenor_eid) as convenor_eid, D.is_optout, D.optout_date, D.modified_by, E.email from course_secrets A
-                    join ps_courses B on A.course_code = B.course_code and A.acadyear = B.term
-                    left join course_updates C on A.course_code = C.course_code and A.acadyear = C.acadyear
-                    left join course_optout D on A.course_code = D.course_code
-                    left join vula_archive.SAKAI_USER_ARCHIVE E on C.convenor_eid = E.EID or (C.convenor_eid is null and B.convenor_eid = E.EID)
-                where A.course_code = :course and A.acadyear = :year limit 1";
+        $qry = "select A.course_code, A.term, A.dept, A.secret, A.start_date, A.end_date, ifnull(C.convenor_name, A.convenor_name) as convenor_name,
+                ifnull(C.convenor_eid, A.convenor_eid) as convenor_eid, D.is_optout, D.updated_at, D.updated_by, E.email from ps_courses A
+                    left join course_updates C on A.course_code = C.course_code and A.term = C.year
+                    left join course_optout D on A.course_code = D.course_code and A.term = D.year
+                    left join vula_archive.SAKAI_USER_ARCHIVE E on C.convenor_eid = E.EID or (C.convenor_eid is null and A.convenor_eid = E.EID)
+                where A.course_code = :course and A.term = :year limit 1";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':course' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {
@@ -64,12 +64,13 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
             'email' => $result[0]['email']
         ];
         $this->optoutStatus = $result[0]['is_optout'];
-        $this->optoutDate = $result[0]['optout_date'];
-        $this->modifiedBy = $result[0]['modified_by'];
+        $this->updatedAt = $result[0]['updated_at'];
+        $this->updatedBy = $result[0]['updated_by'];
+        $this->parentEntityCode = $result[0]['dept'];
     }
 
     public function getDetails() {
-        $fields = ['courseCode', 'year', 'convenor', 'optoutStatus', 'optoutDate', 'modifiedBy'];
+        $fields = ['courseCode', 'year', 'convenor', 'optoutStatus', 'updatedAt', 'updatedBy'];
 
         $details = [];
         foreach ($fields as $idx => $field) {
@@ -88,7 +89,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         return $this->fullHash;
     }
 
-    public function updateCourse($changes, $modifiedBy) {
+    public function updateCourse($changes, $updatedBy) {
         $this->dbh->beginTransaction();
         $allowedFields = [
             'convenorName' => 'name',
@@ -102,7 +103,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 }
 
                 $field = $allowedFields[$change['field']];
-                $this->updateConvenorField($field, $change, $modifiedBy);
+                $this->updateConvenorField($field, $change, $updatedBy);
             }
             $this->dbh->commit();
         } catch (\Exception $e) {
@@ -111,8 +112,8 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         }
     }
 
-    private function updateConvenorField($field, $change, $modifiedBy) {
-        $updateQry = "insert into course_updates (course_code, acadyear, modified_by, convenor_$field)
+    private function updateConvenorField($field, $change, $updatedBy) {
+        $updateQry = "insert into course_updates (course_code, year, updated_by, convenor_$field)
                         (select ifnull(B.course_code, A.course_code), :year, :user, :to
                          from ps_courses A left join course_updates B on A.course_code = B.course_code
                          where A.course_code = :code and A.term = :year and
@@ -121,7 +122,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                              )
                            )
                         )
-                      on duplicate key update convenor_$field = :to, modified_by = :user";
+                      on duplicate key update convenor_$field = :to, updated_by = :user";
 
         try {
             $updateStmt = $this->dbh->prepare($updateQry);
@@ -130,7 +131,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 ':year' => $this->year,
                 ':from' => $change['from'],
                 ':to' => $change['to'],
-                ':user' => $modifiedBy
+                ':user' => $updatedBy
             ];
             $updateStmt->execute($bind);
             if ($updateStmt->rowCount() === 0) {
@@ -146,18 +147,19 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
             throw new \Exception("Authorisation required (invalid user)");
         }
 
-        $updateQry = "replace into course_optout (course_code, is_optout, modified_by, optout_date, acadyear)
-                      values (:courseCode, ifnull(:status,0), :user,  now(), :acadyear)";
+        $updateQry = "replace into course_optout (course_code, dept, is_optout, updated_by, updated_at, year)
+                      values (:courseCode, :dept, ifnull(:status,0), :user,  now(), :year)";
 
         try {
             $updateStmt = $this->dbh->prepare($updateQry);
             $updateStmt->execute([
                 ':courseCode' => $this->entityCode,
+                ':dept' => $this->parentEntityCode,
                 ':status' => $data['status'],
                 ':user' => $user,
-                ':acadyear' => $this->year
+                ':year' => $this->year
             ]);
-            return $updateStmt->rowCount();
+            return json_encode(['success' => $updateStmt->rowCount() > 0]);
         } catch (\PDOException $e) {
             throw new \Exception($e->getMessage());
         }

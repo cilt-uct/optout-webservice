@@ -36,7 +36,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             $this->connectLocally();
         }
 
-        $qry = "select A.*, B.secret from uct_dept A join dept_secrets B on A.dept = B.dept where A.dept = :dept and B.acadyear = :year order by B.acadyear desc limit 1";
+        $qry = "select A.*, B.year from uct_dept A join dept_optout B on A.dept = B.dept where A.dept = :dept and B.year = :year order by year desc limit 1";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {
@@ -98,8 +98,8 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             throw new \Exception("Authorisation required (invalid user)");
         }
 
-        $updateQry = "replace into dept_optout (dept, is_optout, modified_by, optout_date, acadyear)
-                      values (:dept, ifnull(:status,0), :user,  now(), :acadyear)";
+        $updateQry = "replace into dept_optout (dept, is_optout, updated_by, updated_at, year)
+                      values (:dept, ifnull(:status,0), :user,  now(), :year)";
 
         try {
             $updateStmt = $this->dbh->prepare($updateQry);
@@ -107,9 +107,9 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
                 ':dept' => $this->entityCode,
                 ':status' => $data['status'],
                 ':user' => $user,
-                ':acadyear' => $this->year
+                ':year' => $this->year
             ]);
-            return $updateStmt->rowCount();
+            return json_encode(['success' => $updateStmt->rowCount() > 0]);
         } catch (\PDOException $e) {
             throw new \Exception($e->getMessage());
         }
