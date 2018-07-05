@@ -28,7 +28,11 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
 
         parent::__construct($entityCode, $hash, $year, $skipHashCheck);
 
-        $this->fetchCourses();
+        try {
+            $this->fetchCourses();
+        } catch (\Exception $e) {
+            $this->courses = [];
+        }
     }
 
     public function fetchDetails() {
@@ -69,7 +73,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         $year = $this->year;
         $this->courses = array_map(function($course) use ($year) {
-                           return new Course($course['course_code'], null, $year, true);
+                             return new Course($course['course_code'], null, $year, true);
                          }, $result);
     }
 
