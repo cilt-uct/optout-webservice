@@ -14,6 +14,11 @@
     <header>
         <nav class="navbar navbar-default">
             <div class="container">
+                <img src="{{ asset('assets/img/uct.svg') }}" alt="University of Cape Town" class="navbar-brand"/>
+            </div>
+        </nav>
+        <!--nav class="navbar navbar-default">
+            
                 <div class="navbar-header">
                     <a class="navbar-brand navbar-link" href="#">
                         <i class="fa fa-calendar-o"></i>
@@ -31,7 +36,7 @@
                     </ul>
                 </div>
             </div>
-        </nav>
+        </nav-->
     </header>
     <div class="container post">
         <div class="row post-body">
@@ -56,7 +61,7 @@
                             <tr>
                                 <td>
                                     <label>
-                                        <input type="checkbox" />
+                                        <!--input type="checkbox" /-->
                                         <strong>
                                             ACC1000, 2018
                                         </strong>
@@ -77,18 +82,27 @@
                     </table>
                 </div>
                 <br/>
-                <form>
-                    <label>
-                        <input type="checkbox" checked="false">
-                        <u>All</u> the courses will manage their own lecture recording schedule
-                    </label>
-                    <button type="submit" class="btn btn-success" disabled>Confirm</button>
-                </form>
+                <div class="row justify-content-center">
+                    <div class="col-sm-6">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <form>
+                                    <label>
+                                        <input type="checkbox" checked="false">
+                                        <u>All</u> the courses will manage their own lecture recording schedule
+                                    </label>
+                                    <button type="submit" class="btn btn-success" disabled>Confirm</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <footer>
-        <h6>Automatic Timetable Scheduling, 2018. <a href="http://www.cilt.uct.ac.za/" title="Centre for Innovation in Learning and Teaching">CILT</a></h6>
+        <span>Automatic Timetable Scheduling, 2018</span>
+        <a title="Centre for Innovation in Learning and Teaching" href="http://www.cilt.uct.ac.za/">Centre for Innovation in Learning and Teaching</a>
     </footer>
     <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>

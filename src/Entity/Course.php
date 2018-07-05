@@ -143,11 +143,11 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
 
     public function updateOptoutStatus($user, $data) {
         if (!$user) {
-            throw new \Exception("Authorisation required");
+            throw new \Exception("Authorisation required (invalid user)");
         }
 
         $updateQry = "replace into course_optout (course_code, is_optout, modified_by, optout_date, acadyear)
-                      values (:courseCode, :status, :user,  now(), :acadyear)";
+                      values (:courseCode, ifnull(:status,0), :user,  now(), :acadyear)";
 
         try {
             $updateStmt = $this->dbh->prepare($updateQry);

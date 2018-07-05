@@ -11,6 +11,7 @@ use App\Entity\Course;
 use App\Entity\Department;
 use App\Entity\OrganisationalEntityFactory;
 use App\Entity\User;
+use App\Entity\Workflow;
 use App\Service\LDAPService;
 use App\Service\OCRestService;
 use App\Service\SakaiWebService;
@@ -201,7 +202,7 @@ class ApiController extends Controller
     $session = $request->hasSession() ? $request->getSession() : new Session();
     $deptHash = urldecode($request->headers->get('x-entity-hash'));
     $data = json_decode($request->getContent(), true);
-
+    
     try {
       $dept = new Department($deptName, $deptHash, null, false);
       $updateStatus = $dept->updateOptoutStatus($session->get('username'), $data);
@@ -372,6 +373,26 @@ class ApiController extends Controller
 
   private function displayAuthenticationForm(Request $request) {
     return new Response("<form method=post><p><input name=username /></p><p><input name=password type=password /></p><button>Login</button></form>");
+  }
+
+  /**
+   * @Route("/monitor")
+   */
+  public function monitor(Request $request)
+  {
+      switch ($request->getMethod()) {
+          case 'GET':
+              return $this->runWorkflowMonitor($request);
+              break;
+          default:
+              return new Response('Only GET supported right now', 405);
+      }
+  }
+
+  private function runWorkflowMonitor(Request $request) {
+      $result = (new Workflow)->run();
+
+      return new Response(json_encode($result), 201);
   }
 
 }

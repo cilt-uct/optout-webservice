@@ -95,11 +95,11 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
 
     public function updateOptoutStatus($user, $data) {
         if (!$user) {
-            throw new \Exception("Authorisation required");
+            throw new \Exception("Authorisation required (invalid user)");
         }
 
         $updateQry = "replace into dept_optout (dept, is_optout, modified_by, optout_date, acadyear)
-                      values (:dept, :status, :user,  now(), :acadyear)";
+                      values (:dept, ifnull(:status,0), :user,  now(), :acadyear)";
 
         try {
             $updateStmt = $this->dbh->prepare($updateQry);

@@ -1,9 +1,7 @@
 body {
   color: #333;
-}
-
-header{
-  height:260px;
+  font-size: 14px;
+  font-family: 'Work Sans', Calibri, sans-serif
 }
 
 header::after {
@@ -12,10 +10,10 @@ header::after {
   position: absolute;
   z-index: -1;   
   width: 100%;
-  height:260px;
+  height:100px;
   background:url(../../assets/img/auditorium-benches-chairs-207691.jpg) no-repeat center;
   background-size:cover;
-  background-position-y: 12%;
+  background-position-y: 9%;
   opacity: 0.5;
   top: 0;
   left: 0;
@@ -27,111 +25,22 @@ header i.fa.fa-calendar-o{
   font-size:20px;
 }
 
-.navbar-nav{
-  margin-top:14px;
+header .navbar-default {
+  background: inherit;
+  height: 100px;
 }
-
-.navbar-nav .nav li{
-  height:50px;
-}
-
-.navbar-nav > li > a{
-  padding-top:8px;
-  padding-bottom:8px;
-  line-height:32px;
-}
-
-.navbar-default .navbar-nav > li > a{
-  color:#333;
-  font-weight:bold;
-  background-color:rgba(255,255,255,0.4);
-}
-
-.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus{
-  color:#fff;
-  background-color:rgba(0,0,0,0.6);
-  font-weight:bold;
-}
-
-.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus{
-  color:#fff;
-  background-color:rgba(0,0,0,0.6);
-  font-weight:bold;
-}
-
-.navbar-toggle{
-  background-color:#fff !important;
-  box-shadow:1px 1px 1px rgba(0,0,0,0.4);
-  margin-top:20px;
-}
-
-nav.navbar.navbar-default{
-  background:none;
-  box-shadow:none;
-}
-
-.navbar-brand{
-  height:75px;
-  font-size:18px;
-  color:#fff !important;
-  text-shadow:1px 1px 1px rgba(0,0,0,0.4);
-}
-
-.navbar-brand span.text-title{
-  text-transform:uppercase;
-  font-weight:bold;
-  padding-left: 10px;
-}
-
-@media (max-width:767px) {
-  .navbar-brand span.text-title{
-    display:none;
-  }
-}
-
-.navbar-brand .glyphicon{
-  display:inline-block;
-  font-size:36px;
-  color:#fff;
-  vertical-align:middle;
-  margin-right:20px;
-  position:relative;
-  top:-2px;
-}
-
-@media (min-width:768px) {
-  .navbar-nav li{
-    margin-left:10px;
-  }
-}
-
-.categories{
-  text-align:center !important;
-  margin-bottom:20px;
-  border-bottom:1px solid #e4e4e4;
-  padding:10px;
-}
-
-.categories li{
-  display:inline-block !important;
-  float:none;
-}
-
-.post-title .author{
-  text-transform:uppercase;
-}
-
-.post-title .author span{
-  margin-left:5px;
+header img.navbar-brand{
+  height: 75px;
 }
 
 .post-body{
-  margin-top: 30px;
+  margin-top: 0px;
   font-size: 14px;
 }
 
 .post-body label{
   cursor: pointer;
+  margin: 0px;
 }
 
 .post-body input[type=checkbox]{
@@ -144,22 +53,40 @@ nav.navbar.navbar-default{
   font-size: 1em;
   width: 45%;
   margin-right: 20px;
+  border-radius: 3px;
+  padding: 0.34em;
+  border: 1px solid #dedede;
 }
 
 .post-body input[type=text]:last-child {
   margin-right: 0;
 }
 
+.post-body .panel-danger {
+  border-color: #f7a4af;
+}
+
 footer{
   padding:20px;
   text-align:center;
-  background-color: #ddd;
+  background-color: #f4f4f4;
 
-  color:#848484;
+  color:#333;
+  font-size: 14px; 
+  font-family: 'Work Sans', Calibri, sans-serif; 
+  line-height: 24px;
 }
 
-footer h6{
-  color:inherit;
+footer a{
+  color: #5caad2; 
+  text-decoration: none;
+  font-weight: bold;
+  margin-left: 30px;
+}
+
+footer a:hover,
+footer a:active{
+  text-decoration: none;
 }
 
 div.container.post{

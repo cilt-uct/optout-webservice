@@ -41,7 +41,7 @@ class Utilities
                 ':this_year_half' => $yearHalf
             ]);
 
-            $optoutQry = "insert into course_optout (course_code, acadyear, dept) values (:course, :year, :dept) on duplicate key update course_code = :course";
+            $optoutQry = "insert into course_optout (course_code, acadyear, dept) values (:course, :year, :dept) on duplicate key update course_code = :course, dept = :dept";
             $secretsQry = "insert into course_secrets (course_code, acadyear, secret) values (:course, :year, :secret) on duplicate key update course_code = :course";
             $optoutStmt = $this->dbh->prepare($optoutQry);
             $secretsStmt = $this->dbh->prepare($secretsQry);
@@ -65,8 +65,8 @@ class Utilities
                     ]);
                     $updateResults['coursesUpdated'] += $optoutStmt->rowCount();
                 }
-                $this->updateVulaSites();
-                $this->updateOCSeries();
+                //$this->updateVulaSites(); TODO
+                //$this->updateOCSeries();  TODO
             }
 
             return $updateResults;
