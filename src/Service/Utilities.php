@@ -108,7 +108,7 @@ class Utilities
             $stmt = $this->dbh->prepare($query);
             $stmt->execute([':hash' => $hash]);
             if ($stmt->rowCount() === 0) {
-                $result = [ 'success' => 0, 'err' => 'No email found'];
+                $result = [ 'success' => 0, 'err' => 'No reference mail was found.'];
             }
 
             $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);

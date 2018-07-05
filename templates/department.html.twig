@@ -27,8 +27,18 @@
                 <br/>
                 <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the following courses would have automated lecture recording set up.</p>
                 <p>Please check and update the course convenor details below. A course-level opt-out email will be sent to all course convenors by <strong>{{date_course|date("l, d F")}}</strong>. Should the course convener information not be available for a particular course, the course opt-out email will default to the Head of Department.</p>
+                {% if not authenticated.a %}
+                    <div class="alert alert-light" role="alert">
+                        <u>NOTE:</u> To edit the convenor information please <button class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#loginModal">Login</button>
+                    </div>
+                    {% if authenticated.z|length > 1 %}
+                    <div class="alert alert-danger" role="alert">
+                    {{authenticated.z}}
+                    </div>
+                    {% endif %}
+                {% endif %}
                 <div class="table-responsive">
-                    <table class="table">
+                    <table id="course_table" class="table">
                         <thead>
                             <tr>
                                 <th>Course</th>
@@ -37,27 +47,34 @@
                                 <th>Lecture Recording</th-->
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <label>
-                                        <!--input type="checkbox" /-->
-                                        <strong>
-                                            ACC1000, 2018
-                                        </strong>
-                                    </label>
-                                </td>
-                                <td>
-                                    <input type="text" placeholder="Course Convenor">
-                                    <input type="text" placeholder="convenor@uct.ac.za">
-                                </td>
-                                <!--td>
-                                    Yes/No
-                                </td>
-                                <td>
-                                    Not Scheduled / Scheduled
-                                </td-->
-                            </tr>
+                        <tbody>                           
+                            {% for course in details.courses %}
+                                <tr>
+                                    <td>
+                                        <label>
+                                            <!--input type="checkbox" /-->
+                                            <strong>
+                                                {{course.courseCode}}
+                                            </strong>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        {% if authenticated.a %}
+                                            <input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name">
+                                            <input id="{{course.courseCode}}_c_mail"type="text" placeholder="convenor@uct.ac.za" value="{{course.convenor.email}}" data-old="{{course.convenor.email}}" data-course="{{course.courseCode}}" data-type="email">
+                                        {% else %}
+                                            <span class="input">{{course.convenor.name}}</span>
+                                            <span class="input">{{course.convenor.email}}</span>
+                                        {% endif %}
+                                    </td>
+                                    <!--td>
+                                        Yes/No
+                                    </td>
+                                    <td>
+                                        Not Scheduled / Scheduled
+                                    </td-->
+                                </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -94,10 +111,77 @@
             </div>
         </div>
     </footer>
+    <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModal" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="loginForm" method="post" action="/optout/view/{{hash}}">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Login</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" name="eid" id="eid" value="" placeholder="User ID">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" name="pw" id="pw" placeholder="Password">
+                            </div>
+                        </div>                                           
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/ moment.min.js') }}"></script>    
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    {% if authenticated.a %}
+    <script>
+        var changeTimer = false, field = null;
+
+        $(function() {
+            
+            $('#course_table').on('focusin','input',function(event){
+                $(this).removeClass('done err');
+                console.log('focus');
+            });
+            
+            $('#course_table').on('change','input',function(event){
+                    if (changeTimer !== false) clearTimeout(changeTimer);
+                    field = $(this);
+
+                    //changeTimer = setTimeout(function(){
+                        
+                        var d = [{"course": field.data('course'), 
+                                 "changes": [{
+                                     "field": field.data('type') == 'name' ? 'convenorName' : 'convenorEmail', 
+                                     "from": field.data('old'), "to": field.val()}]}];
+                        console.log(JSON.stringify(d));
+                        $.ajax({
+                            headers: {"x-entity-hash": "{{hash}}"},
+                            url: "/optout/api/v0/dept/{{dept}}",
+                            method: 'patch',
+                            data: JSON.stringify(d)
+                        }).done(function() {
+                            field.addClass( "done" );
+                        });
+
+                    //    changeTimer = false;
+                    //}, 300);
+            });
+        });
+    </script>
+    {% endif %}
     <!-- https://www.pexels.com/photo/auditorium-benches-chairs-class-207691/ -->
 </body>
 
