@@ -67,6 +67,10 @@ class DepartmentController extends Controller
             $data['details'] = $dept->getDetails();
         }
 
+        if (count($data['details']['courses']) == 0) {
+            return $this->viewOptOut($hash, $request);
+        }
+
         //return new Response(json_encode($data), 201);
         return $this->render('department.html.twig', $data);
     }
