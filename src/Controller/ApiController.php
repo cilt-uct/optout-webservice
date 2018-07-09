@@ -35,7 +35,7 @@ class ApiController extends Controller
       }
       else if ($isNumeric) {
           $result['ldap'] = $this->searchLdap($searchStr);
-          $result['vula'] = $this->searchVula($result['ldap']['cn']);
+          $result['vula'] = $this->searchVula($result['ldap'][0]['cn'], null, null);
       }
 
       return new Response(
@@ -69,7 +69,7 @@ class ApiController extends Controller
     return $ldap->match($searchStr);
   }
 
-  private function searchVula($eid, $ip, $email) {
+  private function searchVula($eid, $ip = null, $email = null) {
     return (new User($eid, $ip, $email))->getDetails();
   }
 
