@@ -24,17 +24,20 @@ class ApiController extends Controller
    * @Route("/search/{searchStr}")
    */
   public function search($searchStr, Request $request) {
-    $ldap = new LDAPService();
     try {
-      $result = $ldap->match($searchStr);
-      $utils = new Utilities();
-      $result = array_map(function($r) use ($utils, $searchStr, $request) {
-          $ret = [
-              'ldap' => $r,
-              'vula' => (new User($searchStr, $request->getClientIp()))->getDetails()
-          ];
-          return $ret;
-      }, $result);
+      $isUctEmail = filter_var($searchStr, FILTER_VALIDATE_EMAIL) && strpos($searchStr, '@uct.ac.za') > -1;
+      $isNumeric = is_numeric($searchStr);
+
+      $result = [];
+      if ($isUctEmail) {
+          $result['vula'] = $this->searchVula(null, null, $searchStr);
+          $result['ldap'] = $this->searchLdap($result['vula']['username']);
+      }
+      else if ($isNumeric) {
+          $result['ldap'] = $this->searchLdap($searchStr);
+          $result['vula'] = $this->searchVula($result['ldap']['cn']);
+      }
+
       return new Response(
         json_encode($result),
         200,
@@ -59,6 +62,15 @@ class ApiController extends Controller
 
       return new Response($response['text'], $response['statusCode'], $response['contentType']);
     }
+  }
+
+  private function searchLdap($searchStr) {
+    $ldap = new LDAPService();
+    return $ldap->match($searchStr);
+  }
+
+  private function searchVula($eid, $ip, $email) {
+    return (new User($eid, $ip, $email))->getDetails();
   }
 
   /**

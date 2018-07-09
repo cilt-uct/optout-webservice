@@ -87,11 +87,27 @@ class Utilities
             $stmt = $this->dbh->prepare($emailQry);
             $stmt->execute([':eid' => $eid]);
             if ($stmt->rowCount() === 0) {
-                throw new Exception("no such user");
+                throw new \Exception("no such user");
             }
 
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             return $result[0]['EMAIL'];
+        } catch (\PDOException $e) {
+            throw new Exception($e->getMessage());
+        }
+    }
+
+    public function getCompleteUser($search) {
+        try {
+            $searchQry = "select EID, EMAIL from vula_archive.SAKAI_USER_ARCHIVE where EID = :search or EMAIL = :search or USER_ID = :search limit 1";
+            $stmt = $this->dbh->prepare($searchQry);
+            $stmt->execute([':search' => $search]);
+            if ($stmt->rowCount() === 0) {
+                throw new \Exception("no such user");
+            }
+
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $result[0];
         } catch (\PDOException $e) {
             throw new Exception($e->getMessage());
         }
