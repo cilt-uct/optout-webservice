@@ -112,7 +112,7 @@ header img.navbar-brand{
 }
 
 .post-body .err[data-errortext]::after {
-  content: 'Error: ' attr(data-errortext);
+  content: 'Already updated. Please refresh to view the latest changes.';
   position: absolute;
   bottom: -32px;
   left: 0;
