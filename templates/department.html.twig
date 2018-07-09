@@ -60,8 +60,8 @@
                                     </td>
                                     <td>
                                         {% if authenticated.a %}
-                                            <input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name">
-                                            <input id="{{course.courseCode}}_c_mail"type="text" placeholder="convenor@uct.ac.za" value="{{course.convenor.email}}" data-old="{{course.convenor.email}}" data-course="{{course.courseCode}}" data-type="email">
+                                            <span><input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name"></span>
+                                            <span><input id="{{course.courseCode}}_c_mail"type="text" placeholder="convenor@uct.ac.za" value="{{course.convenor.email}}" data-old="{{course.convenor.email}}" data-course="{{course.courseCode}}" data-type="email"></span>
                                         {% else %}
                                             <span class="input">{{course.convenor.name}}</span>
                                             <span class="input">{{course.convenor.email}}</span>
@@ -153,7 +153,6 @@
             
             $('#course_table').on('focusin','input',function(event){
                 $(this).removeClass('done err');
-                console.log('focus');
             });
             
             $('#course_table').on('change','input',function(event){
@@ -166,19 +165,57 @@
                                  "changes": [{
                                      "field": field.data('type') == 'name' ? 'convenorName' : 'convenorEmail', 
                                      "from": field.data('old'), "to": field.val()}]}];
-                        console.log(JSON.stringify(d));
+                        field
+                            .parent()
+                            .addClass('updating')
+                            .removeClass('done')
+                            .removeClass('err')
+                            .removeAttr('data-errortext');
+
                         $.ajax({
                             headers: {"x-entity-hash": "{{hash}}"},
                             url: "/optout/api/v0/dept/{{dept}}",
                             method: 'patch',
                             data: JSON.stringify(d)
                         }).done(function() {
-                            field.addClass( "done" );
+                            updateSuccess(field);
+                        }).fail(function(xhr) {
+                            if (xhr.status === 409 && xhr.responseJSON) {
+                                //If updated value is equal to server's current record for field, show a success
+                                var fieldName = field.data('type');
+                                if (xhr.responseJSON[0].convenor[fieldName] === field.val()) {
+                                    return updateSuccess(field);
+                                }
+                            }
+
+                            //otherwise, show an error message so user knows why update could not take place
+                            updateError(field, xhr);
+                        }).always(function() {
+                            field.parent().removeClass('updating');
                         });
 
                     //    changeTimer = false;
                     //}, 300);
             });
+
+            function updateSuccess(field) {
+                field
+                    .data('old', field.val())
+                    .parent()
+                        .addClass( "done" );
+                setTimeout(function() {
+                    field
+                        .parent()
+                        .removeClass('done');
+                }, 5000);
+            }
+
+            function updateError(field, serverResponse) {
+                field
+                    .parent()
+                    .addClass('err')
+                    .attr('data-errortext', 'Some error');
+            }
         });
     </script>
     {% endif %}

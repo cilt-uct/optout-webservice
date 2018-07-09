@@ -62,12 +62,70 @@ header img.navbar-brand{
   border: 1px solid #dedede;
 }
 
-.post-body input[type=text].done {
+.post-body .done input[type=text] {
   border-color: #218838;
 }
 
-.post-body input[type=text].err {
+.post-body .done::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 16px;
+  box-sizing: border-box;
+  border-bottom: 3px solid #218838;
+  border-right: 3px solid #218838;
+  top: -2px;
+  right: 32px;
+  transform: rotate(45deg) skewX(10deg);
+  pointer-events: none;
+}
+
+.post-body .err input[type=text] {
   border-color: #b21f2d;
+}
+
+.post-body .err::before {
+  width: 16px;
+  height: 16px;
+  content: '';
+  position: absolute;
+  right: 30px;
+  top: 0;
+  background: linear-gradient(to top right,
+                transparent 0%,
+                transparent calc(50% - 2px),
+                #b21f2d calc(50% - 2px),
+                #b21f2d calc(50% + 2px),
+                transparent calc(50% + 2px),
+                transparent 100%
+              ),
+              linear-gradient(to top left,
+                transparent 0%,
+                transparent calc(50% - 2px),
+                #b21f2d calc(50% - 2px),
+                #b21f2d calc(50% + 2px),
+                transparent calc(50% + 2px),
+                transparent 100%
+              );
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.post-body .err[data-errortext]::after {
+  content: 'Error: ' attr(data-errortext);
+  position: absolute;
+  bottom: -32px;
+  left: 0;
+  width: calc(100% - 20px);
+  box-shadow: 0 2px 3px -2px rgba(0,0,0,0.2);
+  padding: 0 8px;
+  border: 1px solid #b21f2d;
+  border-top: none;
+  background: white;
+}
+
+.post-body span {
+  position: relative;
 }
 
 .post-body span.input {
@@ -77,11 +135,32 @@ header img.navbar-brand{
   margin-right: 20px;
   border-radius: 3px;
   padding: 0.34em;
-  border: 1px solid #eee;
+  border: 1px solid #ddd;
+  background: #eee;
 }
 
-.post-body input[type=text]:last-child {
+.post-body span.input:empty::before {
+  content: 'Convenor details missing';
+  font-style: italic;
+  color: #aaa;
+}
+
+.post-body span:last-child {
   margin-right: 0;
+}
+
+.post-body span.updating::before {
+  content: '';
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, transparent 0%, transparent 60%, blue 60%, blue 100%),
+              radial-gradient(circle at 12px 18px, blue 0%, blue 4px, transparent 4px, transparent 100%);
+  box-sizing: border-box;
+  top: -4px;
+  right: 26px;
+  animation: spin 1s linear infinite;
 }
 
 .post-body .panel-danger {
@@ -112,4 +191,13 @@ footer a:active{
 
 div.container.post{
   margin-bottom:50px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

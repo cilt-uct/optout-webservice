@@ -41,8 +41,10 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
 
         $utils = new Utilities();
 
-        $qry = "select A.course_code, A.term, A.dept, A.secret, A.start_date, A.end_date, ifnull(C.convenor_name, A.convenor_name) as convenor_name,
-                ifnull(C.convenor_eid, A.convenor_eid) as convenor_eid, D.is_optout, D.updated_at, D.updated_by, E.email from ps_courses A
+        $qry = "select A.course_code, A.term, A.dept, A.secret, A.start_date, A.end_date,
+                ifnull(C.convenor_name, A.convenor_name) as convenor_name,
+                ifnull(C.convenor_eid, A.convenor_eid) as convenor_eid, D.is_optout, D.updated_at, D.updated_by,
+                ifnull(C.convenor_email, E.email) as email from ps_courses A
                     left join course_updates C on A.course_code = C.course_code and A.term = C.year
                     left join course_optout D on A.course_code = D.course_code and A.term = D.year
                     left join vula_archive.SAKAI_USER_ARCHIVE E on C.convenor_eid = E.EID or (C.convenor_eid is null and A.convenor_eid = E.EID)
@@ -113,6 +115,9 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
     }
 
     private function updateConvenorField($field, $change, $updatedBy) {
+        if (!isset($change['to']) || is_null($change['to']) || empty($change['to'])) {
+            throw new \Exception('bad request');
+        }
         $updateQry = "insert into course_updates (course_code, year, updated_by, convenor_$field)
                         (select ifnull(B.course_code, A.course_code), :year, :user, :to
                          from ps_courses A left join course_updates B on A.course_code = B.course_code
