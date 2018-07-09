@@ -81,7 +81,7 @@ header img.navbar-brand{
 }
 
 .post-body .err input[type=text] {
-  border-color: #b21f2d;
+  border-color: #dc3545;
 }
 
 .post-body .err::before {
@@ -94,16 +94,16 @@ header img.navbar-brand{
   background: linear-gradient(to top right,
                 transparent 0%,
                 transparent calc(50% - 2px),
-                #b21f2d calc(50% - 2px),
-                #b21f2d calc(50% + 2px),
+                #dc3545 calc(50% - 2px),
+                #dc3545 calc(50% + 2px),
                 transparent calc(50% + 2px),
                 transparent 100%
               ),
               linear-gradient(to top left,
                 transparent 0%,
                 transparent calc(50% - 2px),
-                #b21f2d calc(50% - 2px),
-                #b21f2d calc(50% + 2px),
+                #dc3545 calc(50% - 2px),
+                #dc3545 calc(50% + 2px),
                 transparent calc(50% + 2px),
                 transparent 100%
               );
@@ -112,16 +112,18 @@ header img.navbar-brand{
 }
 
 .post-body .err[data-errortext]::after {
-  content: 'Already updated. Please refresh to view the latest changes.';
+  content: attr(data-errortext);
   position: absolute;
-  bottom: -32px;
+  bottom: -29px;
   left: 0;
-  width: calc(100% - 20px);
+  width: calc(100% - 24px);
   box-shadow: 0 2px 3px -2px rgba(0,0,0,0.2);
   padding: 0 8px;
-  border: 1px solid #b21f2d;
+  border: 1px solid #dc3545;
   border-top: none;
-  background: white;
+  background: #f5c6cb;
+  font-size: 12px;
+  padding: 0.3em;
 }
 
 .post-body span {
@@ -168,7 +170,8 @@ header img.navbar-brand{
 	display:inline-block;
 	position:absolute;
 	left:50%;
-	margin-left:-10px;
+  margin-left:-10px;
+  opacity: 0.7;
 	-webkit-animation:3s infinite ease-in-out;
 	-moz-animation:3s infinite ease-in-out;
 	-o-animation:3s infinite ease-in-out;

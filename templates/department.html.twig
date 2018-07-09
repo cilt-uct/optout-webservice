@@ -156,35 +156,46 @@
                         var d = [{"course": field.data('course'), 
                                  "changes": [{
                                      "field": field.data('type') == 'name' ? 'convenorName' : 'convenorEmail', 
-                                     "from": field.data('old'), "to": field.val()}]}];
+                                     "from": field.data('old'), "to": field.val()}]}],
+                            valid = true;
                         field
                             .parent()
-                            .addClass('updating')
-                            .removeClass('done err')
+                            .removeClass('done err updating')
                             .removeAttr('data-errortext');
 
-                        $.ajax({
-                            headers: {"x-entity-hash": "{{hash}}"},
-                            url: "/optout/api/v0/dept/{{dept}}",
-                            method: 'patch',
-                            data: JSON.stringify(d)
-                        }).done(function() {
-                            updateSuccess(field);
-                        }).fail(function(xhr) {
-                            if (xhr.status === 409 && xhr.responseJSON) {
-                                //If updated value is equal to server's current record for field, show a success
-                                var fieldName = field.data('type');
-                                if (xhr.responseJSON[0].convenor[fieldName] === field.val()) {
-                                    return updateSuccess(field);
-                                }
+                        if (field.data('type') === 'email') {
+                            email_address = $(this);
+                            email_regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
+                            if(!email_regex.test(email_address.val())){ 
+                                mailValidationError(field);
+                                valid = false;
                             }
+                        }
 
-                            //otherwise, show an error message so user knows why update could not take place
-                            updateError(field, xhr);
-                        }).always(function() {
-                            field.parent().removeClass('updating');
-                        });
+                        if (valid) {
+                            field.parent().addClass('updating');
+                            $.ajax({
+                                headers: {"x-entity-hash": "{{hash}}"},
+                                url: "/optout/api/v0/dept/{{dept}}",
+                                method: 'patch',
+                                data: JSON.stringify(d)
+                            }).done(function() {
+                                updateSuccess(field);
+                            }).fail(function(xhr) {
+                                if (xhr.status === 409 && xhr.responseJSON) {
+                                    //If updated value is equal to server's current record for field, show a success
+                                    var fieldName = field.data('type');
+                                    if (xhr.responseJSON[0].convenor[fieldName] === field.val()) {
+                                        return updateSuccess(field);
+                                    }
+                                }
 
+                                //otherwise, show an error message so user knows why update could not take place
+                                updateError(field, xhr);
+                            }).always(function() {
+                                field.parent().removeClass('updating');
+                            });
+                        }
                     //    changeTimer = false;
                     //}, 300);
             });
@@ -205,7 +216,14 @@
                 field
                     .parent()
                     .addClass('err')
-                    .attr('data-errortext', 'Some error');
+                    .attr('data-errortext', 'Already updated. Please refresh to view the latest changes.');
+            }
+
+            function mailValidationError(field, serverResponse) {
+                field
+                    .parent()
+                    .addClass('err')
+                    .attr('data-errortext', 'Please enter a valid e-mail address.');
             }
         });
     </script>
