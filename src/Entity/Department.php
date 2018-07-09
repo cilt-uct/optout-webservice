@@ -17,6 +17,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
 
     private $deptName;
     private $hod;
+    public $isOptOut;
     public $courses;
     private $fullHash;
 
@@ -29,6 +30,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
         parent::__construct($entityCode, $hash, $year, $skipHashCheck);
 
         try {
+            $this->fetchDetails();
             $this->fetchCourses();
         } catch (\Exception $e) {
             $this->courses = [];
@@ -40,7 +42,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             $this->connectLocally();
         }
 
-        $qry = "select A.*, B.year from uct_dept A join dept_optout B on A.dept = B.dept where A.dept = :dept and B.year = :year order by year desc limit 1";
+        $qry = "select A.*, B.year, B.is_optout from uct_dept A join dept_optout B on A.dept = B.dept where A.dept = :dept and B.year = :year order by year desc limit 1";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {
@@ -57,6 +59,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
                          return !is_null($val) && !empty($val);
                        })
                      );
+        $this->isOptOut = $result[0]['is_optout'] === '1' ? true : false;
     }
 
     public function fetchCourses() {
@@ -82,6 +85,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             'dept' => $this->entityCode,
             'name' => $this->deptName,
             'hod' => $this->hod,
+            'is_optout' => $this->isOptOut,
             'courses' => array_map(function($course) {
                              return $course->getDetails();
                          }, $this->courses)

@@ -11,3 +11,5 @@ symfony.lock
 bin/
 src/Controller/.gitignore
 public/
+.DS_Store
+*.swp

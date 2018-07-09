@@ -76,11 +76,14 @@ class DepartmentController extends Controller
      */
     public function viewOptOut($hash, Request $request)
     {
-        $authenticated = ['a' => false, 'z' => '0'];
-        $confirmed = false;
-
         $utils = new Utilities();
         $data = $utils->getMail($hash);
+
+        // get department
+        $dept = new Department($data['result'][0]['dept'], $hash, $data['result'][0]['year']);
+
+        $authenticated = ['a' => false, 'z' => '0'];
+        $confirmed = $dept->isOptOut;
 
         switch ($request->getMethod()) {
             case 'POST':
@@ -113,10 +116,6 @@ class DepartmentController extends Controller
                         }
                     break;
                     case 'ask':
-                    
-                        // get department
-                        $dept = new Department($data['result'][0]['dept'], $hash, $data['result'][0]['year']);
-
                         if ($dept) {
                             
                             $session = $request->hasSession() ? $request->getSession() : new Session();
@@ -141,6 +140,7 @@ class DepartmentController extends Controller
             $data['hash'] = $hash;
             $data['out_link'] = 'http://srvslscet001.uct.ac.za/optout/out/'. $hash;
             $data['authenticated'] = json_encode($authenticated);
+            $data['confirmed'] = json_encode($dept->getDetails());
 
             if ($authenticated['a']) {
                 // authenticated - show confirm page
