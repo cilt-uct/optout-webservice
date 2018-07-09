@@ -164,7 +164,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 ':user' => $user,
                 ':year' => $this->year
             ]);
-            return json_encode(['success' => $updateStmt->rowCount() > 0]);
+            return ['success' => $updateStmt->rowCount() > 0];
         } catch (\PDOException $e) {
             throw new \Exception($e->getMessage());
         }

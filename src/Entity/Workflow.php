@@ -4,12 +4,15 @@ namespace App\Entity;
 
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\Course;
+use App\Entity\Department;
 use App\Service\Utilities;
 
 class Workflow
 {
     private $dbh = null;
 
+    private $oid;
     private $year;
     private $status;
     private $active;
@@ -44,6 +47,7 @@ class Workflow
             if ($stmt->rowCount() > 0) {
                 $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
+                $this->oid = $result[0]['id'];
                 $this->year = $result[0]['year'];
                 $this->status = $result[0]['status'];
                 $this->date_start = new \DateTime($result[0]['date_start']);
@@ -100,23 +104,35 @@ class Workflow
             case 'run':
                 // (wait for department date)
                 if ($now->diff($this->date_dept)->format('%R') == '-') {
-                    // Create email entries for each departments head, so mail can be sent to each
-                    
-                    // > state: dept
-                    $this->setState('dept');
+
+                    // Create email entries for each departments head, so mail can be sent to each                   
+                    $action = $this->createDepartmentMails();
+                    if ($action === 1) {
+                        // > state: dept
+                        $this->setState('dept');
+                    } else {
+                        $result = [ 'success' => 0, 'err' => $action];
+                    }
                 }
                 break;
             case 'dept':
                 // (wait for course date)
                 if ($now->diff($this->date_course)->format('%R') == '-') {
 
-                    // > state: course
-                    $this->setState('course');
+                    // Create email entries for each COURSE, so mail can be sent to each 
+                    if ($this->createCourseMails()) {
+                        // > state: course
+                        $this->setState('course');
+                    } else {
+                        $result = [ 'success' => 0, 'err' => 'Error creating course mails'];
+                    }
                 }
                 break;
             case 'course':
                 // (wait for schedule date)
                 if ($now->diff($this->date_schedule)->format('%R') == '-') {
+
+                    // do scheduling
 
                     // > state: done
                     $this->setState('done');
@@ -139,9 +155,51 @@ class Workflow
                 $result = [ 'success' => 0, 'err' => 'Error running workflow'];
                 break;
         }
+
         $result['result'] = 'running: '. $this->status;
         return $result;
     }
+
+    private function createDepartmentMails(){
+
+        try {
+            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `mail_to`, `mail_cc`, `hash`, `name`) VALUES
+                            (:workflow_id, :dept, :mail_to, :mail_cc, :hash, :name)";
+            $mailStmt = $this->dbh->prepare($insertQry);
+
+            // get list of departments
+            $query = "SELECT * FROM uct_dept where `use_dept` = 1";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute();
+            
+            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+
+                $dept = new Department($row['dept'], null, $this->year, true);
+                $ar = [
+                    ':workflow_id' => $this->oid, 
+                    ':dept' => $row['dept'], 
+                    ':mail_to' => $row['email'], 
+                    ':mail_cc' => $row['alt_email'], 
+                    ':hash' => $dept->getHash(),
+                    ':name' => ( strlen($row['firstname']."".$row['lastname']) < 2 ? "Colleague" : $row['firstname'] ." ". $row['lastname']) ];
+
+                //return $ar;
+
+                if (!$mailStmt->execute($ar)) {
+                    return $this->dbh->errorInfo();
+                }
+            }
+        } catch (\PDOException $e) {
+            return $e->getMessage();
+        }
+
+        return 1;
+    }
+
+    private function createCourseMails(){
+        // TODO
+        return 1;
+    }    
 
     private function setState($status) {
         try {

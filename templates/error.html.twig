@@ -1,54 +1,14 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecture Recording Automated Setup</title>
-    <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/bootstrap/fonts/font-awesome.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/user.css') }}">
-</head>
-
-<body>
-    <header>
-        <nav class="navbar navbar-default">
-            <div class="container">
-                <img src="{{ asset('assets/img/uct.svg') }}" alt="University of Cape Town" class="navbar-brand"/>
-            </div>
-        </nav>
-    </header>
+{% include 'header.html' %}
     <div class="container post">
         <div class="row post-body">
             <div class="col-md-12 post-title">
-                <h3><span style="color: #5caad2;">Lecture Recording</span> Automated Setup</h3>
+                <h3><span style="color: #5caad2;">Lecture Recording</span> Automated Setup <small>or</small> Opt-Out</h3>
                 <br/>
                 <div class="alert alert-danger" role="alert">Error loading department or course.<br/><small>{{err}}</small></div>
             </div>
         </div>
     </div>
-    <footer>
-        <div class="container">
-            <p style="font-size: 14px;"><strong>UCT Lecture Recording Team</strong></p>
-            <div class="row justify-content-center">
-                <div class="col-sm-5">
-                    <a title="Centre for Innovation in Learning and Teaching" href="http://www.cilt.uct.ac.za/">Centre for Innovation in Learning and Teaching</a>
-                    <br/>
-                    <span>Email: </span><a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording for { { dept } }" title="Help at Vula">help@vula.uct.ac.za</a>
-                    <br/>
-                    <span>Phone: 021-650-5500</span>
-                </div>
-                <div class="col-sm-5">
-                    <a title="ICTS Classroom Support Services" href="http://www.icts.uct.ac.za/">ICTS Classroom Support Services</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
-    <script src="{{ asset('assets/js/tmpl.js') }}"></script>
-    <script src="{{ asset('assets/js/ moment.min.js') }}"></script>    
-    <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    {% include 'footer.html' %}
     <!-- https://www.pexels.com/photo/auditorium-benches-chairs-class-207691/ -->
 </body>
-
 </html>

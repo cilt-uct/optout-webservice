@@ -222,7 +222,7 @@ class ApiController extends Controller
       }
       return new Response($e->getMessage(), $statusCode, ['Content-Type' => 'text/plain']);
     }
-    return new Response($updateStatus, 201);
+    return new Response(json_encode($updateStatus), 201);
   }
 
   private function updateCourseOptoutStatus($courseCode, Request $request) {
@@ -242,7 +242,7 @@ class ApiController extends Controller
       }
       return new Response($e->getMessage(), $statusCode, ['Content-Type' => 'text/plain']);
     }
-    return new Response($updateStatus, 201);
+    return new Response(json_encode($updateStatus), 201);
   }
 
   /**
