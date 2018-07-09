@@ -54,8 +54,22 @@
                                     </td>
                                     <td>
                                         {% if authenticated.a %}
-                                            <span><input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name"></span>
-                                            <span><input id="{{course.courseCode}}_c_mail"type="text" placeholder="convenor@uct.ac.za" value="{{course.convenor.email}}" data-old="{{course.convenor.email}}" data-course="{{course.courseCode}}" data-type="email"></span>
+                                            <span>
+                                                <input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name">
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
+                                                </span>
+                                            </span>
+                                            <span class="edit">
+                                                <input id="{{course.courseCode}}_c_mail"type="text" placeholder="convenor@uct.ac.za" value="{{course.convenor.email}}" data-old="{{course.convenor.email}}" data-course="{{course.courseCode}}" data-type="email">
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
+                                                </span>                                                
+                                            </span>
                                         {% else %}
                                             <span class="input">{{course.convenor.name}}</span>
                                             <span class="input">{{course.convenor.email}}</span>
@@ -146,8 +160,7 @@
                         field
                             .parent()
                             .addClass('updating')
-                            .removeClass('done')
-                            .removeClass('err')
+                            .removeClass('done err')
                             .removeAttr('data-errortext');
 
                         $.ajax({
