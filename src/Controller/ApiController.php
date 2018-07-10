@@ -46,7 +46,6 @@ class ApiController extends Controller
         ]
       );
     } catch (\Exception $e) {
-      var_dump($e);
       $response = [
         "text" => "Server error",
         "statusCode" => 500,
