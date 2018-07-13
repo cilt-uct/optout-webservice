@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Symfony\Component\Dotenv\Dotenv;
+use App\Service\OCRestService;
 use App\Service\Utilities;
 
 class Course extends AbstractOrganisationalEntity implements HashableInterface

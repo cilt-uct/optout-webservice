@@ -43,7 +43,18 @@ class OCRestService
             $checkSeries = $this->getOCSeries($courseCode, $year);
             return sizeof($checkSeries) > 0;
         } catch (\Exception $e) {
-            var_dump($e);
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    public function isTimetabled($activityId) {
+        try {
+            $url = $this->ocHost . "/admin-ng/event/events.json?filter=textFilter:$activityId&limit=1";
+            $headers = ['X-Requested-Auth: Digest'];
+
+            $activityEvent = json_decode($this->getRequest($url, $headers), true);
+            return sizeof($activityEvent) > 0;
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
