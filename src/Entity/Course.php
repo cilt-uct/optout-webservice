@@ -48,7 +48,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                     left join course_updates C on A.course_code = C.course_code and A.term = C.year
                     left join course_optout D on A.course_code = D.course_code and A.term = D.year
                     left join vula_archive.SAKAI_USER_ARCHIVE E on C.convenor_eid = E.EID or (C.convenor_eid is null and A.convenor_eid = E.EID)
-                where A.course_code = :course and A.term = :year limit 1";
+                where A.active = 1 and A.course_code = :course and A.term = :year limit 1";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':course' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {

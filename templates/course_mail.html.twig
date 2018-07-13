@@ -224,69 +224,18 @@
                                         <div style="line-height: 24px">
                                             <p>Dear {{name}},</p>
                                             <br/>
-                                            <p>Lecture recording facilitates learning and is highly valued by students. At UCT, there has been significant growth in the use of lecture recording. An opt-out provision was introduced through the <a href="https://www.uct.ac.za/sites/default/files/image_tool/images/328/about/policies/Lecture_Recording_Policy_2017.pdf" title="UCT Lecture Recording Policy (.PDF)">UCT Lecture Recording Policy</a> to streamline the lecture recording process. This provision means from the second semester of 2018 onwards, timetabled course lectures will be recorded unless the Head of Department or course convener opts out. This applies to all undergraduate courses taught on Upper and Middle campus in <a href="https://ictsapps.uct.ac.za/lectureRecording.php" title="ICTS: Lecture Recording Venues">equipped teaching venues</a>.</p>
+                                            <p>Lecture recording facilitates learning and is highly valued by students. At UCT, there has been significant growth in the use of lecture recording. An opt-out provision was introduced through the <a href="https://www.uct.ac.za/sites/default/files/image_tool/images/328/about/policies/Lecture_Recording_Policy_2017.pdf" title="UCT Lecture Recording Policy (.PDF)">UCT Lecture Recording Policy</a> to streamline the lecture recording process. This provision means that, from the second semester of 2018 onwards, timetabled course lectures will be recorded unless the Head of Department or course convener opts out. This applies to all <strong>undergraduate courses</strong> taught on <strong>Upper and Middle campus</strong> in <a href="https://ictsapps.uct.ac.za/lectureRecording.php" title="ICTS: Lecture Recording Venues">equipped teaching venues</a>.</p>
                                             <br/>
-                                            <p>As the Head of Department (HoD), you can choose to opt-out of <strong>automated setup of lecture recording</strong> for the department ({{ dept_name }}) as a whole. If an HoD does not opt out on behalf of a department, an email will then be sent to each course convener who may opt out for their individual course.</p>
+                                            <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the {{course}} course would have automated lecture recording set up. As the course convener, you can choose to opt out of <strong>automated setup of lecture recording</strong> for this course.</p>
                                             <br/>
-                                            <p>By {{date|date("l, d F")}}, either the HoD or a delegated representative must:</p>
+                                            <p>By {{date|date("l, d F")}}, you would need to either:</p>
                                             <ol type="a">
-                                                <li>Indicate if your department wishes to opt out of automated lecture recording setup, see "Opt-out for the department" link below.</li>
-                                                <li>Confirm course convener details under the “View Courses” link if your department is not opting out.</li>
+                                                <li>Indicate if the course wishes to opt out of automated lecture recording setup - see “View course” link below;</li>
+                                                <li>If there is no course site in Vula yet and the course is not opting out, create a Vula course site (with attached classlist) for the automated setup of lecture recording.</li>
                                             </ol>
                                             <br/>
-                                            <p><strong><u>Opt-out process</u></strong></p>
+                                            <p>Opting out is recommended if the course does not strictly follow the venue timetable schedule. If a course opts out of the automated setup, <a href="http://www.cilt.uct.ac.za/cilt/lecture-recording#howto" title="Lecture recording: How To">self-service setup</a> of recordings is still available in Vula if you would like to record and setup.</p>
                                             <br/>
-                                            <p>We understand that lecture recording may not be appropriate for all courses. If your department as a whole chooses to opt-out from automatic lecture recording, please click the link below:</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td height="25" style="font-size: 25px; line-height: 25px;">&nbsp;</td>
-                    </tr>
-
-                    <tr>
-                        <td align="center">
-                            <table border="0" align="center" width="200" cellpadding="0" cellspacing="0" bgcolor="A83E43" style="">
-
-                                <tr>
-                                    <td height="10" style="font-size: 10px; line-height: 10px;">&nbsp;</td>
-                                </tr>
-
-                                <tr>
-                                    <td align="center" style="color: #ffffff; font-size: 14px; font-family: 'Work Sans', Calibri, sans-serif; line-height: 26px;">
-
-
-                                        <div style="line-height: 26px;">
-                                            <a href="{{out_link}}" style="color: #ffffff; text-decoration: none;">Opt-out for the department</a>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td height="10" style="font-size: 10px; line-height: 10px;">&nbsp;</td>
-                                </tr>
-
-                            </table>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td height="25" style="font-size: 25px; line-height: 25px;">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td align="center">
-                            <table width="640"  border="0" align="center" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="left" style="color: #333; font-size: 14px; font-family: 'Work Sans', Calibri, sans-serif; line-height: 24px;">
-                                        <div style="line-height: 24px">
-                                            <p>If however, your department participates with the automated lecture recording setup (i.e. does not opt out), in the week before the start of the semester there will be an opportunity for individual courses to opt out.</p>
-                                            <br/>
-                                            <p><strong><u>Automated Lecture Recording Setup</u></strong></p>
-                                            <br/>
-                                            <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the following courses would have automated lecture recording set up:</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -309,7 +258,7 @@
 
 
                                         <div style="line-height: 26px;">
-                                            <a href="{{view_link}}" style="color: #ffffff; text-decoration: none;">View Courses</a>
+                                            <a href="{{view_link}}" style="color: #ffffff; text-decoration: none;">View Course</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -330,21 +279,15 @@
                                 <tr>
                                     <td align="left" style="color: #333; font-size: 14px; font-family: 'Work Sans', Calibri, sans-serif; line-height: 24px;">
                                         <div style="line-height: 24px">
-                                            <p>Further communication will be sent out to course conveners, so we request that you check and update any course convener details in the link above. Should the course convener information not be available by {{date|date("l, d F")}} for a particular course, the course opt-out email will default to you as Head of Department.</p>
-                                            <br/>
-                                            <p><strong><u>More information</u></strong></p>
-                                            <br/>
                                             <ul type="circle">
                                                 <li>For participating departments, automated lecture recording setup will require a Vula course site to be created at least 3 working days prior to the start of the semester.</li>
-                                                <li>The automated recording will be scheduled based on the timetable bookings as per the <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">UCT course timetable</a>.</li>
+                                                <li>If there are already recordings scheduled for the course, we will not schedule further recordings.</li>
+                                                <li>Automated recordings will be scheduled based on the timetable bookings as per the <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">UCT course timetable</a>.</li>
                                                 <li>Please note that the course convener is responsible for ensuring that each person who teaches the course is aware that lectures will be recorded.</li>
-                                                <li>The course convener or delegate should adjust the recording schedule in advance through Vula to exclude individual lectures from being recorded if consent has not been obtained.</li>
+                                                <li>The course convener or delegate should adjust the recording schedule through Vula in advance to exclude individual lectures from being recorded if consent has not been obtained.</li>
                                                 <li>The lecture recording team will not verify consent for any timetabled lecture and recordings will be automatically published to Vula.</li>
-                                                <li>For more information on lecture recording, please <a href="http://www.cilt.uct.ac.za/cilt/lecture-recording" title="Lecture recording">see here</a>.</li>
                                             </ul>
-                                            <p>If a department or course opts out of the automated setup, <a href="http://www.cilt.uct.ac.za/cilt/lecture-recording#howto" title="Lecture recording: How To">self-service setup</a> of recordings is still available in Vula.</p>
-                                            <br/>
-                                            <p>For any queries, please feel free to contact us.</p>
+                                            <p>For further information on lecture recording, please <a href="http://www.cilt.uct.ac.za/cilt/lecture-recording" title="Lecture recording">see here</a> and feel free to contact us.</p>
                                             <br/>
                                             <p>Thank you,</p>
                                             <p>UCT Lecture Recording Team</p>

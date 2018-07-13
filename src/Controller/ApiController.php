@@ -397,6 +397,8 @@ class ApiController extends Controller
 
   /**
    * @Route("/process/mail")
+   * 
+   * THIS DOESN'T WORK
    */
   public function processMail(Request $request, \Swift_Mailer $mailer) {
 

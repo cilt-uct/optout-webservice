@@ -30,6 +30,7 @@ class Utilities
                     and ((date_add(curdate(), interval 2 week) > :this_year_half and ps_courses.end_date > :this_year_half) or
                          (date_add(curdate(), interval 2 week) < :this_year_half and ps_courses.end_date < :this_year_half)
                         )
+                    and ps_courses.active = 1
                     and campus_code in ('UPPER','MIDDLE')
                     and sn_timetable_versioned.course_code not in (select course_code from course_optout where year = :year)
                     order by course_code";
@@ -116,7 +117,7 @@ class Utilities
     public function getMail($hash) {
         $result = [ 'success' => 1, 'result' => null ];
         try {
-            $query = "select mail.dept, mail.course, mail.state, mail.created_at,
+            $query = "select mail.dept, mail.course, mail.state, mail.created_at, mail.name, mail.type,
                         `workflow`.`year`, `workflow`.`status`, `workflow`.`date_start`, `workflow`.`date_dept`, `workflow`.`date_course`, `workflow`.`date_schedule` 
                         from uct_workflow_email mail 
                         left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`  

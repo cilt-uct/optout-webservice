@@ -4,7 +4,8 @@
             <div class="col-md-12 post-title">
                 <h3><span style="color: #5caad2;">Lecture Recording</span> Automated Setup <small>or</small> Opt-Out</h3>
                 <br/>
-                <div class="alert alert-danger" role="alert">Error loading department or course.<br/><small>{{err}}</small></div>
+                <div class="alert alert-danger" role="alert">Error loading department or course.<br/>
+                    {% if err is defined %}<small>{{err}}</small>{% endif %}</div>
             </div>
         </div>
     </div>

@@ -7,97 +7,74 @@
                 <br/>
                 <div class="row">
                     <div class="col-md-8">
-                        <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the following courses would have automated lecture recording set up.</p>
-                        <p>Please check and update the course convenor details below. A course-level opt-out email will be sent to all course convenors by <strong>{{date_course|date("l, d F")}}</strong>. Should the course convener information not be available for a particular course, the course opt-out email will default to the Head of Department.</p>
+                        <p>Course page</p>
+                        <ul>
+                            <li>Vula site - We would schedule for you</li>
+                            <li>Lecture recording series  - We would schedule for you</li>
+                            <li>Scheduled - We won’t schedule for you</li>
+                        </ul>
+                        <i class="fa fa-check-circle-o success"></i>
+
+                        <p>Current schedule - We would schedule for you</p>
+                        <p>You are welcome to schedule additional sessions after the automated setup.</p>
                     </div>
                     <div class="col-md-4">
                         <div class="card bg-light mb-3">
                             <div class="card-body">
-                                <p>If your department as a whole chooses to opt-out from automated setup of lecture recording, please click the link below:</p>
-                                <div style="text-align:center;">
-                                    <a href="{{out_link}}" title="Opt out of automated lrecture scheduling" class="btn btn-danger">Opt-out for the department</a>
-                                </div>
+                                {% if details.optoutStatus == '0' %}
+                                    Will use automatic scheduling
+                                    
+                                {% else %}
+                                    Self scheduling
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
-                {% if not authenticated.a %}
-                    <div class="alert alert-light" role="alert">
-                        <u>NOTE:</u> To edit the convenor information please <button class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#loginModal">Login</button>
-                    </div>
-                    {% if authenticated.z|length > 1 %}
-                    <div class="alert alert-danger" role="alert">
-                    {{authenticated.z}}
-                    </div>
-                    {% endif %}
-                {% endif %}
                 <div class="table-responsive">
                     <table id="course_table" class="table">
                         <thead>
+                            <tr class="notop">
+                                <th rowspan="2">Venue</th>
+                                <th rowspan="2">Dates</th>
+                                <th rowspan="2">Times</th>
+                                <th class="days-header">Days</th>
+                            </tr>
                             <tr>
-                                <th>Course</th>
-                                <th>Convenor</th>
-                                <!--th>Vula Site</th>
-                                <th>Lecture Recording</th-->
+                                <th class="days">
+                                    <div>Mon</div>
+                                    <div>Tue</div>
+                                    <div>Wed</div>
+                                    <div>Thu</div>
+                                    <div>Fri</div>
+                                    <div>Sat</div>
+                                    <div>Sun</div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>                           
-                            {% for course in details.courses %}
+                            {% for lec in timetable.LEC %}
                                 <tr>
+                                    <td>{{lec.venue}}</td>
                                     <td>
-                                        <label>
-                                            <!--input type="checkbox" /-->
-                                            <strong>
-                                                {{course.courseCode}}
-                                            </strong>
-                                        </label>
+                                        {{lec.start_date}} <small>to</small> {{lec.end_date}}
                                     </td>
                                     <td>
-                                        {% if authenticated.a %}
-                                            <span>
-                                                <input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name">
-                                                <span class="loader">
-                                                    <span></span>
-                                                    <span></span>
-                                                    <span></span>
-                                                </span>
-                                            </span>
-                                            <span class="edit">
-                                                <input id="{{course.courseCode}}_c_mail"type="text" placeholder="convenor@uct.ac.za" value="{{course.convenor.email}}" data-old="{{course.convenor.email}}" data-course="{{course.courseCode}}" data-type="email">
-                                                <span class="loader">
-                                                    <span></span>
-                                                    <span></span>
-                                                    <span></span>
-                                                </span>                                                
-                                            </span>
-                                        {% else %}
-                                            <span class="input">{{course.convenor.name}}</span>
-                                            <span class="input">{{course.convenor.email}}</span>
-                                        {% endif %}
+                                        {{lec.start_time}} <small>-</small> {{lec.end_time}}
                                     </td>
-                                    <!--td>
-                                        Yes/No
+                                    <td class="days">
+                                        <div class="{% if lec.days.mon %}use{% endif %}"></div>
+                                        <div class="{% if lec.days.tue %}use{% endif %}"></div>
+                                        <div class="{% if lec.days.wed %}use{% endif %}"></div>
+                                        <div class="{% if lec.days.thu %}use{% endif %}"></div>
+                                        <div class="{% if lec.days.fri %}use{% endif %}"></div>
+                                        <div class="{% if lec.days.sat %}use{% endif %}"></div>
+                                        <div class="{% if lec.days.sun %}use{% endif %}"></div>
                                     </td>
-                                    <td>
-                                        Not Scheduled / Scheduled
-                                    </td-->
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
-                </div>
-                <br/>
-                <div class="row justify-content-center">
-                    <div class="col-sm-6">
-                        <div class="card bg-light mb-3">
-                            <div class="card-body">
-                                <p>If your department as a whole chooses to opt-out from automated setup of lecture recording, please click the link below:</p>
-                                <div style="text-align:center;">
-                                    <a href="{{out_link}}" title="Opt out of automated lrecture scheduling" class="btn btn-danger">Opt-out for the department</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

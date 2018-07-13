@@ -42,6 +42,22 @@ header img.navbar-brand{
   font-size: 14px;
 }
 
+.post-body .success {
+  color:#28a745;
+}
+
+.post-body .info {
+  color:#17a2b8;
+}
+
+.post-body .warning {
+  color:#ffc107;
+}
+
+.post-body .danger {
+  color:#dc3545;
+}
+
 .post-body label{
   cursor: pointer;
   margin: 0px;
@@ -290,6 +306,45 @@ header img.navbar-brand{
   animation: spin 1s linear infinite;
 }
 */
+.post-body #course_table small {
+  color: #848484;
+}
+
+.post-body #course_table tr.notop th {
+  border-top-width: 0px;
+}
+
+.post-body #course_table th.days-header {
+  text-align: center;
+  border-bottom-width: 1px;
+  padding-top: 0.5em;
+  padding-bottom: 0.1em;
+}
+
+.post-body #course_table th.days,
+.post-body #course_table td.days  {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-gap: 0.1em;
+  width: 100%;
+}
+.post-body #course_table th.days {
+  text-align: center;
+  font-size: 12px;
+  border-bottom-width: 1px;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+.post-body #course_table td.days > div {
+  display: block;
+  padding: 0.8em;
+  background-color: #d6d8db;
+}
+
+.post-body #course_table td.days > div.use {
+  background-color: #c3e6cb;
+}
 
 .post-body .panel-danger {
   border-color: #f7a4af;

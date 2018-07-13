@@ -1,5 +1,5 @@
 <?php
-// src/Controller/DepartmentController.php
+// src/Controller/UIController.php
 namespace App\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -11,12 +11,14 @@ use App\Entity\Department;
 use App\Service\LDAPService;
 use App\Service\Utilities;
 
-class DepartmentController extends Controller
+class UIController extends Controller
 {
     /**
      * @Route("/view/{hash}")
+     * 
+     * View the page according to the hash it receives 
      */
-    public function viewDepartment($hash, Request $request)
+    public function viewFromHash($hash, Request $request)
     {
         $authenticated = ['a' => false, 'z' => '0'];
         
@@ -54,7 +56,8 @@ class DepartmentController extends Controller
                 $authenticated['a'] = $session->get('username') ? true : false;
             break;
         }
-        
+        //return new Response(json_encode($data), 201);
+
         if (!$data['success']) {
             return $this->render('error.html.twig', $data);
         } else {
@@ -62,17 +65,29 @@ class DepartmentController extends Controller
             $data['hash'] = $hash;
             $data['out_link'] = 'http://srvslscet001.uct.ac.za/optout/out/'. $hash;
             $data['authenticated'] = $authenticated;
-            
+        }
+
+        if ($data['course'] === null ) {
             $dept = new Department($data['dept'], $hash, $data['year'], false);    
             $data['details'] = $dept->getDetails();
-        }
 
-        if (count($data['details']['courses']) == 0) {
-            return $this->viewOptOut($hash, $request);
-        }
+            if (count($data['details']['courses']) == 0) {
+                return $this->viewOptOut($hash, $request);
+            }       
 
-        //return new Response(json_encode($data), 201);
-        return $this->render('department.html.twig', $data);
+            return $this->render('department.html.twig', $data);   
+        } else {
+
+            $course = new Course($data['course'], $hash, $data['year'], false);    
+            $data['details'] = $course->getDetails();
+            
+            // retrieve timetable information
+            $json = file_get_contents('https://srvslscet001.uct.ac.za/timetable/?course='. $data['course'] .','. $data['year']);
+            $data['timetable'] = json_decode($json);
+
+            //return new Response(json_encode($data), 201);
+            return $this->render('course.html.twig', $data);
+        }
     }
 
     /**
@@ -158,6 +173,47 @@ class DepartmentController extends Controller
             } else {
                 return $this->render('department_out_1_login.html.twig', $data);
             }
+        }
+    }
+
+    /**
+     * @Route("/mail/{hash}")
+     */
+    public function getMail($hash, Request $request)
+    {
+        $utils = new Utilities();
+        $data = $utils->getMail($hash);
+
+        //return new Response(json_encode($data), 201);
+
+        if ($data['success']) {
+            $data = $data['result'][0];
+
+            if ($data['course'] === null ) {
+                $dept = new Department($data['dept'], $hash, $data['year'], false);
+                $details = $dept->getDetails();
+
+                return $this->render('department_mail.html.twig', 
+                    array(  'dept' => $data['dept'],
+                            'dept_name' => $details['name'],
+                            'name' => $data['name'],
+                            'date' => $data['date_course'],
+                            'out_link' => 'http://srvslscet001.uct.ac.za/optout/out/'. $hash,
+                            'view_link' => 'http://srvslscet001.uct.ac.za/optout/view/'. $hash));
+            } else {
+                $course = new Course($data['course'], $hash, $data['year'], false);
+                $details = $course->getDetails();
+
+                return $this->render('course_mail.html.twig', 
+                    array(  'dept' => $data['dept'],
+                            'course' => $data['course'],
+                            'name' => $data['name'],
+                            'date' => $data['date_schedule'],
+                            'out_link' => 'http://srvslscet001.uct.ac.za/optout/out/'. $hash,
+                            'view_link' => 'http://srvslscet001.uct.ac.za/optout/view/'. $hash));
+            }
+        } else {
+            return new Response("ERROR_MAIL_HASH", 500);
         }
     }
 }
