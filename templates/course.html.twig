@@ -5,77 +5,112 @@
                 <h3><span style="color: #5caad2;">Lecture Recording</span> Automated Setup <small>or</small> Opt-Out</h3>
                 <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
                 <br/>
+                <!-- {% if readonly %}Readonly{% else %}Editable{% endif %} -->
                 <div class="row">
                     <div class="col-md-8">
-                        <p>Course page</p>
-                        <ul>
-                            <li>Vula site - We would schedule for you</li>
-                            <li>Lecture recording series  - We would schedule for you</li>
-                            <li>Scheduled - We won’t schedule for you</li>
-                        </ul>
-                        <i class="fa fa-check-circle-o success"></i>
+                        <p>For the course <strong>{{course}}</strong> we have found that:</p>
+                        {% if hasVulaSite %}
+                            <div class="alert alert-success" role="alert">
+                                <i class="fa fa-3x fa-check-circle-o success"></i>
+                                <span>There is a Vula site associated with this course.</span>
+                            </div>
 
-                        <p>Current schedule - We would schedule for you</p>
-                        <p>You are welcome to schedule additional sessions after the automated setup.</p>
+                            {% if not hasOCSeries %}
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fa fa-3x fa-check-circle-o info"></i>
+                                    <span>A lecture recording series will be created for this course.</span>
+                                </div>
+                            {% else %}
+                                {% if not isTimetabled %}
+                                    <div class="alert alert-success" role="alert">
+                                        <i class="fa fa-3x fa-check-circle-o success"></i>
+                                        <span>A lecture recording series exists for this course.</span>
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-danger" role="alert">
+                                        <i class="fa fa-3x fa-times-circle-o danger"></i>
+                                        <span>A lecture recording series exists for this course and there are recordings scheduled or active.</span>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fa fa-3x fa-times-circle-o danger"></i>
+                                <span>Please create a Vula site for this course, otherwise the timetable (below) cannot be scheduled.</span>
+                            </div>
+                        {% endif %}
+                        <div class="alert alert-light" role="alert">
+                            <u>NOTE:</u> You are welcome to schedule additional sessions after the automated setup.
+                        </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card bg-light mb-3">
+                        <div class="card bg-light mb-3 switch-container" {% if readonly %}style="height:auto;margin-top: 26px;"{% endif %}>
                             <div class="card-body">
-                                {% if details.optoutStatus == '0' %}
-                                    Will use automatic scheduling
-                                    
+                                {% if not readonly %}
+                                    <div class="switch-button">
+                                        <span class="active" {% if details.optoutStatus %}style="top: 0%;"{% else %}style="top: 50%;"{% endif %}></span>
+                                        <button class="switch-button-case left {% if details.optoutStatus %}active-case{% endif %}">Not using lecture recording<br/> or <br/> I will schedule my own recordings</button>
+                                        <button class="switch-button-case right {% if not details.optoutStatus %}active-case{% endif %}">Please automatically schedule my lectures</button>
+                                    </div>
                                 {% else %}
-                                    Self scheduling
+                                    {% if details.optoutStatus %}
+                                        <h6>Not using lecture recording or<br/> will be self scheduling for the course.</h6>
+                                    {% else %}
+                                        <h6>Lectures will be automatically scheduled.</h6>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="course_table" class="table">
-                        <thead>
-                            <tr class="notop">
-                                <th rowspan="2">Venue</th>
-                                <th rowspan="2">Dates</th>
-                                <th rowspan="2">Times</th>
-                                <th class="days-header">Days</th>
-                            </tr>
-                            <tr>
-                                <th class="days">
-                                    <div>Mon</div>
-                                    <div>Tue</div>
-                                    <div>Wed</div>
-                                    <div>Thu</div>
-                                    <div>Fri</div>
-                                    <div>Sat</div>
-                                    <div>Sun</div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>                           
-                            {% for lec in timetable.LEC %}
-                                <tr>
-                                    <td>{{lec.venue}}</td>
-                                    <td>
-                                        {{lec.start_date}} <small>to</small> {{lec.end_date}}
-                                    </td>
-                                    <td>
-                                        {{lec.start_time}} <small>-</small> {{lec.end_time}}
-                                    </td>
-                                    <td class="days">
-                                        <div class="{% if lec.days.mon %}use{% endif %}"></div>
-                                        <div class="{% if lec.days.tue %}use{% endif %}"></div>
-                                        <div class="{% if lec.days.wed %}use{% endif %}"></div>
-                                        <div class="{% if lec.days.thu %}use{% endif %}"></div>
-                                        <div class="{% if lec.days.fri %}use{% endif %}"></div>
-                                        <div class="{% if lec.days.sat %}use{% endif %}"></div>
-                                        <div class="{% if lec.days.sun %}use{% endif %}"></div>
-                                    </td>
+                {% if (timetable is not empty) %}
+                    <div class="table-responsive">
+                        <h4>Timetable:</h4>
+                        <table id="course_table" class="table">
+                            <thead>
+                                <tr class="notop">
+                                    <th rowspan="2">Venue</th>
+                                    <th rowspan="2">Dates</th>
+                                    <th rowspan="2">Times</th>
+                                    <th class="days-header">Days</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                <tr>
+                                    <th class="days">
+                                        <div>Mon</div>
+                                        <div>Tue</div>
+                                        <div>Wed</div>
+                                        <div>Thu</div>
+                                        <div>Fri</div>
+                                        <div>Sat</div>
+                                        <div>Sun</div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>                           
+                                {% for lec in timetable.LEC %}
+                                    <tr>
+                                        <td>{{lec.venue}}</td>
+                                        <td>
+                                            {{lec.start_date}} <small>to</small> {{lec.end_date}}
+                                        </td>
+                                        <td>
+                                            {{lec.start_time}} <small>-</small> {{lec.end_time}}
+                                        </td>
+                                        <td class="days">
+                                            <div class="{% if lec.days.mon %}use{% endif %}"></div>
+                                            <div class="{% if lec.days.tue %}use{% endif %}"></div>
+                                            <div class="{% if lec.days.wed %}use{% endif %}"></div>
+                                            <div class="{% if lec.days.thu %}use{% endif %}"></div>
+                                            <div class="{% if lec.days.fri %}use{% endif %}"></div>
+                                            <div class="{% if lec.days.sat %}use{% endif %}"></div>
+                                            <div class="{% if lec.days.sun %}use{% endif %}"></div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -92,6 +127,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
+                        <p>Please login to change your preference.</p>
                         <div class="form-group row">
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" name="eid" id="eid" value="" placeholder="User ID">
@@ -115,94 +151,81 @@
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>    
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    {% if authenticated.a %}
+    {% if not readonly %}
     <script>
         var changeTimer = false, field = null;
 
         $(function() {
             
-            $('#course_table').on('focusin','input',function(event){
-                $(this).removeClass('done err');
-            });
-            
-            $('#course_table').on('change','input',function(event){
-                    if (changeTimer !== false) clearTimeout(changeTimer);
-                    field = $(this);
+            var switchButton 			= document.querySelector('.switch-button');
+            var switchBtnRight 			= document.querySelector('.switch-button-case.right');
+            var switchBtnLeft 			= document.querySelector('.switch-button-case.left');
+            var activeSwitch 			= document.querySelector('.active');
 
-                    //changeTimer = setTimeout(function(){
-                        
-                        var d = [{"course": field.data('course'), 
-                                 "changes": [{
-                                     "field": field.data('type') == 'name' ? 'convenorName' : 'convenorEmail', 
-                                     "from": field.data('old'), "to": field.val()}]}],
-                            valid = true;
-                        field
-                            .parent()
-                            .removeClass('done err updating')
-                            .removeAttr('data-errortext');
-
-                        if (field.data('type') === 'email') {
-                            email_address = $(this);
-                            email_regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
-                            if(!email_regex.test(email_address.val())){ 
-                                mailValidationError(field);
-                                valid = false;
-                            }
-                        }
-
-                        if (valid) {
-                            field.parent().addClass('updating');
-                            $.ajax({
-                                headers: {"x-entity-hash": "{{hash}}"},
-                                url: "/optout/api/v0/dept/{{dept}}",
-                                method: 'patch',
-                                data: JSON.stringify(d)
-                            }).done(function() {
-                                updateSuccess(field);
-                            }).fail(function(xhr) {
-                                if (xhr.status === 409 && xhr.responseJSON) {
-                                    //If updated value is equal to server's current record for field, show a success
-                                    var fieldName = field.data('type');
-                                    if (xhr.responseJSON[0].convenor[fieldName] === field.val()) {
-                                        return updateSuccess(field);
-                                    }
-                                }
-
-                                //otherwise, show an error message so user knows why update could not take place
-                                updateError(field, xhr);
-                            }).always(function() {
-                                field.parent().removeClass('updating');
-                            });
-                        }
-                    //    changeTimer = false;
-                    //}, 300);
-            });
-
-            function updateSuccess(field) {
-                field
-                    .data('old', field.val())
-                    .parent()
-                        .addClass( "done" );
+            function updateSuccess() {
+                $(switchButton).addClass('done');
                 setTimeout(function() {
-                    field
-                        .parent()
-                        .removeClass('done');
+                    $(switchButton).removeClass('done');
                 }, 5000);
             }
 
             function updateError(field, serverResponse) {
-                field
-                    .parent()
-                    .addClass('err')
-                    .attr('data-errortext', 'Already updated. Please refresh to view the latest changes.');
+                $(switchButton).addClass('err');
             }
 
-            function mailValidationError(field, serverResponse) {
-                field
-                    .parent()
-                    .addClass('err')
-                    .attr('data-errortext', 'Please enter a valid e-mail address.');
+            function switchLeft(){
+                switchBtnRight.classList.remove('active-case');
+                switchBtnLeft.classList.add('active-case');
+                activeSwitch.style.top 						= '0%';
+
+                $.ajax({
+                    headers: {"x-entity-hash": "{{hash}}"},
+                    url: "/optout/api/v0/course/{{course}}",
+                    method: 'PUT',
+                    data: '{"status": 1}'
+                }).done(function() {
+                    updateSuccess();
+                }).fail(function(xhr) {
+                    updateError();
+                }).always(function() {
+                    $(switchButton).removeClass('updating');
+                });
             }
+
+            function switchRight(){
+                switchBtnRight.classList.add('active-case');
+                switchBtnLeft.classList.remove('active-case');
+                activeSwitch.style.top 						= '50%';
+
+                $.ajax({
+                    headers: {"x-entity-hash": "{{hash}}"},
+                    url: "/optout/api/v0/course/{{course}}",
+                    method: 'PUT',
+                    data: '{"status": 0}'
+                }).done(function() {
+                    updateSuccess();
+                }).fail(function(xhr) {
+                    updateError();
+                }).always(function() {
+                    $(switchButton).removeClass('updating');
+                });
+            }
+
+            switchBtnLeft.addEventListener('click', function(){
+                {% if not authenticated.a %}
+                    $('#loginModal').modal('show');
+                {% else %}
+                    switchLeft();
+                {% endif %}
+            }, false);
+
+            switchBtnRight.addEventListener('click', function(){
+                {% if not authenticated.a %}
+                    $('#loginModal').modal('show');
+                {% else %}
+                    switchRight();
+                {% endif %}
+            }, false);
         });
     </script>
     {% endif %}

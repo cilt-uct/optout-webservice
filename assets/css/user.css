@@ -63,6 +63,13 @@ header img.navbar-brand{
   margin: 0px;
 }
 
+.post-body .alert i {
+  float: left;
+  position: relative;
+  top: -10px;
+  left: -12px;
+}
+
 .post-body input[type=checkbox]{
   position: relative;
   top: 1px;
@@ -78,11 +85,11 @@ header img.navbar-brand{
   border: 1px solid #dedede;
 }
 
-.post-body .done input[type=text] {
+.post-body span.done input[type=text] {
   border-color: #218838;
 }
 
-.post-body .done::before {
+.post-body span.done::before {
   content: '';
   position: absolute;
   width: 10px;
@@ -96,11 +103,11 @@ header img.navbar-brand{
   pointer-events: none;
 }
 
-.post-body .err input[type=text] {
+.post-body span.err input[type=text] {
   border-color: #dc3545;
 }
 
-.post-body .err::before {
+.post-body span.err::before {
   width: 16px;
   height: 16px;
   content: '';
@@ -291,21 +298,7 @@ header img.navbar-brand{
     -o-transform:translateX(-20px);
 	}
 }
-/*
-.post-body span.updating::before {
-  content: '';
-  position: absolute;
-  height: 24px;
-  width: 24px;
-  border-radius: 50%;
-  background: radial-gradient(circle at center, transparent 0%, transparent 60%, blue 60%, blue 100%),
-              radial-gradient(circle at 12px 18px, blue 0%, blue 4px, transparent 4px, transparent 100%);
-  box-sizing: border-box;
-  top: -4px;
-  right: 26px;
-  animation: spin 1s linear infinite;
-}
-*/
+
 .post-body #course_table small {
   color: #848484;
 }
@@ -376,11 +369,67 @@ div.container.post{
   margin-bottom:50px;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+.switch-container {
+  height: 224px;
+}
+
+.switch-button {
+  width: 300px;
+  height: 180px;
+  text-align: center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate3D(-50%, -50%, 0);
+          transform: translate3D(-50%, -50%, 0);
+  will-change: transform;
+  z-index: 197 !important;
+  cursor: pointer;
+  transition: .3s ease all;
+  border: 1px solid #ccc;
+  border-radius: .25rem;
+}
+
+.switch-button.done{
+  border-color: #218838;
+}
+
+.switch-button.err{
+  border-color: #dc3545;
+}
+
+.switch-button-case {
+  display: inline-block;
+  background: none;
+  width: 100%;
+  height: 49%;
+  color: #ccc;
+  position: relative;
+  border: none;
+  transition: .3s ease all;
+  padding-bottom: 1px;
+}
+
+.switch-button-case:hover {
+  color: #848484;
+  cursor: pointer;
+}
+
+.switch-button-case:focus {
+  outline: none;
+}
+
+.switch-button .active {
+  color: #151515;
+  background-color: #28a745;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 50%;
+  z-index: -1;
+  transition: .3s ease-out all;
+}
+.switch-button .active-case {
+  color: #151515;
 }

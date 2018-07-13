@@ -5,32 +5,37 @@
                 <h3><span style="color: #5caad2;">Lecture Recording</span> Automated Setup <small>or</small> Opt-Out</h3>
                 <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
                 <br/>
+                <!-- {% if readonly %}Readonly{% else %}Editable{% endif %} -->
                 <div class="row">
                     <div class="col-md-8">
                         <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the following courses would have automated lecture recording set up.</p>
                         <p>Please check and update the course convenor details below. A course-level opt-out email will be sent to all course convenors by <strong>{{date_course|date("l, d F")}}</strong>. Should the course convener information not be available for a particular course, the course opt-out email will default to the Head of Department.</p>
                     </div>
                     <div class="col-md-4">
-                        <div class="card bg-light mb-3">
-                            <div class="card-body">
-                                <p>If your department as a whole chooses to opt-out from automated setup of lecture recording, please click the link below:</p>
-                                <div style="text-align:center;">
-                                    <a href="{{out_link}}" title="Opt out of automated lrecture scheduling" class="btn btn-danger">Opt-out for the department</a>
+                        {% if not readonly %}
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <p>If your department as a whole chooses to opt-out from automated setup of lecture recording, please click the link below:</p>
+                                    <div style="text-align:center;">
+                                        <a href="{{out_link}}" title="Opt out of automated lrecture scheduling" class="btn btn-danger">Opt-out for the department</a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
-                {% if not authenticated.a %}
-                    <div class="alert alert-light" role="alert">
-                        <u>NOTE:</u> To edit the convenor information please <button class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#loginModal">Login</button>
-                    </div>
-                    {% if authenticated.z|length > 1 %}
-                    <div class="alert alert-danger" role="alert">
-                    {{authenticated.z}}
-                    </div>
+                {% if not readonly %}
+                    {% if not authenticated.a %}
+                        <div class="alert alert-light" role="alert">
+                            <u>NOTE:</u> To edit the convenor information please <button class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#loginModal">Login</button>
+                        </div>
+                        {% if authenticated.z|length > 1 %}
+                        <div class="alert alert-danger" role="alert">
+                        {{authenticated.z}}
+                        </div>
+                        {% endif %}
                     {% endif %}
-                {% endif %}
+                {% endif %}                    
                 <div class="table-responsive">
                     <table id="course_table" class="table">
                         <thead>
@@ -53,7 +58,7 @@
                                         </label>
                                     </td>
                                     <td>
-                                        {% if authenticated.a %}
+                                        {% if authenticated.a and (not readonly) %}
                                             <span>
                                                 <input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name">
                                                 <span class="loader">
@@ -87,18 +92,20 @@
                     </table>
                 </div>
                 <br/>
-                <div class="row justify-content-center">
-                    <div class="col-sm-6">
-                        <div class="card bg-light mb-3">
-                            <div class="card-body">
-                                <p>If your department as a whole chooses to opt-out from automated setup of lecture recording, please click the link below:</p>
-                                <div style="text-align:center;">
-                                    <a href="{{out_link}}" title="Opt out of automated lrecture scheduling" class="btn btn-danger">Opt-out for the department</a>
+                {% if not readonly %}
+                    <div class="row justify-content-center">
+                        <div class="col-sm-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <p>If your department as a whole chooses to opt-out from automated setup of lecture recording, please click the link below:</p>
+                                    <div style="text-align:center;">
+                                        <a href="{{out_link}}" title="Opt out of automated lrecture scheduling" class="btn btn-danger">Opt-out for the department</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -138,7 +145,7 @@
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>    
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    {% if authenticated.a %}
+    {% if authenticated.a and (not readonly) %}
     <script>
         var changeTimer = false, field = null;
 

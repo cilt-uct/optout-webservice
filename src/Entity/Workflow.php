@@ -112,6 +112,7 @@ class Workflow
                     // Create email entries for each departments head, so mail can be sent to each                   
                     $action = $this->createDepartmentMails();
                     if ($action === 1) {
+
                         // > state: dept
                         $this->setState('dept');
                         $result['result'] = $result['result'] ." - switch to dept";
@@ -128,6 +129,7 @@ class Workflow
 
                     // Create email entries for each COURSE, so mail can be sent to each 
                     if ($this->createCourseMails()) {
+
                         // > state: course
                         $this->setState('course');
                         $result['result'] = $result['result'] ." - switch to course";
@@ -144,7 +146,7 @@ class Workflow
 
                     // do scheduling
                     // TODO
-                    
+
                     // > state: done
                     $this->setState('done');
                     $result['result'] = $result['result'] ." - switch to done";
@@ -186,31 +188,26 @@ class Workflow
     private function createDepartmentMails(){
 
         try {
-            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `mail_to`, `mail_cc`, `hash`, `name`) VALUES
-                            (:workflow_id, :dept, :mail_to, :mail_cc, :hash, :name)";
-            $mailStmt = $this->dbh->prepare($insertQry);
-
             // get list of departments
             $query = "SELECT * FROM uct_dept where `use_dept` = 1";
             $stmt = $this->dbh->prepare($query);
             $stmt->execute();
             
+            $ar = [];
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
                 $dept = new Department($row['dept'], null, $this->year, true);
-                $ar = [
-                    ':workflow_id' => $this->oid, 
-                    ':dept' => $row['dept'], 
-                    ':mail_to' => $row['email'], 
-                    ':mail_cc' => $row['alt_email'], 
-                    ':hash' => $dept->getHash(),
-                    ':name' => ( strlen($row['firstname']."".$row['lastname']) < 2 ? "Colleague" : $row['firstname'] ." ". $row['lastname']) ];
 
-                //return $ar;
+                array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['email'] .'","'. 
+                        $row['alt_email'] .'","'. $dept->getHash() .'","'. 
+                        ( strlen($row['firstname']."".$row['lastname']) < 2 ? "Colleague" : $row['firstname'] ." ". $row['lastname']) .'")');
+            }
 
-                if (!$mailStmt->execute($ar)) {
-                    return $this->dbh->errorInfo();
-                }
+            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `mail_to`, `mail_cc`, `hash`, `name`) VALUES ". implode(',', $ar);
+
+            $mailStmt = $this->dbh->prepare($insertQry);
+            if (!$mailStmt->execute($ar)) {
+                return $this->dbh->errorInfo();
             }
         } catch (\PDOException $e) {
             return $e->getMessage();
@@ -221,11 +218,7 @@ class Workflow
 
     private function createCourseMails(){
         try {
-            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`) VALUES
-                            (:workflow_id, :dept, :course, :mail_to, :hash, :name)";
-            $mailStmt = $this->dbh->prepare($insertQry);
-
-            // get list of departments
+            // get list of courses
             $query = "SELECT `course`.course_code as course_code, `course`.dept as dept
                 FROM timetable.course_optout `course`
                 left join timetable.ps_courses `ps` on `ps`.course_code =  `course`.course_code and `ps`.term = `course`.year
@@ -236,24 +229,22 @@ class Workflow
             $stmt = $this->dbh->prepare($query);
             $stmt->execute();
             
+            $ar = [];
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
                 $course = new Course($row['course_code'], null, $this->year, true);
                 $details = $course->getDetails();
-                $ar = [
-                    ':workflow_id' => $this->oid, 
-                    ':dept' => $row['dept'],
-                    ':course' => $row['course_code'],
-                    ':mail_to' => $details['convenor']['email'], 
-                    ':hash' => $course->getHash(),
-                    ':name' => $details['convenor']['name']
-                ];
 
-                //return $ar;
+                array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['course_code'] .'","'. 
+                                $details['convenor']['email'] .'","'. $course->getHash() .'","'. $details['convenor']['name'] .'")');
+            }
 
-                if (!$mailStmt->execute($ar)) {
-                    return $this->dbh->errorInfo();
-                }
+            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`) VALUES ". implode(',', $ar);
+            //return $insertQry;
+            
+            $mailStmt = $this->dbh->prepare($insertQry);
+            if (!$mailStmt->execute($ar)) {
+                return $this->dbh->errorInfo();
             }
         } catch (\PDOException $e) {
             return $e->getMessage();

@@ -381,6 +381,7 @@ class ApiController extends Controller
    */
   public function monitor(Request $request)
   {
+      set_time_limit(3000);
       switch ($request->getMethod()) {
           case 'GET':
               return $this->runWorkflowMonitor($request);
@@ -388,6 +389,7 @@ class ApiController extends Controller
           default:
               return new Response('Only GET supported right now', 405);
       }
+      set_time_limit(30);
   }
 
   private function runWorkflowMonitor(Request $request) {

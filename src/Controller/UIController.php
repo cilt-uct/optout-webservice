@@ -9,6 +9,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use App\Entity\Course;
 use App\Entity\Department;
 use App\Service\LDAPService;
+use App\Service\OCRestService;
+use App\Service\SakaiWebService;
 use App\Service\Utilities;
 
 class UIController extends Controller
@@ -22,6 +24,7 @@ class UIController extends Controller
     {
         $authenticated = ['a' => false, 'z' => '0'];
         
+        $now = new \DateTime();
         $utils = new Utilities();
         $data = $utils->getMail($hash);
 
@@ -70,6 +73,7 @@ class UIController extends Controller
         if ($data['course'] === null ) {
             $dept = new Department($data['dept'], $hash, $data['year'], false);    
             $data['details'] = $dept->getDetails();
+            $data['readonly'] = ($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
 
             if (count($data['details']['courses']) == 0) {
                 return $this->viewOptOut($hash, $request);
@@ -77,13 +81,20 @@ class UIController extends Controller
 
             return $this->render('department.html.twig', $data);   
         } else {
+            $vula = new SakaiWebService();
+            $ocService = new OCRestService();
 
-            $course = new Course($data['course'], $hash, $data['year'], false);    
+            $course = new Course($data['course'], $hash, $data['year'], false);
+
             $data['details'] = $course->getDetails();
-            
+            $data['readonly'] = ($now->diff(new \DateTime($data['date_schedule']))->format('%R') == '-');
+            $data['hasVulaSite'] = $vula->hasProviderId($data['course'], $data['year']);
+            $data['hasOCSeries'] = $ocService->hasOCSeries($data['course'], $data['year']);
+            $data['isTimetabled'] = $data['hasOCSeries'] ? $course->checkIsTimetabled() : false;
+
             // retrieve timetable information
             $json = file_get_contents('https://srvslscet001.uct.ac.za/timetable/?course='. $data['course'] .','. $data['year']);
-            $data['timetable'] = json_decode($json);
+            $data['timetable'] = [];//json_decode($json);
 
             //return new Response(json_encode($data), 201);
             return $this->render('course.html.twig', $data);
@@ -95,6 +106,7 @@ class UIController extends Controller
      */
     public function viewOptOut($hash, Request $request)
     {
+        $now = new \DateTime();
         $utils = new Utilities();
         $data = $utils->getMail($hash);
 
@@ -160,18 +172,24 @@ class UIController extends Controller
             $data['out_link'] = 'http://srvslscet001.uct.ac.za/optout/out/'. $hash;
             $data['authenticated'] = json_encode($authenticated);
             $data['confirmed'] = json_encode($dept->getDetails());
+            $data['details'] = $dept->getDetails();
+            $data['readonly'] = ($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
 
-            if ($authenticated['a']) {
-                // authenticated - show confirm page
-                if ($confirmed) {
-                    // show confirmed page
-                    return $this->render('department_out_3_confirmed.html.twig', $data);
+            if (!$data['readonly']) {
+                if ($authenticated['a']) {
+                    // authenticated - show confirm page
+                    if ($confirmed) {
+                        // show confirmed page
+                        return $this->render('department_out_3_confirmed.html.twig', $data);
+                    } else {
+                        // show confirm choice
+                        return $this->render('department_out_2_ask.html.twig', $data);
+                    }
                 } else {
-                    // show confirm choice
-                    return $this->render('department_out_2_ask.html.twig', $data);
+                    return $this->render('department_out_1_login.html.twig', $data);
                 }
             } else {
-                return $this->render('department_out_1_login.html.twig', $data);
+                return $this->viewFromHash($hash, $request);
             }
         }
     }
@@ -211,6 +229,35 @@ class UIController extends Controller
                             'date' => $data['date_schedule'],
                             'out_link' => 'http://srvslscet001.uct.ac.za/optout/out/'. $hash,
                             'view_link' => 'http://srvslscet001.uct.ac.za/optout/view/'. $hash));
+            }
+        } else {
+            return new Response("ERROR_MAIL_HASH", 500);
+        }
+    }
+
+    /**
+     * @Route("/subject/{hash}")
+     */
+    public function getMailSubject($hash, Request $request)
+    {
+        $utils = new Utilities();
+        $data = $utils->getMail($hash);
+
+        //return new Response(json_encode($data), 201);
+
+        if ($data['success']) {
+            $data = $data['result'][0];
+
+            if ($data['course'] === null ) {
+                $dept = new Department($data['dept'], $hash, $data['year'], false);
+                $details = $dept->getDetails();
+
+                return new Response("Automated Setup of Lecture Recording: Department Opt-Out process", 201);
+            } else {
+                $course = new Course($data['course'], $hash, $data['year'], false);
+                $details = $course->getDetails();
+
+                return new Response($data['course'] ." course:  Automated Setup or Opt-out of Lecture Recording", 201);
             }
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
