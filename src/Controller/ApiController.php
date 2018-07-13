@@ -326,6 +326,7 @@ class ApiController extends Controller
       $response = $course->getDetails();
       $response['hasVulaSite'] = $vula->hasProviderId($courseCode, $year);
       $response['hasOCSeries'] = $ocService->hasOCSeries($courseCode, $year);
+      $response['isTimetabled'] = $response['hasOCSeries'] ? $course->checkIsTimetabled() : false;
       return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
     } catch (\Exception $e) {
       return new Response($e->getMessage(), 500);

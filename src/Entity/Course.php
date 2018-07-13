@@ -147,6 +147,32 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         }
     }
 
+    public function checkIsTimetabled() {
+        $activitiesQry = "select activity_id from sn_timetable_versioned where course_code = :course_code and class_section like 'LG%' and tt_version = (select max(version) from timetable_versions)";
+        try {
+            $isTimetabled = false;
+            $activityStmt = $this->dbh->prepare($activitiesQry);
+            $activityStmt->execute([':course_code' => $this->courseCode]);
+            if ($activityStmt->rowCount() === 0) {
+                return false;
+            }
+
+            $result = $activityStmt->fetchAll(\PDO::FETCH_ASSOC);
+            $ocService = new OCRestService();
+            for ($i = 0, $n = sizeof($result); $i < $n; $i++) {
+                if ($ocService->isTimetabled($result[$i]['activity_id'])) {
+                    $isTimetabled = true;
+                    break;
+                }
+            }
+            return $isTimetabled;
+        } catch(\PDOException $e) {
+            var_dump("pdo error");
+        }
+
+        return false;
+    }
+
     public function updateOptoutStatus($user, $data) {
         if (!$user) {
             throw new \Exception("Authorisation required (invalid user)");
