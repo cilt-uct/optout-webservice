@@ -219,12 +219,15 @@ class Workflow
     private function createCourseMails(){
         try {
             // get list of courses
-            $query = "SELECT `course`.course_code as course_code, `course`.dept as dept
+            $query = "SELECT distinct(`course`.course_code) as course_code, `course`.dept as dept
                 FROM timetable.course_optout `course`
                 left join timetable.ps_courses `ps` on `ps`.course_code =  `course`.course_code and `ps`.term = `course`.year
+                left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `course`.course_code and `sn`.term = `course`.year
                 left join timetable.dept_optout `deptout` on `course`.`dept` = `deptout`.`dept`
                 left join timetable.uct_dept `dept` on `course`.`dept` = `dept`.`dept`
-                where `dept`.use_dept = 1 and `deptout`.is_optOut = 0 and `ps`.active = 1";
+                left join timetable.opencast_venues on `sn`.venue = opencast_venues.sn_venue
+                where `dept`.use_dept = 1 and `deptout`.is_optOut = 0 and `ps`.active = 1 
+                    and `ps`.acad_career = 'UGRD' and opencast_venues.campus_code in ('UPPER','MIDDLE')";
 
             $stmt = $this->dbh->prepare($query);
             $stmt->execute();
@@ -236,15 +239,19 @@ class Workflow
                 $details = $course->getDetails();
 
                 //if ($course->checkIsTimetabled() === false) {
+                    $to = [ 'mail' => $details['convenor']['email'], 
+                            'name' => $details['convenor']['name']];
 
-                    $dept = new Department($row['dept'], null, $this->year, true);
-                    $dept_details = $dept->getDetails();
+                    if ($to['mail'] == null) {
+                        $dept = new Department($row['dept'], null, $this->year, true, true);
+                        $dept_details = $dept->getDetails();
 
-                    $to = [ 'mail' => ($details['convenor']['email'] == null ? $dept_details['mail'] : $details['convenor']['email']), 
-                            'name' => ($details['convenor']['email'] == null ? $dept_details['hod'] : $details['convenor']['name'])];
+                        $to = [ 'mail' => ($details['convenor']['email'] == null ? $dept_details['mail'] : $details['convenor']['email']), 
+                                'name' => ($details['convenor']['email'] == null ? $dept_details['hod'] : $details['convenor']['name'])];
                     
-                    if (strlen($to['name']) < 2) {
-                        $to['name'] = "Colleague";
+                        if (strlen($to['name']) < 2) {
+                            $to['name'] = "Colleague";
+                        }
                     }
 
                     array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['course_code'] .'","'. 

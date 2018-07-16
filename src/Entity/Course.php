@@ -45,10 +45,10 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         $qry = "select A.course_code, A.term, A.dept, A.secret, A.start_date, A.end_date,
                 ifnull(C.convenor_name, A.convenor_name) as convenor_name,
                 ifnull(C.convenor_eid, A.convenor_eid) as convenor_eid, D.is_optout, D.updated_at, D.updated_by,
-                ifnull(C.convenor_email, E.email) as email from ps_courses A
-                    left join course_updates C on A.course_code = C.course_code and A.term = C.year
-                    left join course_optout D on A.course_code = D.course_code and A.term = D.year
-                    left join vula_archive.SAKAI_USER_ARCHIVE E on C.convenor_eid = E.EID or (C.convenor_eid is null and A.convenor_eid = E.EID)
+                ifnull(C.convenor_email, (select E.email from vula_archive.SAKAI_USER_ARCHIVE E where C.convenor_eid = E.EID or (C.convenor_eid is null and A.convenor_eid = E.EID))) as email 
+                    from timetable.ps_courses A
+                    left join timetable.course_updates C on A.course_code = C.course_code and A.term = C.year
+                    left join timetable.course_optout D on A.course_code = D.course_code and A.term = D.year
                 where A.active = 1 and A.course_code = :course and A.term = :year limit 1";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':course' => $this->entityCode, ':year' => $this->year]);

@@ -22,7 +22,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
     public $courses;
     private $fullHash;
 
-    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = false) {
+    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = false, $skipCourses = false) {
         $this->entityCode = $entityCode;
         $this->hash = $hash;
         $this->year = !empty($year) ? $year : date('Y');
@@ -32,7 +32,9 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
 
         try {
             $this->fetchDetails();
-            $this->fetchCourses();
+            if ($skipCourses) {
+                $this->fetchCourses();
+            }
         } catch (\Exception $e) {
             $this->courses = [];
         }
@@ -82,17 +84,21 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
                          }, $result);
     }
 
-    public function getDetails() {
-        return [
+    public function getDetails($skipCourses = false) {
+        $result = [
             'dept' => $this->entityCode,
             'name' => $this->deptName,
             'hod' => $this->hod,
             'mail' => $this->hodMail,
             'is_optout' => $this->isOptOut,
-            'courses' => array_map(function($course) {
-                             return $course->getDetails();
-                         }, $this->courses)
+            'courses' => []
         ];
+
+        if ($skipCourses) {
+            $result['courses'] = array_map(function($course) { return $course->getDetails(); }, $this->courses);
+        }
+
+        return $result;
     }
 
     public function getHash() {
