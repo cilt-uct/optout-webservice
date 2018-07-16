@@ -48,15 +48,43 @@ class OCRestService
     }
 
     public function isTimetabled($activityId) {
+        $headers = ['X-Requested-Auth: Digest'];
         try {
             $url = $this->ocHost . "/admin-ng/event/events.json?filter=textFilter:$activityId&limit=1";
-            $headers = ['X-Requested-Auth: Digest'];
-
             $activityEvent = json_decode($this->getRequest($url, $headers), true);
-            return sizeof($activityEvent) > 0;
+            if (isset($activityEvent['total']) && $activityEvent['total'] > 0) {
+                return true;
+            }
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
+
+        return false;
+    }
+
+    public function isCourseHasEvents($courseCode = '', $year = 0) {
+        if (!isset($courseCode) || empty($courseCode) || is_null($courseCode)) {
+            return false;
+        }
+
+        $year = date('Y');
+        $headers = ['X-Requested-Auth: Digest'];
+
+        try {
+            $courseSeriesUrl = $this->ocHost . "/admin-ng/series/series.json?filter=textFilter:$courseCode&limit=1&sort=createdDateTime:DESC";
+            $courseSeries = json_decode($this->getRequest($courseSeriesUrl, $headers), true);
+            if (isset($courseSeries['total']) && $courseSeries['total'] > 0 && strpos($courseSeries['results'][0]['title'], "$courseCode,$year") > -1) {
+                $seriesId = $courseSeries['results'][0]['id'];
+                $seriesEventsUrl = $this->ocHost . "/admin-ng/event/events.json?filter=series:$seriesId&limit=1";
+                $seriesEvents = json_decode($this->getRequest($seriesEventsUrl, $headers), true);
+                if (isset($seriesEvents['total']) && $seriesEvents['total'] > 0) {
+                    return true;
+                }
+            }
+        } catch (\Exception $e) {
+        }
+
+        return false;
     }
 
     private function getRequest($url, $headers, $opts = [], $body = []) {

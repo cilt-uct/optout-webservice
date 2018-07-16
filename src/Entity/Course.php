@@ -149,7 +149,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
     }
 
     public function checkIsTimetabled() {
-        $activitiesQry = "select activity_id from sn_timetable_versioned where course_code = :course_code and class_section like 'LG%' and tt_version = (select max(version) from timetable_versions)";
+        $activitiesQry = "select activity_id from sn_timetable_versioned where course_code = :course_code and (class_section like 'LG%' or class_section like 'MG%') and tt_version = (select max(version) from timetable_versions)";
         try {
             $isTimetabled = false;
             $activityStmt = $this->dbh->prepare($activitiesQry);
@@ -161,12 +161,20 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
             $result = $activityStmt->fetchAll(\PDO::FETCH_ASSOC);
             $ocService = new OCRestService();
             for ($i = 0, $n = sizeof($result); $i < $n; $i++) {
-                if ($ocService->isTimetabled($result[$i]['activity_id'])) {
-                    $isTimetabled = true;
-                    break;
+                try {
+                    if ($ocService->isTimetabled($result[$i]['activity_id'], $this->courseCode, $this->year)) {
+                        $isTimetabled = true;
+                        break;
+                    }
+                }
+                catch (\Exception $e) {
                 }
             }
-            return $isTimetabled;
+            if ($isTimetabled) {
+                return true;
+            }
+
+            return $ocService->isCourseHasEvents($this->courseCode, $this->year);
         } catch(\PDOException $e) {
             var_dump("pdo error");
         }
