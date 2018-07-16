@@ -216,8 +216,8 @@ class UIController extends Controller
                             'dept_name' => $details['name'],
                             'name' => $data['name'],
                             'date' => $data['date_course'],
-                            'out_link' => 'http://srvslscet001.uct.ac.za/optout/out/'. $hash,
-                            'view_link' => 'http://srvslscet001.uct.ac.za/optout/view/'. $hash));
+                            'out_link' => 'https://srvslscet001.uct.ac.za/optout/out/'. $hash,
+                            'view_link' => 'https://srvslscet001.uct.ac.za/optout/view/'. $hash));
             } else {
                 $course = new Course($data['course'], $hash, $data['year'], false);
                 $details = $course->getDetails();
@@ -227,8 +227,8 @@ class UIController extends Controller
                             'course' => $data['course'],
                             'name' => $data['name'],
                             'date' => $data['date_schedule'],
-                            'out_link' => 'http://srvslscet001.uct.ac.za/optout/out/'. $hash,
-                            'view_link' => 'http://srvslscet001.uct.ac.za/optout/view/'. $hash));
+                            'out_link' => 'https://srvslscet001.uct.ac.za/optout/out/'. $hash,
+                            'view_link' => 'https://srvslscet001.uct.ac.za/optout/view/'. $hash));
             }
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
