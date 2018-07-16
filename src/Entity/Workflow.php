@@ -235,8 +235,23 @@ class Workflow
                 $course = new Course($row['course_code'], null, $this->year, true);
                 $details = $course->getDetails();
 
-                array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['course_code'] .'","'. 
-                                $details['convenor']['email'] .'","'. $course->getHash() .'","'. $details['convenor']['name'] .'")');
+                //if ($course->checkIsTimetabled() === false) {
+
+                    $dept = new Department($row['dept'], null, $this->year, true);
+                    $dept_details = $dept->getDetails();
+
+                    $to = [ 'mail' => ($details['convenor']['email'] == null ? $dept_details['mail'] : $details['convenor']['email']), 
+                            'name' => ($details['convenor']['email'] == null ? $dept_details['hod'] : $details['convenor']['name'])];
+                    
+                    if (strlen($to['name']) < 2) {
+                        $to['name'] = "Colleague";
+                    }
+
+                    array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['course_code'] .'","'. 
+                                $to['mail'] .'","'. 
+                                $course->getHash() .'","'. 
+                                $to['name'] .'")');
+                //}
             }
 
             $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`) VALUES ". implode(',', $ar);

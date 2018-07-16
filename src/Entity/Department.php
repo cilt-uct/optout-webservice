@@ -17,6 +17,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
 
     private $deptName;
     private $hod;
+    private $hodMail;
     public $isOptOut;
     public $courses;
     private $fullHash;
@@ -59,6 +60,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
                          return !is_null($val) && !empty($val);
                        })
                      );
+        $this->hodMail = $result[0]['email'];                     
         $this->isOptOut = $result[0]['is_optout'] === '1' ? true : false;
     }
 
@@ -85,6 +87,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             'dept' => $this->entityCode,
             'name' => $this->deptName,
             'hod' => $this->hod,
+            'mail' => $this->hodMail,
             'is_optout' => $this->isOptOut,
             'courses' => array_map(function($course) {
                              return $course->getDetails();
