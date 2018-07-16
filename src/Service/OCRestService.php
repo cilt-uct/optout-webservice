@@ -23,7 +23,7 @@ class OCRestService
     }
 
     private function getOCSeries($courseCode, $year) {
-        $url = $this->ocHost . "/api/series/?filter=textFilter:$courseCode&limit=10";
+        $url = $this->ocHost . "/api/series/?filter=textFilter:$courseCode&limit=50&sort=created:DESC";
         $headers = ['X-Requested-Auth: Digest'];
 
         $series = json_decode($this->getRequest($url, $headers), true);
@@ -32,7 +32,7 @@ class OCRestService
         }
 
         $series = array_filter($series, function($s) use ($year) {
-                      return strpos($s['title'], $year) > -1;
+                      return strpos($s['created'], $year) > -1;
                   });
 
         return $series;
@@ -73,7 +73,7 @@ class OCRestService
         try {
             $courseSeriesUrl = $this->ocHost . "/admin-ng/series/series.json?filter=textFilter:$courseCode&limit=1&sort=createdDateTime:DESC";
             $courseSeries = json_decode($this->getRequest($courseSeriesUrl, $headers), true);
-            if (isset($courseSeries['total']) && $courseSeries['total'] > 0 && strpos($courseSeries['results'][0]['title'], "$courseCode,$year") > -1) {
+            if (isset($courseSeries['total']) && $courseSeries['total'] > 0 && strpos($courseSeries['results'][0]['creation_date'], $year) > -1) {
                 $seriesId = $courseSeries['results'][0]['id'];
                 $seriesEventsUrl = $this->ocHost . "/admin-ng/event/events.json?filter=series:$seriesId&limit=1";
                 $seriesEvents = json_decode($this->getRequest($seriesEventsUrl, $headers), true);
