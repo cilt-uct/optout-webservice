@@ -237,8 +237,9 @@ class Workflow
 
                 $course = new Course($row['course_code'], null, $this->year, true);
                 $details = $course->getDetails();
+                $timetabled = $course->checkIsTimetabled();
 
-                //if ($course->checkIsTimetabled() === false) {
+                if ($timetabled == false) {
                     $to = [ 'mail' => $details['convenor']['email'], 
                             'name' => $details['convenor']['name']];
 
@@ -255,10 +256,10 @@ class Workflow
                     }
 
                     array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['course_code'] .'","'. 
-                                $to['mail'] .'","'. 
-                                $course->getHash() .'","'. 
-                                $to['name'] .'")');
-                //}
+                        $to['mail'] .'","'. 
+                        $course->getHash() .'","'. 
+                        $to['name'] .'")');
+                }
             }
 
             $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`) VALUES ". implode(',', $ar);
