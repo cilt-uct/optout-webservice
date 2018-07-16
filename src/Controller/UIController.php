@@ -94,7 +94,7 @@ class UIController extends Controller
 
             // retrieve timetable information
             $json = file_get_contents('https://srvslscet001.uct.ac.za/timetable/?course='. $data['course'] .','. $data['year']);
-            $data['timetable'] = [];//json_decode($json);
+            $data['timetable'] = json_decode($json);
 
             //return new Response(json_encode($data), 201);
             return $this->render('course.html.twig', $data);
