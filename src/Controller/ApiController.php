@@ -415,8 +415,8 @@ class ApiController extends Controller
             $this->renderView(
                 'department_mail.html.twig',
                 array('dept' => 'ZZZ',
-                      'out_link' => 'http://srvslscet001.uct.ac.za/optout/dept',
-                      'view_link' => 'http://srvslscet001.uct.ac.za/optout/dept')
+                      'out_link' => 'https://srvslscet001.uct.ac.za/optout/dept',
+                      'view_link' => 'https://srvslscet001.uct.ac.za/optout/dept')
             )
         );
 
