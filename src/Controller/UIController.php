@@ -16,9 +16,9 @@ use App\Service\Utilities;
 class UIController extends Controller
 {
     /**
-     * @Route("/view/{hash}")
+     * View the page according to the hash it receives
      * 
-     * View the page according to the hash it receives 
+     * @Route("/view/{hash}")
      */
     public function viewFromHash($hash, Request $request)
     {
@@ -109,13 +109,17 @@ class UIController extends Controller
         $now = new \DateTime();
         $utils = new Utilities();
         $data = $utils->getMail($hash);
-
-        // get department
-        $dept = new Department($data['result'][0]['dept'], $hash, $data['result'][0]['year']);
-
         $authenticated = ['a' => false, 'z' => '0'];
-        $confirmed = $dept->isOptOut;
-
+        $confirmed = false;
+        
+        // get department
+        try {
+            $dept = new Department($data['result'][0]['dept'], $hash, $data['result'][0]['year']);
+            $confirmed = $dept->isOptOut;
+        } catch (\Exception $e) {
+            $hash = null;
+        }
+        
         switch ($request->getMethod()) {
             case 'POST':
                 $type = $request->request->get('type');
@@ -164,7 +168,8 @@ class UIController extends Controller
             break;
         }
 
-        if (!$data['success']) {
+        
+        if (!$data['success'] || $hash == null) {
             return $this->render('error.html.twig', $data);
         } else {
             $data = $data['result'][0];
@@ -262,5 +267,67 @@ class UIController extends Controller
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
         }
+    }
+
+    /**
+     * Show admin page
+     * 
+     * @Route("/admin", name="admin_show"))
+     */
+    public function getAdmin(Request $request)
+    {
+        return new Response("ERROR_MAIL_HASH", 500);
+        /*
+        $authenticated = ['a' => false, 'z' => '0'];
+        
+        $now = new \DateTime();
+        $utils = new Utilities();
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+            
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                        $authenticated['z'] = $details[0]['cn'];
+                    } else {
+                        $authenticated['z'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+                $authenticated['z'] = $session->get('username') ? $session->get('username') : '0';
+            break;
+        }
+
+        $data = [ 'dept' => [], 
+                  'courses' => [],
+                  'authenticated' => $authenticated
+        ];
+        return new Response(json_encode($data), 201);
+
+        if ($authenticated['a']) {
+            return $this->render('admin.html.twig', $data);
+        } else {
+            return $this->render('admin_login.html.twig', []);
+        }
+        */
     }
 }
