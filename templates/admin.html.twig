@@ -1,13 +1,359 @@
 {% include 'header.html' %}
+    <aside id="nav-side">
+        <ul>
+            <li><a href="#top" ref="top">Top</a></li>
+        {% for l in list %}
+            <li><a href="#{{l}}" ref="{{l}}">{{l}}</a></li>
+        {% endfor %}
+        </ul>
+    </aside>
+    <a name="top" class="anchor"></a>
     <div class="container post">
         <div class="row post-body">
-            <div class="col-md-6">
+            <div class="col-md-12 post-title">
                 <h3><span style="color: #5caad2;">Lecture Recording</span> Admin</h3>
                 <br/>
-                {{authenticated}}
+                <div>
+                     {{workflow|json_encode()}}
+                    
+    <!--div class="wrapper">
+        <div class="content">
+            <h1 id="date" class="date"></h1>
+            <h3 id="time" class="time"></h3>
+        </div>
+    </div-->
+
+                </div>
+                <br/>
+                <div class="departments" id="departments">
+                    {% if departments.success %}
+                        {% set newTitle = '0' %}
+                        {% for dept in departments.result %}
+                        <div>
+                            {% set curTitle = dept.dept|split('')|first %}
+                            {% if (curTitle != newTitle) %}
+                                {% set newTitle = curTitle %}
+                                <a name="{{newTitle}}" class="anchor"></a>
+                            {% endif %}                        
+                            <div class="row no-gutters dept-title">
+                                <div class="col-sm-6">
+                                    {% if dept.eligble_courses > 0 %}
+                                    <h5><a href="https://srvslscet001.uct.ac.za/optout/view/{{dept.hash}}" target="_blank">{{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small></a></h5>
+                                    {% else %}
+                                    <h5 style="margin:0.4em;">{{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small></h5>
+                                    {% endif %}
+                                </div>
+                                <div class="col-sm-2" style="padding-top:0.6em;">
+                                    <label>Active</label>
+                                    <div class="switch">    
+                                        <input type="checkbox" id="chk_use_{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" {% if (dept.use_dept == '1') %}checked{% endif %} /><label id="toggle_use_{{dept.dept}}" for="chk_use_{{dept.dept}}">Toggle</label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4" style="padding-top:0.6em;">
+                                    <label>Opted Out</label>
+                                    <label class="right" id="chk_opt_{{dept.dept}}_date">
+                                        {% if dept.updated_by|length > 1 %}{{dept.updated_by}}<br/>{{dept.updated_at|date("g:ia \o\n l jS F Y")}}{% endif %}
+                                    </label>
+                                    <div class="switch">    
+                                        <input type="checkbox" id="chk_opt_{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" {% if dept.is_optout %}checked{% endif %}/><label id="toggle_opt_{{dept.dept}}" for="chk_opt_{{dept.dept}}">Toggle</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row no-gutters dept-details">
+                                <div class="col-sm-8">
+                                    <h6>Contact Details</h6>
+                                    <div class="form-group row">
+                                        <label for="inp_{{dept.dept}}_firstname" class="col-sm-3 col-form-label">Firstname</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_firstname" data-type="dept" data-field="hodFirstname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="Firstname" data-old="{{dept.firstname}}" value="{{dept.firstname}}"/>
+                                            <span class="loader">
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="inp_{{dept.dept}}_lastname" class="col-sm-3 col-form-label">Lastname</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_lastname" data-type="dept" data-field="hodLastname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="Lastname" data-old="{{dept.lastname}}" value="{{dept.lastname}}"/>
+                                            <span class="loader">
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="inp_{{dept.dept}}_mail" class="col-sm-3 col-form-label">E-mail</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_mail" data-type="dept" data-field="hodMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="E-mail" data-old="{{dept.email}}" value="{{dept.email}}"/>
+                                            <span class="loader">
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="inp_{{dept.dept}}_alt" class="col-sm-3 col-form-label">Alternative E-mail</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_alt" data-type="dept" data-field="altMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="E-mail" data-old="{{dept.alt_email}}" value="{{dept.alt_email}}"/>
+                                            <span class="loader">
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                            </span>
+                                        </div>
+                                    </div>                                    
+                                </div>
+                                <div class="col-sm-4">
+                                    <h6>&nbsp;</h6>
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td class="text-right"><strong>Eligble Courses:</strong></td>
+                                                <td>{{dept.eligble_courses}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2"><hr/></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-right"><strong>Course Mails:</strong>&nbsp;&nbsp;&nbsp;Sent</td>
+                                                <td>{{dept.mail_sent}}</td>
+                                            </tr>   
+                                            <tr>
+                                                <td class="text-right">To Send</td>
+                                                <td>{{dept.mail_unsent}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-right">Error</td>
+                                                <td>{{dept.mail_err}}</td>
+                                            </tr>
+                                         
+                                        </tbody>
+                                    </table>
+                                    <br/>
+                                    {% if dept.eligble_courses > 0 %}
+                                    <div calss="text-center">
+                                        <button class="btn btn-outline-success btn-sm" style="width:60%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row no-gutters justify-content-end dept-courses" id="{{dept.dept}}_courses">
+                                <div class="col-10" id="{{dept.dept}}_courses_html">
+                                    
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                </div>
+                {% else %}
+                {{departments|json_encode()}}
+                {% endif %}
             </div>
         </div>
     </div>
+    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/js/tmpl.js') }}"></script>
+    <script src="{{ asset('assets/js/moment.min.js') }}"></script>    
+    <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script>
+        var changeTimer = false, field = null, div = null;
+
+        $(function() {
+
+            // view courses
+            $('#departments .dept-details').on('click','button', function(event) {
+                var btn = $(this);
+                div = $('#'+ btn.data('rel') +'_courses_html');
+                console.log(btn.data('rel') +' '+ btn.data('hash'));
+               
+                if (btn.hasClass('btn-outline-info')) {
+                    $('#'+ btn.data('rel') +'_courses').hide();
+                    btn.removeClass('btn-outline-info').addClass('btn-outline-success').html('View Courses');
+                } else {
+                    btn.removeClass('btn-outline-success').addClass('btn-outline-info').html('Hide Courses');
+                    $('#'+ btn.data('rel') +'_courses_html').html(tmpl('tmpl-courses-loading',{}));
+                    $('#'+ btn.data('rel') +'_courses').show();
+
+                    $.ajax({
+                        headers: {"x-entity-hash": btn.data('hash'), "x-entity-courses": '1'},
+                        url: "/optout/api/v0/dept/"+ btn.data('rel'),
+                        method: 'GET',
+                        dataType: 'json'
+                    }).done(function(data) {
+                        console.log(data)
+                        $('#'+ data.dept +'_courses_html').html(tmpl('tmpl-courses', data));
+                    }).fail(function(xhr) {
+                        div.html(tmpl('tmpl-courses-error',{}));
+                    });
+                }
+            });
+
+            // saving department active
+            $('.dept-title input[id*="chk_use_"]').on('change', function(event) {
+                var chk = $(this);
+                console.log(chk.attr('id') +' '+ chk.data('dept') +' '+ chk.data('hash') +' '+ chk.is(':checked'));
+
+                d = [{  "dept": chk.data('dept'),
+                        "changes": [{
+                                "field": 'active', 
+                                "from": chk.is(':checked') ? '0' : '1', 
+                                "to": chk.is(':checked') ? '1' : '0'
+                            }]
+                        }];
+                console.log(JSON.stringify(d));
+                $.ajax({
+                    headers: {"x-entity-hash": chk.data('hash')},
+                    url: "/optout/api/v0/dept/" + chk.data('dept'),
+                    method: 'patch',
+                    data: JSON.stringify(d)
+                }).done(function() {
+                    console.log('done');
+                }).fail(function(xhr) {
+                    
+                    console.log(xhr.responseText);
+                });
+            });
+
+            // saving department opt-out
+            $('.dept-title input[id*="chk_opt_"]').on('change', function(event) {
+                var chk = $(this),
+                    dt = $('#'+ $(this).attr('id') +'_date');
+                console.log(chk.attr('id') +' '+ chk.data('dept') +' '+ chk.data('hash') +' '+ chk.is(':checked'));
+                
+                $.ajax({
+                    headers: {"x-entity-hash": chk.data('hash')},
+                    url: "/optout/api/v0/dept/"+ chk.data('dept'),
+                    method: 'PUT',
+                    data: '{"status": '+ (chk.is(':checked') ? '1':'0') +'}',
+                    dataType: 'json'
+                }).done(function(data) {
+                    if (data.success) {
+                        dt.html(data.user +'<br/>'+ moment(data.date).calendar());
+                    } else {
+                        console.log(data);
+                        alert('error opting out department');
+                    }
+                }).fail(function(xhr) {
+                    console.log(xhr);
+                    alert('error opting out department');
+                });
+            });
+
+            // saving course opt-out
+            $('#departments').on('change', '.course-title input[id*="chk_opt_"]', function(event) {
+                var chk = $(this),
+                    dt = $('#'+ $(this).attr('id') +'_date');
+                console.log(chk.attr('id') +' '+ chk.data('course') +' '+ chk.data('hash') +' '+ chk.is(':checked'));
+                
+                $.ajax({
+                    headers: {"x-entity-hash": chk.data('hash')},
+                    url: "/optout/api/v0/course/"+ chk.data('course'),
+                    method: 'PUT',
+                    data: '{"status": '+ (chk.is(':checked') ? '1':'0') +'}',
+                    dataType: 'json'
+                }).done(function(data) {
+                    if (data.success) {
+                        dt.html(data.user +' '+ moment(data.date).calendar());
+                    } else {
+                        console.log(data);
+                        alert('error opting out course');
+                    }
+                }).fail(function(xhr) {
+                    console.log(xhr);
+                    alert('error opting out course');
+                });
+            });
+
+            $('#departments').on('focusin','input[type=text]',function(event){
+                $(this).parent().removeClass('done err updating');
+            });
+            
+            $('#departments').on('change','input[type=text]',function(event){
+                if (changeTimer !== false) clearTimeout(changeTimer);
+                field = $(this);
+
+                console.log(field.attr('id') +' '+ field.data('dept') +' '+ field.data('hash') +' '+ field.data('type') +' '+ field.data('field'));
+
+                field.parent()
+                        .removeClass('done err updating')
+                        .removeAttr('data-errortext');
+                        
+                var valid = true,
+                    d = [{  "changes": [{
+                                "field": field.data('field'), 
+                                "from": field.data('old'), 
+                                "to": field.val()
+                            }]
+                        }];
+
+                d[0][ field.data('type') ] = (field.data('type') == 'dept' ? field.data('dept') : field.data('course'));
+
+                if ((field.data('field') === 'hodMail') || (field.data('field') === 'altMail') || (field.data('field') === 'convenorEmail')) {
+                    email_address = $(this);
+                    email_regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
+                    if(!email_regex.test(email_address.val())){ 
+                        mailValidationError(field);
+                        valid = false;
+                    }
+                }
+
+                if (valid) {
+                    field.parent().addClass('updating');
+
+                    console.log(d);
+                    
+                    $.ajax({
+                        headers: {"x-entity-hash": field.data('hash')},
+                        url: "/optout/api/v0/dept/"+ field.data('dept'),
+                        method: 'patch',
+                        data: JSON.stringify(d)
+                    }).done(function() {
+                        updateSuccess(field);
+                    }).fail(function(xhr) {
+                        if (xhr.status === 409 && xhr.responseJSON) {
+                            console.log(xhr.responseJSON);
+                        }
+
+                        updateError(field, xhr);
+                    }).always(function() {
+                        field.parent().removeClass('updating');
+                    });                    
+                }
+            });
+
+            function updateSuccess(field) {
+                field
+                    .data('old', field.val())
+                    .parent()
+                        .addClass( "done" );
+                setTimeout(function() {
+                    field
+                        .parent()
+                        .removeClass('done');
+                }, 5000);
+            }
+
+            function updateError(field, serverResponse) {
+                field
+                    .parent()
+                    .addClass('err')
+                    .attr('data-errortext', 'Already updated. Please refresh to view the latest changes.');
+            }
+
+            function mailValidationError(field, serverResponse) {
+                field
+                    .parent()
+                    .addClass('err')
+                    .attr('data-errortext', 'Please enter a valid e-mail address.');
+            }
+        });
+    </script>
+    {{ source('admin_templates.html') }}
     {% include 'footer.html' %}
     <!-- https://www.pexels.com/photo/auditorium-benches-chairs-class-207691/ -->
 </body>

@@ -68,6 +68,7 @@ class Workflow
      */
     public function getWorkflow() {
         return [
+            'oid' => $this->oid,
             'year' => $this->year,
             'status' => $this->status,
             'date_start' => $this->date_start,

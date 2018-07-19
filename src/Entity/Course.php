@@ -75,7 +75,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
     public function getDetails() {
         $fields = ['courseCode', 'year', 'convenor', 'optoutStatus', 'updatedAt', 'updatedBy'];
 
-        $details = [];
+        $details = ['hash' => $this->getHash()];
         foreach ($fields as $idx => $field) {
             $details[$field] = $this->{$field};
         }
@@ -199,7 +199,10 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 ':user' => $user,
                 ':year' => $this->year
             ]);
-            return ['success' => $updateStmt->rowCount() > 0];
+            
+            $date = new \DateTime('now');
+            $date->setTimezone(new \DateTimeZone('Africa/Johannesburg'));
+            return ['success' => $updateStmt->rowCount() > 0, 'user' => $user, 'date' => $date->format('Y-m-d H:i:s')];
         } catch (\PDOException $e) {
             throw new \Exception($e->getMessage());
         }

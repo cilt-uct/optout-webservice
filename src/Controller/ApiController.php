@@ -115,8 +115,9 @@ class ApiController extends Controller
 
   private function getDepartmentInfo($deptName, Request $request) {
     $deptHash = urldecode($request->headers->get('x-entity-hash'));
+    $fullCourse = urldecode($request->headers->get('x-entity-courses')) == '1';    
     try {
-      $department = new Department($deptName, $deptHash);
+      $department = new Department($deptName, $deptHash, '', false, !$fullCourse);
     } catch (\Exception $e) {
       switch($e->getMessage()) {
         case 'no such dept':
@@ -132,7 +133,9 @@ class ApiController extends Controller
       }
     }
 
-    return new Response(json_encode($department->getDetails()), 200, ['Content-Type' => 'application/json']);
+    $result = $department->getDetails();
+    $result['fullCourse'] = $fullCourse;
+    return new Response(json_encode($result), 200, ['Content-Type' => 'application/json']);
   }
 
   private function updateDeptCourses($deptName, $request) {
@@ -143,6 +146,16 @@ class ApiController extends Controller
 
     $deptHash = urldecode($request->headers->get('x-entity-hash'));
     $data = json_decode($request->getContent(), true);
+    /*
+    $data = [{
+      "course": course_code, 
+      "changes": [{
+          "field": name (convenorName / convenorEmail), 
+          "from": old value, 
+          "to": new value
+        }]
+    }]
+    */
 
     $conflicts = [];
     $someSuccess = false;
@@ -152,37 +165,71 @@ class ApiController extends Controller
     }
 
     try {
-      $dept = new Department($deptName, $deptHash, null, false);
+      // get full department with all courses
+      $dept = new Department($deptName, $deptHash, null, false, false);
+
       $courseCodesToUpdate = array_map(function($change) {
-        return $change['course'];
+        if (isset($change['course'])) {
+          return $change['course'];
+        }        
       }, $data);
+
+      //if ($courseCodesToUpdate)
+
       $coursesToUpdate = array_filter($dept->courses, function($course) use ($courseCodesToUpdate) {
         return in_array($course->courseCode, $courseCodesToUpdate);
       });
+      
       $coursesToUpdate = array_reduce($coursesToUpdate, function($result, $course) {
         $result[$course->courseCode] = $course;
         return $result;
       }, []);
 
+      // loop through values
       foreach ($data as $index => $update) {
-        if (!isset($coursesToUpdate[$update['course']])) {
-          continue;
-        }
+        
+        // we want to change a course value
+        if (isset($update['course'])) {
 
-        try {
-            $coursesToUpdate[$update['course']]->updateCourse($update['changes'], $session->get('username'));
+          // nope we don't have that course :p
+          if (!isset($coursesToUpdate[$update['course']])) {
+            continue;
+          }
+
+          try {
+              // get the correct course and run update on it
+              $coursesToUpdate[$update['course']]->updateCourse($update['changes'], $session->get('username'));
+              $someSuccess = true;
+          } catch (\Exception $e) {
+              switch($e->getMessage()) {
+                  case 'conflict':
+                      $coursesToUpdate[$update['course']]->fetchDetails();
+                      $conflicts[] = $coursesToUpdate[$update['course']]->getDetails();
+                      break;
+                  default:
+                      throw new \Exception($e->getMessage());
+              }
+          }
+        } // if updating
+
+        // we want to change the dept value
+        if (isset($update['dept'])) {
+          
+          try {
+            // get the correct course and run update on it
+            $dept->updateDepartment($update['changes'], $session->get('username'));
             $someSuccess = true;
-        } catch (\Exception $e) {
+          } catch (\Exception $e) {
             switch($e->getMessage()) {
                 case 'conflict':
-                    $coursesToUpdate[$update['course']]->fetchDetails();
-                    $conflicts[] = $coursesToUpdate[$update['course']]->getDetails();
+                    $conflicts[] = $dept->getDetails();
                     break;
                 default:
                     throw new \Exception($e->getMessage());
-            }
-        }
-      }
+            }            
+          }
+        } // if updating dept
+      } // foreach 
     } catch (\Exception $e) {
       $statusCode = 500;
       switch($e->getMessage()) {
@@ -392,7 +439,8 @@ class ApiController extends Controller
       set_time_limit(30);
   }
 
-  private function runWorkflowMonitor(Request $request) {
+  private function runWorkflowMonitor(Request $request) 
+  {
       $result = (new Workflow)->run();
 
       return new Response(json_encode($result), 201);
@@ -403,7 +451,8 @@ class ApiController extends Controller
    * 
    * THIS DOESN'T WORK
    */
-  public function processMail(Request $request, \Swift_Mailer $mailer) {
+  public function processMail(Request $request, \Swift_Mailer $mailer) 
+  {
 
     //$transport = new \Swift_SendmailTransport('/usr/sbin/exim -bs');
     //$mailer = new \Swift_Mailer($transport);

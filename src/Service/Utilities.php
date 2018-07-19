@@ -6,6 +6,9 @@ use Symfony\Component\Dotenv\Dotenv;
 use App\Service\SakaiWebService;
 use App\Service\OCRestService;
 use App\Entity\HashableInterface;
+use App\Entity\Course;
+use App\Entity\Department;
+use App\Entity\Workflow;
 
 class Utilities
 {
@@ -117,7 +120,7 @@ class Utilities
     public function getMail($hash) {
         $result = [ 'success' => 1, 'result' => null ];
         try {
-            $query = "select mail.dept, mail.course, mail.state, mail.created_at, mail.name, mail.type,
+            $query = "select mail.dept, mail.course, mail.state, mail.created_at, mail.name, mail.type, mail.case,
                         `workflow`.`year`, `workflow`.`status`, `workflow`.`date_start`, `workflow`.`date_dept`, `workflow`.`date_course`, `workflow`.`date_schedule` 
                         from uct_workflow_email mail 
                         left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`  
@@ -131,6 +134,76 @@ class Utilities
             $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        return $result;
+    }
+
+    public function getAllCourses($year = '') 
+    {
+
+        $workflow = new Workflow();
+        $worfklow_details = $workflow->getWorkflow();
+
+        $result = [ 'success' => true, 'result' => null ];
+        try {
+            $query = "select A.*, B.*,
+                    (SELECT count(distinct(`ps`.course_code)) FROM timetable.ps_courses `ps`
+                    join course_optout B on `ps`.course_code = B.course_code
+                    left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `ps`.course_code and `sn`.term = `ps`.term
+                    left join timetable.opencast_venues on `sn`.venue = opencast_venues.sn_venue
+                    where `ps`.active = 1 and `ps`.dept = A.dept and `ps`.term = B.year
+                    and `ps`.acad_career = 'UGRD' and opencast_venues.campus_code in ('UPPER','MIDDLE')) as eligble_courses,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 0 and course is not null) as mail_unsent,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 1 and course is not null) as mail_sent,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 2 and course is not null) as mail_err
+                from uct_dept A left join dept_optout B on A.dept = B.dept
+                where B.year = :year";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']]);
+
+            if ($stmt->rowCount() === 0) {
+                $result = [ 'success' => false, 'err' => 'Query failed.'];
+            }
+
+            # dept, name, email, firstname, lastname, alt_email, use_dept, secret, year, is_optout
+            $ar = [];
+            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                
+                $d = new Department($row['dept'], null, $worfklow_details['year'], true);
+                $dept = $row;
+                $dept['hash'] = $d->getHash();
+                unset($dept['secret']);
+                $dept['mails'] = $this->getDepartmentMails($worfklow_details['oid'], $row['dept']);
+                array_push($ar, $dept);
+            }
+            $result['result'] = $ar;
+        } catch (\PDOException $e) {
+            $result = [ 'success' => false, 'err' => $e->getMessage()];
+        }
+
+        return $result;
+    }
+
+    private function getDepartmentMails($workflow_id, $dept)
+    {
+        $result = [ 'success' => 1, 'result' => null ];
+        try {
+            $query = "select * from uct_workflow_email where workflow_id = :workflow_id and dept = :dept and course is null";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':workflow_id' => $workflow_id, ':dept' => $dept]);
+            if ($stmt->rowCount() === 0) {
+                $result = [ 'success' => 0 ];
+            }
+
+            $ar = [];
+            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                array_push($ar, $row);
+            }
+
+            $result['result'] = $ar;
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0 ];
         }
 
         return $result;

@@ -8,6 +8,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use App\Entity\Course;
 use App\Entity\Department;
+use App\Entity\Workflow;
 use App\Service\LDAPService;
 use App\Service\OCRestService;
 use App\Service\SakaiWebService;
@@ -71,7 +72,7 @@ class UIController extends Controller
         }
 
         if ($data['course'] === null ) {
-            $dept = new Department($data['dept'], $hash, $data['year'], false);    
+            $dept = new Department($data['dept'], $hash, $data['year'], false, false);    
             $data['details'] = $dept->getDetails();
             $data['readonly'] = ($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
 
@@ -79,6 +80,7 @@ class UIController extends Controller
                 return $this->viewOptOut($hash, $request);
             }       
 
+            //return new Response(json_encode($data), 201);
             return $this->render('department.html.twig', $data);   
         } else {
             $vula = new SakaiWebService();
@@ -227,13 +229,39 @@ class UIController extends Controller
                 $course = new Course($data['course'], $hash, $data['year'], false);
                 $details = $course->getDetails();
 
-                return $this->render('course_mail.html.twig', 
-                    array(  'dept' => $data['dept'],
+                $vula = new SakaiWebService();
+                $site_list = $vula->getSiteByProviderId($data['course'], $data['year']);
+                $site = '';
+                if (count($site_list) > 0) {
+                    $site = $site_list[0]['SITE_ID'];
+                }
+
+                $o = array( 'dept' => $data['dept'],
                             'course' => $data['course'],
                             'name' => $data['name'],
+                            'site_list' => $site_list,
+                            'site' => $site,
                             'date' => $data['date_schedule'],
                             'out_link' => 'https://srvslscet001.uct.ac.za/optout/out/'. $hash,
-                            'view_link' => 'https://srvslscet001.uct.ac.za/optout/view/'. $hash));
+                            'view_link' => 'https://srvslscet001.uct.ac.za/optout/view/'. $hash);
+                    
+                if ($data['type'] == 'confirm') {
+                    switch($data['case']) {
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                            return $this->render('course_mail_case_'. $data['case'] .'.html.twig', $o);
+                            break;
+                        default:
+                            return $this->render('course_mail.html.twig', $o);
+                            break;
+                    }
+                } else {
+                    return $this->render('course_mail.html.twig', $o);
+                }
             }
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
@@ -262,7 +290,10 @@ class UIController extends Controller
                 $course = new Course($data['course'], $hash, $data['year'], false);
                 $details = $course->getDetails();
 
-                return new Response($data['course'] ." course:  Automated Setup or Opt-out of Lecture Recording", 201);
+                $str = $data['course'] ." course:  Automated Setup or Opt-out of Lecture Recording" . 
+                        ($data['type'] == 'confirm' ? ' [Completed]' : '');
+               
+                return new Response($str, 201);
             }
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
@@ -272,16 +303,15 @@ class UIController extends Controller
     /**
      * Show admin page
      * 
-     * @Route("/admin", name="admin_show"))
+     * @Route("/admin", name="admin_show")
      */
     public function getAdmin(Request $request)
     {
-        return new Response("ERROR_MAIL_HASH", 500);
-        /*
         $authenticated = ['a' => false, 'z' => '0'];
         
         $now = new \DateTime();
         $utils = new Utilities();
+        $workflow = new Workflow();
 
         switch ($request->getMethod()) {
             case 'POST':
@@ -317,17 +347,25 @@ class UIController extends Controller
             break;
         }
 
-        $data = [ 'dept' => [], 
-                  'courses' => [],
-                  'authenticated' => $authenticated
-        ];
-        return new Response(json_encode($data), 201);
+        $data = [ 'dept' => 'CILT', 'authenticated' => $authenticated, 'workflow' => $workflow->getWorkflow() ];
+        //return new Response(json_encode($data), 201);
 
         if ($authenticated['a']) {
+
+            $data['departments'] = $utils->getAllCourses();
+
+            $ar = [];
+            if ($data['departments']['success'] == '1') {
+                foreach ($data['departments']['result'] as $a) {
+                    array_push($ar, substr($a['dept'], 0, 1));
+                }
+            }
+            $data['list'] = array_unique($ar);
+
+            //$data['courses'] = 
             return $this->render('admin.html.twig', $data);
         } else {
             return $this->render('admin_login.html.twig', []);
         }
-        */
     }
 }
