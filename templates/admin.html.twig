@@ -87,7 +87,7 @@
                                     <div class="form-group row">
                                         <label for="inp_{{dept.dept}}_mail" class="col-sm-3 col-form-label">E-mail</label>
                                         <div class="col-sm-9">
-                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_mail" data-type="dept" data-field="hodMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="E-mail" data-old="{{dept.email}}" value="{{dept.email}}"/>
+                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_mail" data-type="dept" data-field="hodMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="E-mail" data-old="{{dept.email|lower}}" value="{{dept.email|lower}}"/>
                                             <span class="loader">
                                                 <span></span>
                                                 <span></span>
@@ -98,7 +98,7 @@
                                     <div class="form-group row">
                                         <label for="inp_{{dept.dept}}_alt" class="col-sm-3 col-form-label">Alternative E-mail</label>
                                         <div class="col-sm-9">
-                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_alt" data-type="dept" data-field="altMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="E-mail" data-old="{{dept.alt_email}}" value="{{dept.alt_email}}"/>
+                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_alt" data-type="dept" data-field="altMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="E-mail" data-old="{{dept.alt_email|lower}}" value="{{dept.alt_email|lower}}"/>
                                             <span class="loader">
                                                 <span></span>
                                                 <span></span>
@@ -300,6 +300,9 @@
                         mailValidationError(field);
                         valid = false;
                     }
+
+                    d[0]['changes'][0]['to'] = d[0]['changes'][0]['to'].toLowerCase();
+                    d[0]['changes'][0]['from'] = d[0]['changes'][0]['from'].toLowerCase();
                 }
 
                 if (valid) {

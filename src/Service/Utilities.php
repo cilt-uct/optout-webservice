@@ -124,7 +124,7 @@ class Utilities
                         `workflow`.`year`, `workflow`.`status`, `workflow`.`date_start`, `workflow`.`date_dept`, `workflow`.`date_course`, `workflow`.`date_schedule` 
                         from uct_workflow_email mail 
                         left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`  
-                        where hash = :hash limit 1";
+                        where hash = :hash order by created_at desc limit 1";
             $stmt = $this->dbh->prepare($query);
             $stmt->execute([':hash' => $hash]);
             if ($stmt->rowCount() === 0) {

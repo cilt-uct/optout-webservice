@@ -47,7 +47,7 @@
                     <div class="col-sm-9">
                         <input type="text" class="form-control" id="inp_{%=course.courseCode%}_convenorEmail" placeholder="Convenor Mail" data-dept="{%=o.dept%}"
                                     data-type="course" data-field="convenorEmail" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}" 
-                                    data-old="{%=course.convenor.email%}" value="{%=course.convenor.email%}"/>
+                                    data-old="{%=course.convenor.email.toLowerCase()%}" value="{%=course.convenor.email.toLowerCase()%}"/>
                         <span class="loader">
                             <span></span>
                             <span></span>
