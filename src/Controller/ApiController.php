@@ -345,6 +345,24 @@ class ApiController extends Controller
   }
    */
 
+  /**
+   * @Route("/api/v0/timetable/{courseCode}/{year}")
+   * 
+   * THIS DOESN'T WORK
+   */
+  public function processMail($courseCode, $year, Request $request)
+  {
+
+    // retrieve timetable information
+    $json = file_get_contents('https://srvslscet001.uct.ac.za/timetable/?course='. $courseCode .','. $year);
+    $result = json_decode($json);
+
+    if (json_last_error() == JSON_ERROR_NONE) {
+      return new Response($json, 201);
+    }
+
+    return new Response('Error loading timetable', 201);  
+  }
 
   /**
    * @Route("/api/v0/course/{courseCode}")
@@ -446,36 +464,5 @@ class ApiController extends Controller
       return new Response(json_encode($result), 201);
   }
 
-  /**
-   * @Route("/process/mail")
-   * 
-   * THIS DOESN'T WORK
-   */
-  public function processMail(Request $request, \Swift_Mailer $mailer) 
-  {
-
-    //$transport = new \Swift_SendmailTransport('/usr/sbin/exim -bs');
-    //$mailer = new \Swift_Mailer($transport);
-
-    $message = (new \Swift_Message('Automated Setup of Lecture Recording: Department Opt-Out process'))
-        ->setFrom(['help@vula.uct.ac.za' => 'Lecture Recording Team'])
-        ->setTo('corne.oosthuizen@uct.ac.za')
-        ->setBody(
-            $this->renderView(
-                'department_mail.html.twig',
-                array('dept' => 'ZZZ',
-                      'out_link' => 'https://srvslscet001.uct.ac.za/optout/dept',
-                      'view_link' => 'https://srvslscet001.uct.ac.za/optout/dept')
-            )
-        );
-
-    $message->setReturnPath('help@vula.uct.ac.za'); // bounces will be sent to this address
-    $result = $mailer->send($message, $failures);
-
-    if (!$result) {
-      return new Response($failures, 201);
-    }
-    return new Response('email sent successfully', 201);  
-  }
 
 }

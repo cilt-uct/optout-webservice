@@ -76,7 +76,8 @@ header img.navbar-brand{
   margin-right: 8px;
 }
 
-.post-body input[type=text] {
+.post-body input[type=text], 
+.post-body input[type=password] {
   font-size: 1em;
   width: 45%;
   margin-right: 20px;
@@ -99,7 +100,7 @@ header img.navbar-brand{
 }
 
 .post-body .departments input[type=text] {
-  width: 80%;
+  width: 90%;
   margin-right: 0px;
   border-radius: 3px;
   border: 1px solid #dedede;
@@ -158,6 +159,10 @@ header img.navbar-brand{
   margin-bottom: 0.1rem;
 }
 
+.post-body .departments .dept-details .form-group .input-group-append button {
+  min-width: 2.5em;
+}
+
 .post-body .departments .dept-details label,
 .post-body .departments .course-details label {
   text-align: right;
@@ -169,12 +174,40 @@ header img.navbar-brand{
 }
 
 .post-body .departments .dept-details .col-sm-3,
-.post-body .departments .dept-details .col-sm-9,
+.post-body .departments .dept-details .col-sm-8,
 .post-body .departments .course-details .col-sm-3,
-.post-body .departments .course-details .col-sm-9  {
+.post-body .departments .course-details .col-sm-8  {
   padding-right: 0px;
   padding-lefT: 8px;
 }
+
+.post-body .departments .dept-details .form-group .multi {
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.post-body .departments .dept-details .form-group .multi a {
+  float: right;
+  display: block;
+  position: relative;
+  top: 2px;
+  right: 10px;
+  padding: 0.2em 0.6em;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.post-body .departments .dept-details .form-group .multi a i {
+  position: relative;
+  top: 2px;
+}
+
+.post-body .departments .dept-details .form-group .multi a.success {
+  color: #28a745;
+} 
+
+.post-body .departments .dept-details .form-group .multi a.danger {
+  color: #c82333;
+} 
 
 .post-body .dept-details table hr {
   margin-top: 0.1em;
@@ -185,7 +218,8 @@ header img.navbar-brand{
   padding-left: 8px;
 } 
 
-.post-body .dept-courses {
+.post-body .dept-courses, 
+.post-body .courses-timetable {
   display: none;
 }
 
@@ -196,10 +230,17 @@ header img.navbar-brand{
   border-radius: 0 0 4px 4px;
 }
 
-.post-body .dept-courses .loading span {
+.post-body .dept-courses .loading span,
+.post-body .courses-timetable .loading span {
   position: relative;
   top: -4px;
 }
+
+.post-body .departments .courses-timetable > div {
+  border-top: 1px dashed #eee;
+  padding-top: 10px;
+}
+
 /*
 .post-body .departments > div {
   border-bottom: 1px solid #ccc;
@@ -246,6 +287,12 @@ header img.navbar-brand{
   top: 5px;
 }
 
+.post-body .departments div.done::before {
+  right: auto;
+  left: 85%;
+  top: 5px;
+}
+
 .post-body span.err input[type=text],
 .post-body div.err input[type=text]  {
   border-color: #dc3545;
@@ -285,6 +332,12 @@ header img.navbar-brand{
   top: 7px;
 }
 
+.post-body .departments div.err::before {
+  right: auto;
+  left: 85%;
+  top: 8px;
+}
+
 .post-body .err[data-errortext]::after {
   z-index: 1000;
   content: attr(data-errortext);
@@ -304,8 +357,15 @@ header img.navbar-brand{
   bottom: auto;
   top: calc(100% - 5px);
   left: 8px;
-  width: calc(80% - 7px);
+  width: calc(90% - 7px);
   padding: 0.68em;
+}
+
+.post-body div.multi.err[data-errortext]::after {
+  top: auto;
+  bottom: -33px;
+  left: 0px;
+  width: 90%;
 }
 
 .post-body .departments .course-details div.err[data-errortext]::after {
@@ -313,7 +373,6 @@ header img.navbar-brand{
   font-size: 11px;
   width: calc(80% - 6px);
 }
-
 
 .post-body span {
   position: relative;
@@ -356,6 +415,12 @@ header img.navbar-brand{
 .post-body div.updating span.loader {
   right: auto;
   left: 75%;
+  top: 11px;
+}
+
+.post-body .departments div.updating span.loader {
+  right: auto;
+  left: 84%;
   top: 11px;
 }
 

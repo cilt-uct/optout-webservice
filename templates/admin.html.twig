@@ -11,10 +11,12 @@
     <div class="container post">
         <div class="row post-body">
             <div class="col-md-12 post-title">
+                <span style="color: #ccc;font-size: 0.8em;">Hi {{authenticated.z.result.0.name}},</span>
                 <h3><span style="color: #5caad2;">Lecture Recording</span> Admin</h3>
                 <br/>
                 <div>
-                     {{workflow|json_encode()}}
+                     <!--p>{{authenticated|json_encode()}}</p-->
+                     <p>{{workflow|json_encode()}}</p>
                     
     <!--div class="wrapper">
         <div class="content">
@@ -64,8 +66,10 @@
                                     <h6>Contact Details</h6>
                                     <div class="form-group row">
                                         <label for="inp_{{dept.dept}}_firstname" class="col-sm-3 col-form-label">Firstname</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_firstname" data-type="dept" data-field="hodFirstname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="Firstname" data-old="{{dept.firstname}}" value="{{dept.firstname}}"/>
+                                        <div class="col-sm-8">
+                                            <input type="text" class="form-control" 
+                                                    id="inp_{{dept.dept}}_firstname" data-type="dept" data-field="hodFirstname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" 
+                                                    placeholder="Firstname" data-old="{{dept.firstname}}" value="{{dept.firstname}}"/>
                                             <span class="loader">
                                                 <span></span>
                                                 <span></span>
@@ -75,8 +79,10 @@
                                     </div>
                                     <div class="form-group row">
                                         <label for="inp_{{dept.dept}}_lastname" class="col-sm-3 col-form-label">Lastname</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_lastname" data-type="dept" data-field="hodLastname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="Lastname" data-old="{{dept.lastname}}" value="{{dept.lastname}}"/>
+                                        <div class="col-sm-8">
+                                            <input type="text" class="form-control" 
+                                                    id="inp_{{dept.dept}}_lastname" data-type="dept" data-field="hodLastname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" 
+                                                    placeholder="Lastname" data-old="{{dept.lastname}}" value="{{dept.lastname}}"/>
                                             <span class="loader">
                                                 <span></span>
                                                 <span></span>
@@ -86,8 +92,10 @@
                                     </div>
                                     <div class="form-group row">
                                         <label for="inp_{{dept.dept}}_mail" class="col-sm-3 col-form-label">E-mail</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_mail" data-type="dept" data-field="hodMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="E-mail" data-old="{{dept.email|lower}}" value="{{dept.email|lower}}"/>
+                                        <div class="col-sm-8">
+                                            <input type="text" class="form-control" 
+                                                    id="inp_{{dept.dept}}_mail" data-type="dept" data-field="hodMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" 
+                                                    placeholder="E-mail" data-old="{{dept.email|lower}}" value="{{dept.email|lower}}"/>
                                             <span class="loader">
                                                 <span></span>
                                                 <span></span>
@@ -97,13 +105,26 @@
                                     </div>
                                     <div class="form-group row">
                                         <label for="inp_{{dept.dept}}_alt" class="col-sm-3 col-form-label">Alternative E-mail</label>
-                                        <div class="col-sm-9">
-                                            <input type="text" class="form-control" id="inp_{{dept.dept}}_alt" data-type="dept" data-field="altMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" placeholder="E-mail" data-old="{{dept.alt_email|lower}}" value="{{dept.alt_email|lower}}"/>
-                                            <span class="loader">
-                                                <span></span>
-                                                <span></span>
-                                                <span></span>
-                                            </span>
+                                        <div class="col-sm-8" id="{{dept.dept}}_alt_mail_container" style="position: relative;">
+                                            {% set alt_mails = dept.alt_email|split(',') %}
+                                            <input type="hidden" id="{{dept.dept}}_alt" name="{{dept.dept}}_alt" value="{{dept.alt_email}}"/>
+                                            <input type="hidden" id="inp_{{dept.dept}}_alt_mails" name="inp_{{dept.dept}}_alt_mails" value="{{alt_mails|length}}"/>
+                                            {% for mail in alt_mails %}
+                                            <div class="multi" id="{{dept.dept}}_alt_{{ loop.index }}">
+                                                <a href="#" class="{% if loop.index == 1 %}success{% else %}danger{% endif %}" rel="{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" data-index="{{ loop.index }}">
+                                                    <i class="fa {% if loop.index == 1 %}fa-plus{% else %}fa-minus{% endif %}" aria-hidden="true"></i>
+                                                </a>
+                                                <input type="text" class="form-control" 
+                                                        id="inp_{{dept.dept}}_alt_{{ loop.index }}" data-type="dept" data-field="altMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
+                                                        data-index="{{ loop.index }}"
+                                                        placeholder="E-mail" data-old="{{mail}}" value="{{mail|lower}}"/>                                                
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
+                                                </span>
+                                            </div>
+                                            {% endfor %}
                                         </div>
                                     </div>                                    
                                 </div>
@@ -135,7 +156,7 @@
                                     </table>
                                     <br/>
                                     {% if dept.eligble_courses > 0 %}
-                                    <div calss="text-center">
+                                    <div class="text-center">
                                         <button class="btn btn-outline-success btn-sm" style="width:60%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
                                     </div>
                                     {% endif %}
@@ -161,12 +182,13 @@
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>    
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
     <script>
-        var changeTimer = false, field = null, div = null;
+        var changeTimer = false, field = null, div = null,
+            email_regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
 
         $(function() {
 
             // view courses
-            $('#departments .dept-details').on('click','button', function(event) {
+            $('#departments .dept-details').on('click','button.btn-sm', function(event) {
                 var btn = $(this);
                 div = $('#'+ btn.data('rel') +'_courses_html');
                 console.log(btn.data('rel') +' '+ btn.data('hash'));
@@ -193,6 +215,31 @@
                 }
             });
 
+            $('#departments').on('click','.course-details button.btn-sm', function(event) {
+                var btn = $(this);
+                div = $('#'+ btn.data('rel') +'_timetable');
+                console.log(btn.data('rel') +' '+ btn.data('year'));
+
+                if (btn.hasClass('btn-outline-info')) {
+                    div.hide();
+                    btn.removeClass('btn-outline-info').addClass('btn-outline-success').html('View Timetable');
+                } else {
+                    btn.removeClass('btn-outline-success').addClass('btn-outline-info').html('Hide Timetable');
+                    div.html(tmpl('tmpl-timetable-loading',{})).show();
+
+                    $.ajax({
+                        url: "/optout/api/v0/timetable/"+ btn.data('rel') +"/"+ btn.data('year'),
+                        method: 'GET',
+                        dataType: 'json'
+                    }).done(function(data) {
+                        console.log(data);
+                        div.html(tmpl('tmpl-course-timetable', data));
+                    }).fail(function(xhr) {
+                        div.html(tmpl('tmpl-timetable-error',{}));
+                    });
+                }
+            });
+    
             // saving department active
             $('.dept-title input[id*="chk_use_"]').on('change', function(event) {
                 var chk = $(this);
@@ -269,41 +316,88 @@
                 });
             });
 
+            $('#departments').on('click','.multi a',function(event){
+                event.preventDefault();
+                var dept = $(this).attr('rel'),
+                    cnt = parseInt($('#inp_'+ dept +'_alt_mails').val(), 10),
+                    idx = parseInt($(this).data('index'), 10);
+                
+                console.log($('#inp_'+ dept +'_alt_mails').val() + " "+ idx);
+
+                if ($(this).hasClass('success')) {
+
+                    $('#inp_'+ dept +'_alt_mails').val(cnt + 1);
+                    $('#'+ dept +'_alt_mail_container').append(tmpl('tmpl-dept-altMail', 
+                                    {index: cnt+1, dept: $(this).data('dept'), hash: $(this).data('hash')}));
+                } else {
+                    $('#inp_'+ dept +'_alt_'+ idx).parent().remove();
+                    $('#inp_'+ dept +'_alt_1').trigger('change');
+                }
+            });
+
             $('#departments').on('focusin','input[type=text]',function(event){
                 $(this).parent().removeClass('done err updating');
             });
             
             $('#departments').on('change','input[type=text]',function(event){
                 if (changeTimer !== false) clearTimeout(changeTimer);
+                var valid = true, d = [], dept = $(this).data('dept');
+
                 field = $(this);
-
-                console.log(field.attr('id') +' '+ field.data('dept') +' '+ field.data('hash') +' '+ field.data('type') +' '+ field.data('field'));
-
                 field.parent()
-                        .removeClass('done err updating')
-                        .removeAttr('data-errortext');
-                        
-                var valid = true,
+                            .removeClass('done err updating')
+                            .removeAttr('data-errortext');
+
+                //console.log(field.attr('id') +' '+ field.data('dept') +' '+ field.data('hash') +' '+ field.data('type') +' '+ field.data('field'));
+
+                if (field.data('field') != 'altMail') {
                     d = [{  "changes": [{
-                                "field": field.data('field'), 
+                                "field": field.data('field'),
                                 "from": field.data('old'), 
                                 "to": field.val()
                             }]
                         }];
 
-                d[0][ field.data('type') ] = (field.data('type') == 'dept' ? field.data('dept') : field.data('course'));
+                    if ((field.data('field') === 'hodMail') || (field.data('field') === 'convenorEmail')) {
+                        if (!email_regex.test(field.val())) { 
+                            mailValidationError(field);
+                            valid = false;
+                        }
 
-                if ((field.data('field') === 'hodMail') || (field.data('field') === 'altMail') || (field.data('field') === 'convenorEmail')) {
-                    email_address = $(this);
-                    email_regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
-                    if(!email_regex.test(email_address.val())){ 
-                        mailValidationError(field);
-                        valid = false;
+                        d[0]['changes'][0]['to'] = d[0]['changes'][0]['to'].toLowerCase();
+                        d[0]['changes'][0]['from'] = d[0]['changes'][0]['from'].toLowerCase();
+                    }
+                
+                } else {
+                    
+                    var idx = field.data('index'),
+                        cnt = $('#inp_'+field.data('dept')+'_alt_mails').val(),
+                        new_val = [];
+
+                    for (var i = 1; i <= cnt; i++) {
+                        var f = $('#inp_'+ field.data('dept') +'_alt_'+ i);
+                        if (f.length > 0) {
+                            if (f.val() != '') {
+                                if(!email_regex.test(f.val())){ 
+                                    mailValidationError(f);
+                                    valid = false;
+                                } else {
+                                    new_val.push(f.val().toLowerCase());
+                                }
+                            }
+                        }
                     }
 
-                    d[0]['changes'][0]['to'] = d[0]['changes'][0]['to'].toLowerCase();
-                    d[0]['changes'][0]['from'] = d[0]['changes'][0]['from'].toLowerCase();
+                    $('#'+ dept +'_alt').data('to', new_val.join(','));
+                    d = [{  "changes": [{
+                                "field": field.data('field'),
+                                "from": $('#'+ dept +'_alt').val(), 
+                                "to": new_val.join(',')
+                            }]
+                        }];
                 }
+                
+                d[0][ field.data('type') ] = (field.data('type') == 'dept' ? field.data('dept') : field.data('course'));
 
                 if (valid) {
                     field.parent().addClass('updating');
@@ -333,7 +427,12 @@
                 field
                     .data('old', field.val())
                     .parent()
-                        .addClass( "done" );
+                    .addClass('done');
+
+                if (field.data('field') == 'altMail') {
+                    var dept = field.data('dept');
+                    $('#'+ dept +'_alt').val( $('#'+ dept +'_alt').data('to') );
+                }
                 setTimeout(function() {
                     field
                         .parent()

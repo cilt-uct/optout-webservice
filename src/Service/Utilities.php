@@ -209,6 +209,28 @@ class Utilities
         return $result;
     }
 
+    public function getAuthorizedUsers($username) {
+        $result = [ 'success' => 0, 'err' => 'Unauthorized ('.$username.')'];
+        try {
+            $query = "select `user`.`username`, `user`.`name`, `user`.`type`
+                        from uct_authorized_users `user` 
+                        where `user`.`username` = :username limit 1";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':username' => $username]);
+            if ($stmt->rowCount() === 0) {
+                $result['err'] = 'Unauthorized ('.$username.')';
+            } else {
+                $result['success'] = 1;
+                $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                unset($result['err']);
+            }
+        } catch (\PDOException $e) {
+            $result['err'] = $e->getMessage();
+        }
+
+        return $result;
+    }
+
     private function connectLocally() {
         $dotenv = new DotEnv();
         $dotenv->load('.env');

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use App\Entity\Course;
@@ -307,7 +308,7 @@ class UIController extends Controller
      */
     public function getAdmin(Request $request)
     {
-        $authenticated = ['a' => false, 'z' => '0'];
+        $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
         
         $now = new \DateTime();
         $utils = new Utilities();
@@ -325,17 +326,17 @@ class UIController extends Controller
                         $session = $request->hasSession() ? $request->getSession() : new Session();
                         $session->set('username', $details[0]['cn']);
                         $authenticated['a'] = true;
-                        $authenticated['z'] = $details[0]['cn'];
+                        $authenticated['z'] = $utils->getAuthorizedUsers($details[0]['cn']);
                     } else {
-                        $authenticated['z'] = 'Invalid username/password combination';
+                        $authenticated['z']['err'] = 'Invalid username/password combination';
                     }
                 } catch (\Exception $e) {
                     switch ($e->getMessage()) {
                         case 'no such user':
-                            $authenticated['z'] = 'No such user';
+                            $authenticated['z']['err'] = 'No such user';
                         break;
                         case 'invalid id':
-                            $authenticated['z'] = 'Please use your official UCT staff number';
+                            $authenticated['z']['err'] = 'Please use your official UCT staff number';
                         break;
                     }
                 }
@@ -343,14 +344,17 @@ class UIController extends Controller
             default:
                 $session = $request->hasSession() ? $request->getSession() : new Session();
                 $authenticated['a'] = $session->get('username') ? true : false;
-                $authenticated['z'] = $session->get('username') ? $session->get('username') : '0';
+                if ($session->get('username')) {
+                    $authenticated['z'] = $utils->getAuthorizedUsers($session->get('username'));
+                }
             break;
         }
 
         $data = [ 'dept' => 'CILT', 'authenticated' => $authenticated, 'workflow' => $workflow->getWorkflow() ];
         //return new Response(json_encode($data), 201);
+        //return new Response(json_encode($authenticated['z']), 201);
 
-        if ($authenticated['a']) {
+        if ($authenticated['z']['success']) {
 
             $data['departments'] = $utils->getAllCourses();
 
@@ -365,7 +369,7 @@ class UIController extends Controller
             //$data['courses'] = 
             return $this->render('admin.html.twig', $data);
         } else {
-            return $this->render('admin_login.html.twig', []);
+            return $this->render('admin_login.html.twig', $authenticated['z']);
         }
     }
 }
