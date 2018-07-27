@@ -74,7 +74,7 @@ class Workflow
             'date_start' => $this->date_start,
             'date_dept' => $this->date_dept,
             'date_course' => $this->date_course,
-            'date_schedule' => $this->date_course,
+            'date_schedule' => $this->date_schedule,
             'active' => $this->active 
         ];
     }
@@ -159,6 +159,7 @@ class Workflow
                 // All done
                 // create new workflow that will run in the future
                 // set this one inactive
+                /*
                 try {
                     $query = "UPDATE uct_workflow SET active = 0 WHERE active = 1";
                     $stmt = $this->dbh->prepare($query);
@@ -171,12 +172,13 @@ class Workflow
                     $stmt = $this->dbh->prepare($query);
                     $stmt->execute();
                     $this->active = false;
-                    */
+                    *
 
                     $result['result'] = $result['result'] ." - New Workflow";
                 } catch (\PDOException $e) {
                     $result = [ 'success' => 0, 'err' => $e->getMessage()];
                 }
+                */
                 break;
             default:
                 $result = [ 'success' => 0, 'err' => 'Error running workflow'];

@@ -12,19 +12,86 @@
         <div class="row post-body">
             <div class="col-md-12 post-title">
                 <span style="color: #ccc;font-size: 0.8em;">Hi {{authenticated.z.result.0.name}},</span>
-                <h3><span style="color: #5caad2;">Lecture Recording</span> Admin</h3>
+                <div class="row no-gutters">
+                    <div class="col-sm-8">
+                        <h3><span style="color: #5caad2;">Lecture Recording</span> Admin</h3>
+                    </div>
+                    <div class="col-sm-2 align-self-end">
+                        <select disabled class="custom-select">
+                            <option value="2018">2018</option>
+                        </select>
+                    </div>
+                </div>
                 <br/>
-                <div>
+                <div class="workflow-details">
                      <!--p>{{authenticated|json_encode()}}</p-->
                      <p>{{workflow|json_encode()}}</p>
                     
-    <!--div class="wrapper">
-        <div class="content">
-            <h1 id="date" class="date"></h1>
-            <h3 id="time" class="time"></h3>
-        </div>
-    </div-->
+                    <div class="form-row form-inline">
+                        <div class="col-md-3 mb-3">
+                            <strong>Year: </strong>
+                            <span>{{workflow.year}}</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <strong>Status: </strong>
+                            <span>{{workflow.status}}</span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-3 mb-3">
+                            <label for="worflow_date_start">Started</label>
 
+                            <input type="text" class="form-control" id="worflow_date_start" value="{{workflow.date_start|date("Y-m-d H:i:s")}}" disabled readonly="true"/>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="worflow_date_dept">Department</label>
+
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control text-center" id="worflow_date_dept" value="{{workflow.date_dept|date("Y-m-d")}}" data-toggle="datepicker"
+                                                style="width: 70%"/>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" id="worflow_date_dept_btn">
+                                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="00">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
+                                        </div>
+                                        <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="00"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="worflow_date_course">Course</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="worflow_date_course" value="{{workflow.date_course|date("Y-m-d")}}" data-toggle="datepicker"/>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary" id="worflow_date_course_btn">
+                                        <i class="fa fa-calendar" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="worflow_date_schedule">Schedule</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="worflow_date_schedule" value="{{workflow.date_schedule|date("Y-m-d")}}" data-toggle="datepicker"/>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary" id="worflow_date_schedule_btn">
+                                        <i class="fa fa-calendar" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>                            
+                        </div>
+                    </div>
                 </div>
                 <br/>
                 <div class="departments" id="departments">
@@ -181,11 +248,89 @@
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>    
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/js/datepicker.min.js') }}"></script>
     <script>
         var changeTimer = false, field = null, div = null,
             email_regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
 
         $(function() {
+            $.fn.datepicker.setDefaults({autoHide: true});
+
+            $('#worflow_date_dept').on('pick.datepicker', function (e) {              
+                var d = $('#worflow_date_dept').datepicker('getDate');
+
+                $('#worflow_date_course').datepicker('setStartDate', d);
+                console.log(e.type, e.namespace, e.view, d);
+            }).datepicker({
+                format: 'yyyy-mm-dd'
+                ,autoHide: true
+                ,date: '{{workflow.date_dept|date("Y-m-d")}}' //new Date(2014, 1, 14) // Or '02/14/2014'
+                ,startDate: '{{workflow.date_start|date("Y-m-d")}}'
+                ,endDate: '{{workflow.date_course|date("Y-m-d")}}'
+                ,trigger: $('#worflow_date_dept_btn')
+            });
+
+            $('#worflow_date_course').on('pick.datepicker', function (e) {
+                var d = $('#worflow_date_course').datepicker('getDate');
+
+                $('#worflow_date_dept').datepicker('setEndDate', d);
+                $('#worflow_date_schedule').datepicker('setStartDate', d);                
+                console.log(e.type, e.namespace, e.view, d);
+            }).datepicker({
+                format: 'yyyy-mm-dd'
+                ,autoHide: true                
+                ,date: '{{workflow.date_course|date("Y-m-d")}}'
+                ,startDate: '{{workflow.date_dept|date("Y-m-d")}}'
+                ,endDate: '{{workflow.date_schedule|date("Y-m-d")}}'
+                ,trigger: $('#worflow_date_course_btn')
+            });
+
+            $('#worflow_date_schedule').on('pick.datepicker', function (e) {
+                var d = $('#worflow_date_schedule').datepicker('getDate');
+
+                $('#worflow_date_course').datepicker('setEndDate', d);
+                console.log(e.type, e.namespace, e.view, d);
+            }).datepicker({
+                format: 'yyyy-mm-dd'
+                ,autoHide: true                
+                ,date: '{{workflow.date_schedule|date("Y-m-d")}}'
+                ,startDate: '{{workflow.date_course|date("Y-m-d")}}'
+                ,trigger: $('#worflow_date_schedule_btn')
+            });
+
+            /*
+            $('#worflow_date_dept').datetimepicker({
+                    defaultDate: '{{workflow.date_dept|date("Y-m-d H:i:s")}}',
+                    //minDate: '{{workflow.date_start|date("Y-m-d H:i:s")}}',
+                    //maxDate: '{{workflow.date_course|date("Y-m-d H:i:s")}}'
+            });
+
+            $('#worflow_date_course').datetimepicker({
+                    defaultDate: '{{workflow.date_course|date("Y-m-d H:i:s")}}',
+                    //minDate: '{{workflow.date_dept|date("Y-m-d H:i:s")}}',
+                    //maxDate: '{{workflow.date_schedule|date("Y-m-d H:i:s")}}'
+            });
+
+            $('#worflow_date_schedule').datetimepicker({
+                    defaultDate: '{{workflow.date_schedule|date("Y-m-d H:i:s")}}',
+                    //minDate: '{{workflow.date_course|date("Y-m-d H:i:s")}}',
+            });
+
+            $('#worflow_date_dept').on('dp.change', function (e) {
+                //$('#worflow_date_course').datetimepicker('minDate', e.date);
+                
+                console.log(e);
+            });
+            $('#worflow_date_course').on('dp.change', function (e) {
+                //$('#worflow_date_dept').datetimepicker('maxDate', e.date);
+               // $('#worflow_date_schedule').datetimepicker('minDate', e.date);
+                console.log(e);
+            });
+            $('#datetimepicker8').on('dp.change', function (e) {
+                //$('#worflow_date_course').datetimepicker('maxDate', e.date);
+                console.log(e);
+            });
+            */
 
             // view courses
             $('#departments .dept-details').on('click','button.btn-sm', function(event) {

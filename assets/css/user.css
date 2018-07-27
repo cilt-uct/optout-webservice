@@ -82,7 +82,7 @@ header img.navbar-brand{
   width: 45%;
   margin-right: 20px;
   border-radius: 3px;
-  padding: 0.34em;
+  padding: 0.34em 0.5em;
   border: 1px solid #dedede;
 }
 
@@ -97,6 +97,16 @@ header img.navbar-brand{
 
 .post-body input::-ms-input-placeholder { /* Microsoft Edge */
   color: #aaa;
+}
+
+.post-body .workflow-details input[type=text] {
+  width: auto;
+  margin: 0;
+  padding: 0.4em 0.5em;
+}
+
+.post-body .workflow-details .input-group btn {
+  padding: 0.3em 0.8em
 }
 
 .post-body .departments input[type=text] {
