@@ -25,7 +25,13 @@
                 <br/>
                 <div class="workflow-details">
                      <!--p>{{authenticated|json_encode()}}</p-->
-                     <p>{{workflow|json_encode()}}</p>
+                     <!--p>{{workflow|json_encode()}}</p-->
+                     <!-- 
+                        TODO: 
+                        - Save the department, Course, and Schedulet Date Times
+                        - Select a Different workflow (drop-down)
+                        - Add button to create new workflow - advance workflow
+                     -->
                     
                     <div class="form-row form-inline">
                         <div class="col-md-3 mb-3">
@@ -47,7 +53,7 @@
                             <label for="worflow_date_dept">Department</label>
 
                             <div class="row">
-                                <div class="col-sm-8">
+                                <div class="col-sm-7">
                                     <div class="input-group">
                                         <input type="text" class="form-control text-center" id="worflow_date_dept" value="{{workflow.date_dept|date("Y-m-d")}}" data-toggle="datepicker"
                                                 style="width: 70%"/>
@@ -58,38 +64,68 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-4">
+                                <div class="col-sm-4" style="padding:0;">
                                     <div class="input-group">
-                                        <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="00">
-                                        <div class="input-group-prepend">
+                                        <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_dept|date("H")}}"/>
+                                        <div class="input-group-mid">
                                             <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
                                         </div>
-                                        <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="00"/>
+                                        <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_dept|date("i")}}"/>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="worflow_date_course">Course</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="worflow_date_course" value="{{workflow.date_course|date("Y-m-d")}}" data-toggle="datepicker"/>
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-outline-secondary" id="worflow_date_course_btn">
-                                        <i class="fa fa-calendar" aria-hidden="true"></i>
-                                    </button>
+                            
+                            <div class="row">
+                                <div class="col-sm-7">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="worflow_date_course" value="{{workflow.date_course|date("Y-m-d")}}" data-toggle="datepicker"
+                                                style="width: 70%"/>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" id="worflow_date_course_btn">
+                                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4" style="padding:0;">
+                                    <div class="input-group">
+                                        <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_course|date("H")}}"/>
+                                        <div class="input-group-mid">
+                                            <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
+                                        </div>
+                                        <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_course|date("i")}}"/>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="worflow_date_schedule">Schedule</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="worflow_date_schedule" value="{{workflow.date_schedule|date("Y-m-d")}}" data-toggle="datepicker"/>
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-outline-secondary" id="worflow_date_schedule_btn">
-                                        <i class="fa fa-calendar" aria-hidden="true"></i>
-                                    </button>
+   
+                            <div class="row">
+                                <div class="col-sm-7">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="worflow_date_schedule" value="{{workflow.date_schedule|date("Y-m-d")}}" data-toggle="datepicker"
+                                                style="width: 70%"/>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" id="worflow_date_schedule_btn">
+                                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div> 
                                 </div>
-                            </div>                            
+                                <div class="col-sm-4" style="padding:0;">
+                                    <div class="input-group">
+                                        <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_schedule|date("H")}}"/>
+                                        <div class="input-group-mid">
+                                            <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
+                                        </div>
+                                        <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_schedule|date("i")}}"/>
+                                    </div>
+                                </div>
+                            </div>                        
                         </div>
                     </div>
                 </div>

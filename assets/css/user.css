@@ -773,3 +773,8 @@ aside li > a:active {
 aside li > a:active {
   top: 2px;
 }
+
+.input-group-mid {
+  margin-right: -1px;
+  margin-left: -1px;
+}
