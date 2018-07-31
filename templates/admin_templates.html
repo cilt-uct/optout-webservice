@@ -1,0 +1,167 @@
+<script type="text/x-tmpl" id="tmpl-courses">
+    {% $.each(o.courses, function( i, course ) { %}
+        <div class="row no-gutters course-title">
+            <div class="col-sm-8">
+                <h6>{%=course.courseCode%}, {%=course.year%}</h6>
+            </div>
+            <div class="col-sm-4" style="padding-top:0.6em;">
+                <label>Opted Out</label>
+                <label class="right" id="chk_opt_{%=course.courseCode%}_date">
+                    {% if (course.updatedBy != null) { %}{%=course.updatedBy%} - {%=course.updatedAt%}{% } %}
+                </label>
+                <div class="switch">
+                    <input type="checkbox" id="chk_opt_{%=course.courseCode%}" data-course="{%=course.courseCode%}" data-hash="{%=course.hash%}" {% if (course.optoutStatus==1) { %}checked{% } %}/><label id="toggle_opt_{%=course.courseCode%}" for="chk_opt_{%=course.courseCode%}">Toggle</label>
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutters course-details">
+            <div class="col-sm-8">
+                <div class="form-group row">
+                    <label for="inp_{%=course.courseCode%}_EID" class="col-sm-3 col-form-label">EID</label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" id="inp_{%=course.courseCode%}_EID" placeholder="EID" data-dept="{%=o.dept%}"
+                                    data-type="course" data-field="convenorEid" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}" 
+                                    data-old="{%=course.convenor.eid%}" value="{%=course.convenor.eid%}"/>
+                        <span class="loader">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="inp_{%=course.courseCode%}_convenorName" class="col-sm-3 col-form-label">Convenor Name</label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" id="inp_{%=course.courseCode%}_convenorName" placeholder="Convenor Name" data-dept="{%=o.dept%}"
+                                    data-type="course" data-field="convenorName" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}" 
+                                    data-old="{%=course.convenor.name%}" value="{%=course.convenor.name%}"/>
+                        <span class="loader">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="inp_{%=course.courseCode%}_convenorEmail" class="col-sm-3 col-form-label">Convenor Mail</label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" id="inp_{%=course.courseCode%}_convenorEmail" placeholder="Convenor Mail" data-dept="{%=o.dept%}"
+                                    data-type="course" data-field="convenorEmail" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}" 
+                                    data-old="{%=(course.convenor.email ? course.convenor.email.toLowerCase() :'')%}" 
+                                    value="{%=(course.convenor.email ? course.convenor.email.toLowerCase() :'')%}"/>
+                        <span class="loader">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                    </div>
+                </div>                           
+                <!--{%=JSON.stringify(course.convenor)%}-->
+            </div>
+            <div class="col-sm-4">
+                <div class="text-center">
+                    <button class="btn btn-outline-success btn-sm" style="margin-top: 4.4em; width:60%" id="btn_timetable_{%=course.courseCode%}" data-rel="{%=course.courseCode%}" data-year="{%=course.year%}">View Timetable</button>
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutters justify-content-end courses-timetable" id="{%=course.courseCode%}_timetable"></div>        
+        <hr/>
+    {% }); %}
+</script>
+
+<script type="text/x-tmpl" id="tmpl-courses-loading">
+    <div class="text-info loading">
+        <i class="fa fa-circle-o-notch fa-spin fa-2x fa-fw"></i>
+        <span>Loading course information...</span>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-timetable-loading">
+    <div class="col-sm-12">
+        <div class="text-info loading">
+            <i class="fa fa-circle-o-notch fa-spin fa-2x fa-fw"></i>
+            <span>Loading timetable information...</span>
+        </div>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-courses-error">
+    <div class="text-danger">
+        <span>Error loading courses</span>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-timetable-error">
+    <div class="col-sm-12">
+        <div class="text-danger">
+            <span>Error loading courses</span>
+        </div>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-dept-altMail">
+    <div class="multi" id="{%=o.dept%}_alt_{%=o.index%}">
+        <a href="#" class="danger" rel="{%=o.dept%}" data-index="{%=o.index%}">
+            <i class="fa fa-minus" aria-hidden="true"></i>
+        </a>
+        <input type="text" class="form-control" 
+                id="inp_{%=o.dept%}_alt_{%=o.index%}" data-type="dept" data-field="altMail" data-dept="{%=o.dept%}" data-hash="{%=o.hash%}"
+                data-index="{%=o.index%}"
+                placeholder="E-mail" data-old="" value=""/>                                                
+        <span class="loader">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-course-timetable">
+    <div class="col-sm-12">
+        <div class="table-responsive">
+            <table id="course_table" class="table">
+                <thead>
+                    <tr class="notop">
+                        <th rowspan="2">Venue</th>
+                        <th rowspan="2">Dates</th>
+                        <th rowspan="2">Times</th>
+                        <th class="header">Days</th>
+                    </tr>
+                    <tr>
+                        <th class="days">
+                            <div>Mon</div>
+                            <div>Tue</div>
+                            <div>Wed</div>
+                            <div>Thu</div>
+                            <div>Fri</div>
+                            <div>Sat</div>
+                            <div>Sun</div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>                           
+                    {% $.each(o.LEC, function(i, lec) { %}
+                        <tr>
+                            <td>{%=lec.venue%}</td>
+                            <td>
+                                {%=lec.start_date%} <small>to</small> {%=lec.end_date%}
+                            </td>
+                            <td>
+                                {%=lec.start_time%} <small>-</small> {%=lec.end_time%}
+                            </td>
+                            <td class="days">
+                                <div class="{% if (lec.days.mon) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.tue) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.wed) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.thu) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.fri) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.sat) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.sun) { %}use{% } %}"></div>
+                            </td>
+                        </tr>
+                    {% }); %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</script>    
