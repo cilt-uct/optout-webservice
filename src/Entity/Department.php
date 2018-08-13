@@ -22,7 +22,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
     public $courses;
     private $fullHash;
 
-    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = false, $skipCourses = false) {
+    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = false, $skipCourses = true) {
         $this->entityCode = $entityCode;
         $this->hash = $hash;
         $this->year = !empty($year) ? $year : date('Y');
@@ -32,7 +32,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
 
         try {
             $this->fetchDetails();
-            if ($skipCourses) {
+            if (!$skipCourses) {
                 $this->fetchCourses();
             }
         } catch (\Exception $e) {
@@ -45,11 +45,11 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             $this->connectLocally();
         }
 
-        $qry = "select A.*, B.year, B.is_optout from uct_dept A join dept_optout B on A.dept = B.dept where A.dept = :dept and B.year = :year order by year desc limit 1";
+        $qry = "select A.*, B.year, B.is_optout from uct_dept A left join dept_optout B on A.dept = B.dept where A.dept = :dept and B.year = :year order by year desc limit 1";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {
-            throw new \Exception("no such dept");
+            throw new \Exception("no such dept [". $this->entityCode ."][". $this->year ."]");
         }
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         $this->fullHash = hash('sha256', $this->entityCode . "." . $result[0]['secret']);
@@ -91,10 +91,11 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             'hod' => $this->hod,
             'mail' => $this->hodMail,
             'is_optout' => $this->isOptOut,
+            'hash' => $this->getHash(),
             'courses' => []
         ];
 
-        if ($skipCourses) {
+        if ((!$skipCourses) && (gettype($this->courses) == 'array')) {
             $result['courses'] = array_map(function($course) { return $course->getDetails(); }, $this->courses);
         }
 
@@ -108,6 +109,67 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
 
     public function getFullHash() {
         return $this->fullHash;
+    }
+
+    public function updateDepartment($changes, $updatedBy) {
+        /*
+        $changes = [{
+            "field": name (convenorName / convenorEmail), 
+            "from": old value, 
+            "to": new value
+          }]
+        */
+        $allowedFields = [
+            'hodFirstname' => 'firstname',
+            'hodLastname' => 'lastname',
+            'hodMail' => 'email',
+            'altMail' => 'alt_email',
+            'active' => 'use_dept'
+        ];
+        try {
+            $this->dbh->beginTransaction();
+
+            foreach ($changes as $index => $change) {
+                if (!in_array($change['field'], array_keys($allowedFields))) {
+                    continue;
+                }
+
+                $field = $allowedFields[$change['field']];
+                $this->updateField($field, $change, $updatedBy);
+            }
+
+            $this->dbh->commit();
+        } catch (\Exception $e) {
+            $this->dbh->rollBack();
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    private function updateField($field, $change, $updatedBy) {
+        if (!isset($change['to']) || is_null($change['to'])) {
+            if (empty($change['to']) && ($field <> 'active')) {
+                throw new \Exception('bad request');
+            }
+        }
+        $updateQry = "update uct_dept A 
+                        set $field = :to, updated_by = :user 
+                        where A.dept = :dept and (A.$field = :from or A.$field is null)";
+
+        try {
+            $updateStmt = $this->dbh->prepare($updateQry);
+            $bind = [
+                ':dept' => $this->entityCode,
+                ':from' => $change['from'],
+                ':to' => $change['to'],
+                ':user' => $updatedBy
+            ];
+            $updateStmt->execute($bind);
+            if ($updateStmt->rowCount() === 0) {
+                throw new \Exception('conflict: '. $updateStmt->debugDumpParams());
+            }
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
+        }
     }
 
     public function updateOptoutStatus($user, $data) {
@@ -126,7 +188,10 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
                 ':user' => $user,
                 ':year' => $this->year
             ]);
-            return ['success' => $updateStmt->rowCount() > 0];
+
+            $date = new \DateTime('now');
+            $date->setTimezone(new \DateTimeZone('Africa/Johannesburg'));
+            return ['success' => $updateStmt->rowCount() > 0, 'user' => $user, 'date' => $date->format('Y-m-d H:i:s')];
         } catch (\PDOException $e) {
             throw new \Exception($e->getMessage());
         }

@@ -76,14 +76,190 @@ header img.navbar-brand{
   margin-right: 8px;
 }
 
-.post-body input[type=text] {
+.post-body input[type=text], 
+.post-body input[type=password] {
   font-size: 1em;
   width: 45%;
   margin-right: 20px;
   border-radius: 3px;
-  padding: 0.34em;
+  padding: 0.34em 0.5em;
   border: 1px solid #dedede;
 }
+
+.post-body input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: #aaa;
+  opacity: 1; /* Firefox */
+}
+
+.post-body input:-ms-input-placeholder { /* Internet Explorer 10-11 */
+  color: #aaa;
+}
+
+.post-body input::-ms-input-placeholder { /* Microsoft Edge */
+  color: #aaa;
+}
+
+.post-body .workflow-details input[type=text] {
+  width: auto;
+  margin: 0;
+  padding: 0.4em 0.5em;
+}
+
+.post-body .workflow-details .input-group btn {
+  padding: 0.3em 0.8em
+}
+
+.post-body .departments input[type=text] {
+  width: 90%;
+  margin-right: 0px;
+  border-radius: 3px;
+  border: 1px solid #dedede;
+}
+
+.post-body .departments .dept-title {
+  background-color: #eee;  
+}
+
+.post-body .departments h5 {
+  margin: 0;
+  padding: 0;
+}
+
+.post-body .departments .dept-title a {
+  display: block;
+  padding: 0.4em;
+  margin-right: 1em;
+}
+
+.post-body .departments .dept-title a:hover,
+.post-body .departments .dept-title a:active {
+  background-color: #ddd;
+  text-decoration: none;
+}
+
+.post-body .departments .dept-title > div > label,
+.post-body .departments .course-title > div > label {
+  float: left;
+  color: #666;
+  font-size: 12px;
+  margin-right: 10px;
+  margin-top: 4px;
+}
+.post-body .departments .dept-title > div > label.right,
+.post-body .departments .course-title > div > label.right {
+  float: right;
+  margin-right: 0px;
+  font-size: 10px;
+  margin-top: -3px;
+  padding-right: 6px;
+}
+
+.post-body .departments .dept-details {
+  padding: 1em;
+}
+
+.post-body .departments .dept-details h6 {
+  color: #bbb;
+  font-weight: 200;
+  margin: 0;
+}
+
+.post-body .departments .dept-details .form-group,
+.post-body .departments .course-details .form-group {
+  margin-bottom: 0.1rem;
+}
+
+.post-body .departments .dept-details .form-group .input-group-append button {
+  min-width: 2.5em;
+}
+
+.post-body .departments .dept-details label,
+.post-body .departments .course-details label {
+  text-align: right;
+}
+
+.post-body .departments .course-details .form-group label,
+.post-body .departments .course-details .form-group input {
+  font-size: 12px;
+}
+
+.post-body .departments .dept-details .col-sm-3,
+.post-body .departments .dept-details .col-sm-8,
+.post-body .departments .course-details .col-sm-3,
+.post-body .departments .course-details .col-sm-8  {
+  padding-right: 0px;
+  padding-lefT: 8px;
+}
+
+.post-body .departments .dept-details .form-group .multi {
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.post-body .departments .dept-details .form-group .multi a {
+  float: right;
+  display: block;
+  position: relative;
+  top: 2px;
+  right: 10px;
+  padding: 0.2em 0.6em;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.post-body .departments .dept-details .form-group .multi a i {
+  position: relative;
+  top: 2px;
+}
+
+.post-body .departments .dept-details .form-group .multi a.success {
+  color: #28a745;
+} 
+
+.post-body .departments .dept-details .form-group .multi a.danger {
+  color: #c82333;
+} 
+
+.post-body .dept-details table hr {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+.post-body .dept-details td:last-child {
+  padding-left: 8px;
+} 
+
+.post-body .dept-courses, 
+.post-body .courses-timetable {
+  display: none;
+}
+
+.post-body .dept-courses > div {
+  border: 1px solid #ddd;
+  margin-bottom: 1em;
+  padding: 1em;
+  border-radius: 0 0 4px 4px;
+}
+
+.post-body .dept-courses .loading span,
+.post-body .courses-timetable .loading span {
+  position: relative;
+  top: -4px;
+}
+
+.post-body .departments .courses-timetable > div {
+  border-top: 1px dashed #eee;
+  padding-top: 10px;
+}
+
+/*
+.post-body .departments > div {
+  border-bottom: 1px solid #ccc;
+}
+
+.post-body .departments > div:last-child {
+  border-bottom-width: 0px;
+}
+*/
 
 .post-body .card {
   border-width: 0px;
@@ -95,11 +271,13 @@ header img.navbar-brand{
   color: #ccc;
 }
 
-.post-body span.done input[type=text] {
+.post-body span.done input[type=text],
+.post-body div.done input[type=text] {
   border-color: #218838;
 }
 
-.post-body span.done::before {
+.post-body span.done::before,
+.post-body div.done::before {
   content: '';
   position: absolute;
   width: 10px;
@@ -113,11 +291,25 @@ header img.navbar-brand{
   pointer-events: none;
 }
 
-.post-body span.err input[type=text] {
+.post-body div.done::before {
+  right: auto;
+  left: 76%;
+  top: 5px;
+}
+
+.post-body .departments div.done::before {
+  right: auto;
+  left: 85%;
+  top: 5px;
+}
+
+.post-body span.err input[type=text],
+.post-body div.err input[type=text]  {
   border-color: #dc3545;
 }
 
-.post-body span.err::before {
+.post-body span.err::before,
+.post-body div.err::before {
   width: 16px;
   height: 16px;
   content: '';
@@ -144,7 +336,20 @@ header img.navbar-brand{
   pointer-events: none;
 }
 
+.post-body div.err::before {
+  right: auto;
+  left: 76%;
+  top: 7px;
+}
+
+.post-body .departments div.err::before {
+  right: auto;
+  left: 85%;
+  top: 8px;
+}
+
 .post-body .err[data-errortext]::after {
+  z-index: 1000;
   content: attr(data-errortext);
   position: absolute;
   bottom: -29px;
@@ -157,6 +362,26 @@ header img.navbar-brand{
   background: #f5c6cb;
   font-size: 12px;
   padding: 0.3em;
+}
+.post-body div.err[data-errortext]::after {
+  bottom: auto;
+  top: calc(100% - 5px);
+  left: 8px;
+  width: calc(90% - 7px);
+  padding: 0.68em;
+}
+
+.post-body div.multi.err[data-errortext]::after {
+  top: auto;
+  bottom: -33px;
+  left: 0px;
+  width: 90%;
+}
+
+.post-body .departments .course-details div.err[data-errortext]::after {
+  padding: 0.4em;
+  font-size: 11px;
+  width: calc(80% - 6px);
 }
 
 .post-body span {
@@ -192,8 +417,21 @@ header img.navbar-brand{
   display: none;
 }
 
-.post-body span.updating span.loader{
+.post-body span.updating span.loader,
+.post-body div.updating span.loader{
   display: block;
+}
+
+.post-body div.updating span.loader {
+  right: auto;
+  left: 75%;
+  top: 11px;
+}
+
+.post-body .departments div.updating span.loader {
+  right: auto;
+  left: 84%;
+  top: 11px;
 }
 
 .post-body span.loader > span{
@@ -317,7 +555,7 @@ header img.navbar-brand{
   border-top-width: 0px;
 }
 
-.post-body #course_table th.days-header {
+.post-body #course_table th.header {
   text-align: center;
   border-bottom-width: 1px;
   padding-top: 0.5em;
@@ -331,7 +569,8 @@ header img.navbar-brand{
   grid-gap: 0.1em;
   width: 100%;
 }
-.post-body #course_table th.days {
+.post-body #course_table th.days,
+.post-body #course_table th.second {
   text-align: center;
   font-size: 12px;
   border-bottom-width: 1px;
@@ -442,4 +681,100 @@ div.container.post{
 }
 .switch-button .active-case {
   color: #151515;
+}
+
+.switch {
+  display: inline-block;
+  position: relative;
+}
+
+.switch input[type=checkbox] {
+  height: 0;
+  width: 0;
+  visibility: hidden;
+}
+
+.switch label {
+  float:left;
+  cursor: pointer;
+  text-indent: -9999px;
+  width: 42px;
+  height: 24px;
+  background: grey;
+  display: block;
+  border-radius: 40px;
+  position: relative;
+}
+
+.switch label:after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 15px;
+  transition: 0.3s;
+}
+
+.switch input:checked + label {
+  background: #28a745;
+}
+
+.switch input:checked + label:after {
+  left: calc(100% - 2px);
+  transform: translateX(-100%);
+}
+
+.switch label:active:after {
+  width: 22px;
+}
+
+aside {  
+  position: fixed;
+  width: 3em;
+  top: 1em;
+  z-index: 100;
+}
+
+aside ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+aside li {
+  position: relative;
+  margin-bottom: 0.4em;
+}
+
+aside li > a {
+  display: inline-block;
+  position: relative;
+  left: -6px;
+  color:#666;
+  background-color: #ddd;
+  border: 1px solid #ccc;
+  border-left-width: 0px;
+  border-radius: 0px 4px 4px 0px;
+  padding: 0.2em 0.6em 0.2em 0.9em;
+  box-shadow: 3px 3px 5px 0px rgba(00,00,00,0.2);
+  font-size: 1em;
+  min-width: 2.4em;
+  text-align: center;
+}
+
+aside li > a:hover,
+aside li > a:active {
+  color: #000;
+  text-decoration: none;
+}
+
+aside li > a:active {
+  top: 2px;
+}
+
+.input-group-mid {
+  margin-right: -1px;
+  margin-left: -1px;
 }

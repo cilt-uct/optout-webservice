@@ -4,10 +4,12 @@ namespace App\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use App\Entity\Course;
 use App\Entity\Department;
+use App\Entity\Workflow;
 use App\Service\LDAPService;
 use App\Service\OCRestService;
 use App\Service\SakaiWebService;
@@ -16,9 +18,9 @@ use App\Service\Utilities;
 class UIController extends Controller
 {
     /**
-     * @Route("/view/{hash}")
+     * View the page according to the hash it receives
      * 
-     * View the page according to the hash it receives 
+     * @Route("/view/{hash}")
      */
     public function viewFromHash($hash, Request $request)
     {
@@ -71,7 +73,7 @@ class UIController extends Controller
         }
 
         if ($data['course'] === null ) {
-            $dept = new Department($data['dept'], $hash, $data['year'], false);    
+            $dept = new Department($data['dept'], $hash, $data['year'], false, false);    
             $data['details'] = $dept->getDetails();
             $data['readonly'] = ($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
 
@@ -79,6 +81,7 @@ class UIController extends Controller
                 return $this->viewOptOut($hash, $request);
             }       
 
+            //return new Response(json_encode($data), 201);
             return $this->render('department.html.twig', $data);   
         } else {
             $vula = new SakaiWebService();
@@ -109,13 +112,17 @@ class UIController extends Controller
         $now = new \DateTime();
         $utils = new Utilities();
         $data = $utils->getMail($hash);
-
-        // get department
-        $dept = new Department($data['result'][0]['dept'], $hash, $data['result'][0]['year']);
-
         $authenticated = ['a' => false, 'z' => '0'];
-        $confirmed = $dept->isOptOut;
-
+        $confirmed = false;
+        
+        // get department
+        try {
+            $dept = new Department($data['result'][0]['dept'], $hash, $data['result'][0]['year']);
+            $confirmed = $dept->isOptOut;
+        } catch (\Exception $e) {
+            $hash = null;
+        }
+        
         switch ($request->getMethod()) {
             case 'POST':
                 $type = $request->request->get('type');
@@ -164,7 +171,8 @@ class UIController extends Controller
             break;
         }
 
-        if (!$data['success']) {
+        
+        if (!$data['success'] || $hash == null) {
             return $this->render('error.html.twig', $data);
         } else {
             $data = $data['result'][0];
@@ -222,13 +230,39 @@ class UIController extends Controller
                 $course = new Course($data['course'], $hash, $data['year'], false);
                 $details = $course->getDetails();
 
-                return $this->render('course_mail.html.twig', 
-                    array(  'dept' => $data['dept'],
+                $vula = new SakaiWebService();
+                $site_list = $vula->getSiteByProviderId($data['course'], $data['year']);
+                $site = '';
+                if (count($site_list) > 0) {
+                    $site = $site_list[0]['SITE_ID'];
+                }
+
+                $o = array( 'dept' => $data['dept'],
                             'course' => $data['course'],
                             'name' => $data['name'],
+                            'site_list' => $site_list,
+                            'site' => $site,
                             'date' => $data['date_schedule'],
                             'out_link' => 'https://srvslscet001.uct.ac.za/optout/out/'. $hash,
-                            'view_link' => 'https://srvslscet001.uct.ac.za/optout/view/'. $hash));
+                            'view_link' => 'https://srvslscet001.uct.ac.za/optout/view/'. $hash);
+                    
+                if ($data['type'] == 'confirm') {
+                    switch($data['case']) {
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                            return $this->render('course_mail_case_'. $data['case'] .'.html.twig', $o);
+                            break;
+                        default:
+                            return $this->render('course_mail.html.twig', $o);
+                            break;
+                    }
+                } else {
+                    return $this->render('course_mail.html.twig', $o);
+                }
             }
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
@@ -257,10 +291,85 @@ class UIController extends Controller
                 $course = new Course($data['course'], $hash, $data['year'], false);
                 $details = $course->getDetails();
 
-                return new Response($data['course'] ." course:  Automated Setup or Opt-out of Lecture Recording", 201);
+                $str = $data['course'] ." course:  Automated Setup or Opt-out of Lecture Recording" . 
+                        ($data['type'] == 'confirm' ? ' [Completed]' : '');
+               
+                return new Response($str, 201);
             }
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
+        }
+    }
+
+    /**
+     * Show admin page
+     * 
+     * @Route("/admin", name="admin_show")
+     */
+    public function getAdmin(Request $request)
+    {
+        $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
+        
+        $now = new \DateTime();
+        $utils = new Utilities();
+        $workflow = new Workflow();
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+            
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                        $authenticated['z'] = $utils->getAuthorizedUsers($details[0]['cn']);
+                    } else {
+                        $authenticated['z']['err'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z']['err'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z']['err'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+                if ($session->get('username')) {
+                    $authenticated['z'] = $utils->getAuthorizedUsers($session->get('username'));
+                }
+            break;
+        }
+
+        $data = [ 'dept' => 'CILT', 'authenticated' => $authenticated, 'workflow' => $workflow->getWorkflow() ];
+        //return new Response(json_encode($data), 201);
+        //return new Response(json_encode($authenticated['z']), 201);
+
+        if ($authenticated['z']['success']) {
+
+            $data['departments'] = $utils->getAllCourses();
+
+            $ar = [];
+            if ($data['departments']['success'] == '1') {
+                foreach ($data['departments']['result'] as $a) {
+                    array_push($ar, substr($a['dept'], 0, 1));
+                }
+            }
+            $data['list'] = array_unique($ar);
+
+            //$data['courses'] = 
+            return $this->render('admin.html.twig', $data);
+        } else {
+            return $this->render('admin_login.html.twig', $authenticated['z']);
         }
     }
 }
