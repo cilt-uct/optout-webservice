@@ -100,7 +100,7 @@ class Utilities
 
     public function getCompleteUser($search) {
         try {
-            $searchQry = "select EID, EMAIL from vula_archive.SAKAI_USER_ARCHIVE where EID = :search or EMAIL = :search or USER_ID = :search limit 1";
+            $searchQry = "select EID, EMAIL from vula_archive.SAKAI_USER_ARCHIVE where (EID = :search or EMAIL = :search or USER_ID = :search) and TYPE != 'test' limit 1";
             $stmt = $this->dbh->prepare($searchQry);
             $stmt->execute([':search' => $search]);
             if ($stmt->rowCount() === 0) {
