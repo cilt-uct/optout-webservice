@@ -302,6 +302,22 @@ class UIController extends Controller
     }
 
     /**
+     * Main page
+     *
+     * @Route("/", name="Main")
+     */
+    public function defaultMain(Request $request)
+    {
+	$pathInfo = $request->getPathInfo();
+        $requestUri = $request->getRequestUri();
+
+        $url = $requestUri .'admin';
+
+	return $this->redirect($url, 301);
+	#return new Response("$url", 200);
+    }
+
+    /**
      * Show admin page
      * 
      * @Route("/admin", name="admin_show")
