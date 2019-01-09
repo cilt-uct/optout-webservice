@@ -63,6 +63,46 @@ class ApiController extends Controller
     }
   }
 
+  /**
+   * @Route("/search/vula/{searchStr}")
+   */
+  public function searchVulaEndpoint($searchStr, Request $request) {
+    try {
+      $result = [];
+//      if ($isUctEmail) {
+          $result['vula'] = $this->searchVula(null, null, $searchStr);
+          $result['ldap'] = $this->searchLdap($result['vula']['username']);
+//      }
+//      else if ($isNumeric) {
+ //         $result['ldap'] = $this->searchLdap($searchStr);
+//          $result['vula'] = $this->searchVula($result['ldap'][0]['cn'], null, null);
+//      }
+
+      return new Response(
+        json_encode($result),
+        200,
+        [
+          'Content-Type' => 'application/json'
+        ]
+      );
+    } catch (\Exception $e) {
+      $response = [
+        "text" => "Server error",
+        "statusCode" => 500,
+        "contentType" => [
+          'Content-Type' => 'text/plain'
+        ]
+      ];
+      switch($e->getMessage()) {
+        case "no such user":
+          $response['text'] = 'User not found';
+          $response['statusCode'] = 404;
+      }
+
+      return new Response($response['text'], $response['statusCode'], $response['contentType']);
+    }
+  }
+
   private function searchLdap($searchStr) {
     $ldap = new LDAPService();
     return $ldap->match($searchStr);

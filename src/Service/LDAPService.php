@@ -37,7 +37,7 @@ class LDAPService
               if (is_numeric($key)) {
                 $result = [];
                 foreach ($this->returnFields as $idx => $field) {
-                  $result[$field] = is_array($ldapSearchArray[$key][$field]) ? $ldapSearchArray[$key][$field]['0'] : $ldapSearchArray[$key][$field];
+                  $result[$field] = isset($ldapSearchArray[$key][$field]) && is_array($ldapSearchArray[$key][$field]) ? $ldapSearchArray[$key][$field]['0'] : (isset($ldapSearchArray[$key][$field]) ? $ldapSearchArray[$key][$field] : null);
                 }
                 $searchResults[] = $result;
               }
