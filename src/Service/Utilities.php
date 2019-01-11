@@ -125,7 +125,7 @@ class Utilities
                         left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`
                         where hash = :hash and workflow_id = :workflow_id order by created_at desc limit 1";
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute([':hash' => $hash, ':workflow_id' => 1]);//$worfklow_details['oid']]);
+            $stmt->execute([':hash' => $hash, ':workflow_id' => $worfklow_details['oid']]);
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,
