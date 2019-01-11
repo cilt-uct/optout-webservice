@@ -32,7 +32,7 @@ class Workflow
      * @Assert\DateTime()
      */
     private $date_schedule;
-    
+
 
     public function __construct() {
         if (!$this->dbh) {
@@ -64,7 +64,7 @@ class Workflow
     }
 
     /**
-     * Get active workflow (only one running at any one time
+     * Get active workflow (only one running at any one time)
      */
     public function getWorkflow() {
         return [
@@ -75,15 +75,15 @@ class Workflow
             'date_dept' => $this->date_dept,
             'date_course' => $this->date_course,
             'date_schedule' => $this->date_schedule,
-            'active' => $this->active 
+            'active' => $this->active
         ];
     }
-  
+
     /**
-     * 
+     * Run the workflow
      */
     public function run() {
-        
+
         $now = new \DateTime();
         $result = [ 'success' => 1 ];
         $result['result'] = 'running: '. $this->status;
@@ -91,26 +91,31 @@ class Workflow
         //ENUM('init', 'start', 'run', 'dept', 'dept_mail', 'course', 'course_mail', 'done')
         switch($this->status) {
             case 'init':
-                // So initialization of this workflow
-                // (wait for start date)
-                if ($now->diff($this->date_start)->format('%R') == '-') {
+
+                if ($this->startWorkflow()) {
                     // > state: start
                     $this->setState('start');
                     $result['result'] = $result['result'] ." - switch to start";
                 } else {
-                    $result['result'] = $result['result'] ." - wating for ". $this->date_start->format("Y-m-d H:i:s");
+                    $result = [ 'success' => 0, 'err' => 'Error starting workflow'];
                 }
+                // So initialization of this workflow
                 break;
             case 'start':
-                // Create the hashing for all the courses
-                // > status : run
-                $this->setState('run');
+                // (wait for start date)
+                if ($now->diff($this->date_start)->format('%R') == '-') {
+                    // > status : run
+                    $this->setState('run');
+                    $result['result'] = $result['result'] ." - switch to run";
+                } else {
+                    $result['result'] = $result['result'] ." - waiting for ". $this->date_start->format("Y-m-d H:i:s");
+                }
                 break;
             case 'run':
                 // (wait for department date)
                 if ($now->diff($this->date_dept)->format('%R') == '-') {
 
-                    // Create email entries for each departments head, so mail can be sent to each                   
+                    // Create email entries for each departments head, so mail can be sent to each
                     $action = $this->createDepartmentMails();
                     if ($action === 1) {
 
@@ -121,14 +126,14 @@ class Workflow
                         $result = [ 'success' => 0, 'err' => $action];
                     }
                 } else {
-                    $result['result'] = $result['result'] ." - wating for ". $this->date_dept->format("Y-m-d H:i:s");
+                    $result['result'] = $result['result'] ." - waiting for ". $this->date_dept->format("Y-m-d H:i:s");
                 }
                 break;
             case 'dept':
                 // (wait for course date)
                 if ($now->diff($this->date_course)->format('%R') == '-') {
 
-                    // Create email entries for each COURSE, so mail can be sent to each 
+                    // Create email entries for each COURSE, so mail can be sent to each
                     if ($this->createCourseMails()) {
 
                         // > state: course
@@ -138,7 +143,7 @@ class Workflow
                         $result = [ 'success' => 0, 'err' => 'Error creating course mails'];
                     }
                 } else {
-                    $result['result'] = $result['result'] ." - wating for ". $this->date_course->format("Y-m-d H:i:s");
+                    $result['result'] = $result['result'] ." - waiting for ". $this->date_course->format("Y-m-d H:i:s");
                 }
                 break;
             case 'course':
@@ -152,7 +157,7 @@ class Workflow
                     $this->setState('done');
                     $result['result'] = $result['result'] ." - switch to done";
                 } else {
-                    $result['result'] = $result['result'] ." - wating for ". $this->date_schedule->format("Y-m-d H:i:s");
+                    $result['result'] = $result['result'] ." - waiting for ". $this->date_schedule->format("Y-m-d H:i:s");
                 }
                 break;
             case 'done':
@@ -166,9 +171,10 @@ class Workflow
                     $stmt->execute();
                     $this->active = false;
 
-                    // TODO: create new workflow 
-                    /*    
-                    $query = "UPDATE uct_workflow SET active = 0 WHERE active = 1";
+                    // TODO: create new workflow
+                    /*
+                    $query = "INSERT INTO uct_workflow (`year`,`date_start`,`date_dept`,`date_course`,`date_schedule`)
+                    VALUES (2019,<{date_start: }>,<{date_dept: }>,<{date_course: }>,<{date_schedule: }>)";
                     $stmt = $this->dbh->prepare($query);
                     $stmt->execute();
                     $this->active = false;
@@ -188,6 +194,31 @@ class Workflow
         return $result;
     }
 
+    /**
+     * Start the process
+     */
+    private function startWorkflow(){
+        try {
+            // Populate the dept_opt_out table
+            $query = "INSERT INTO `timetable`.`dept_optout` (`dept`, `year`, `workflow_id`)
+                    SELECT `dept`, :year, :workflow_id FROM `timetable`.`uct_dept` where `active` = 1
+                    ON DUPLICATE KEY UPDATE `dept`=VALUES(`dept`), `year`=VALUES(`year`), `workflow_id`=VALUES(`workflow_id`);";
+
+            $stmt = $this->dbh->prepare($query);
+
+            if (!$stmt->execute([':year' => $this->year, ':workflow_id' => $this->oid])) {
+                return $this->dbh->errorInfo();
+            } else {
+                $utils = new Utilities();
+                $updateResults = $utils->refreshCourses();
+            }
+        } catch (\PDOException $e) {
+            return $e->getMessage();
+        }
+
+        return 1;
+    }
+
     private function createDepartmentMails(){
 
         try {
@@ -195,14 +226,14 @@ class Workflow
             $query = "SELECT * FROM uct_dept where `use_dept` = 1";
             $stmt = $this->dbh->prepare($query);
             $stmt->execute();
-            
+
             $ar = [];
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
                 $dept = new Department($row['dept'], null, $this->year, true);
 
-                array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['email'] .'","'. 
-                        $row['alt_email'] .'","'. $dept->getHash() .'","'. 
+                array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['email'] .'","'.
+                        $row['alt_email'] .'","'. $dept->getHash() .'","'.
                         ( strlen($row['firstname']."".$row['lastname']) < 2 ? "Colleague" : $row['firstname'] ." ". $row['lastname']) .'")');
             }
 
@@ -221,7 +252,7 @@ class Workflow
 
     private function createCourseMails(){
         try {
-            // get list of courses
+            // get list of courses - only eligible courses
             $query = "SELECT distinct(`course`.course_code) as course_code, `course`.dept as dept
                 FROM timetable.course_optout `course`
                 left join timetable.ps_courses `ps` on `ps`.course_code =  `course`.course_code and `ps`.term = `course`.year
@@ -229,12 +260,12 @@ class Workflow
                 left join timetable.dept_optout `deptout` on `course`.`dept` = `deptout`.`dept`
                 left join timetable.uct_dept `dept` on `course`.`dept` = `dept`.`dept`
                 left join timetable.opencast_venues on `sn`.venue = opencast_venues.sn_venue
-                where `dept`.use_dept = 1 and `deptout`.is_optOut = 0 and `ps`.active = 1 
+                where `dept`.use_dept = 1 and `deptout`.is_optOut = 0 and `ps`.active = 1
                     and `ps`.acad_career = 'UGRD' and opencast_venues.campus_code in ('UPPER','MIDDLE')";
 
             $stmt = $this->dbh->prepare($query);
             $stmt->execute();
-            
+
             $ar = [];
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
@@ -243,31 +274,31 @@ class Workflow
                 $timetabled = $course->checkIsTimetabled();
 
                 if ($timetabled == false) {
-                    $to = [ 'mail' => $details['convenor']['email'], 
+                    $to = [ 'mail' => $details['convenor']['email'],
                             'name' => $details['convenor']['name']];
 
                     if ($to['mail'] == null) {
                         $dept = new Department($row['dept'], null, $this->year, true, true);
                         $dept_details = $dept->getDetails();
 
-                        $to = [ 'mail' => ($details['convenor']['email'] == null ? $dept_details['mail'] : $details['convenor']['email']), 
+                        $to = [ 'mail' => ($details['convenor']['email'] == null ? $dept_details['mail'] : $details['convenor']['email']),
                                 'name' => ($details['convenor']['email'] == null ? $dept_details['hod'] : $details['convenor']['name'])];
-                    
+
                         if (strlen($to['name']) < 2) {
                             $to['name'] = "Colleague";
                         }
                     }
 
-                    array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['course_code'] .'","'. 
-                        $to['mail'] .'","'. 
-                        $course->getHash() .'","'. 
+                    array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['course_code'] .'","'.
+                        $to['mail'] .'","'.
+                        $course->getHash() .'","'.
                         $to['name'] .'")');
                 }
             }
 
             $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`) VALUES ". implode(',', $ar);
             //return $insertQry;
-            
+
             $mailStmt = $this->dbh->prepare($insertQry);
             if (!$mailStmt->execute($ar)) {
                 return $this->dbh->errorInfo();
@@ -277,7 +308,7 @@ class Workflow
         }
 
         return 1;
-    }    
+    }
 
     private function setState($status) {
         try {

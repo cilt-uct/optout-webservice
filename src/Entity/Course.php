@@ -43,12 +43,15 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         $utils = new Utilities();
 
         $qry = "select A.course_code, A.term, A.dept, A.secret, A.start_date, A.end_date,
+                if(A.acad_career = 'UGRD' and opencast_venues.campus_code in ('UPPER','MIDDLE'), 1, 0) as eligble,
                 ifnull(C.convenor_name, A.convenor_name) as convenor_name,
                 ifnull(C.convenor_eid, A.convenor_eid) as convenor_eid, D.is_optout, D.updated_at, D.updated_by,
-                ifnull(C.convenor_email, (select E.email from vula_archive.SAKAI_USER_ARCHIVE E where C.convenor_eid = E.EID or (C.convenor_eid is null and A.convenor_eid = E.EID))) as email 
+                ifnull(C.convenor_email, (select E.email from vula_archive.SAKAI_USER_ARCHIVE E where C.convenor_eid = E.EID or (C.convenor_eid is null and A.convenor_eid = E.EID))) as email
                     from timetable.ps_courses A
                     left join timetable.course_updates C on A.course_code = C.course_code and A.term = C.year
                     left join timetable.course_optout D on A.course_code = D.course_code and A.term = D.year
+                    left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = A.course_code and `sn`.term = A.term
+                    left join timetable.opencast_venues on `sn`.venue = opencast_venues.sn_venue
                 where A.active = 1 and A.course_code = :course and A.term = :year limit 1";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':course' => $this->entityCode, ':year' => $this->year]);
@@ -70,16 +73,18 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         $this->updatedAt = $result[0]['updated_at'];
         $this->updatedBy = $result[0]['updated_by'];
         $this->parentEntityCode = $result[0]['dept'];
+        $this->eligble = $result[0]['eligble'];
     }
 
     public function getDetails() {
-        $fields = ['courseCode', 'year', 'convenor', 'optoutStatus', 'updatedAt', 'updatedBy'];
+        $fields = ['courseCode', 'year', 'convenor', 'optoutStatus', 'updatedAt', 'updatedBy', 'eligble'];
 
         $details = ['hash' => $this->getHash()];
         foreach ($fields as $idx => $field) {
             $details[$field] = $this->{$field};
         }
         if ($details['optoutStatus']) $details['optoutStatus'] = (int) $details['optoutStatus'];
+        if ($details['eligble']) $details['eligble'] = (int) $details['eligble'];
         return $details;
     }
 
@@ -199,7 +204,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 ':user' => $user,
                 ':year' => $this->year
             ]);
-            
+
             $date = new \DateTime('now');
             $date->setTimezone(new \DateTimeZone('Africa/Johannesburg'));
             return ['success' => $updateStmt->rowCount() > 0, 'user' => $user, 'date' => $date->format('Y-m-d H:i:s')];

@@ -25,6 +25,8 @@ class Utilities
 
     public function refreshCourses() {
         try {
+            $workflow = (new Workflow)->getWorkflow();
+
             $qry = "select distinct sn_timetable_versioned.course_code, ps_courses.term, ps_courses.dept FROM sn_timetable_versioned
                       inner join opencast_venues on sn_timetable_versioned.venue = opencast_venues.sn_venue
                       inner join ps_courses on sn_timetable_versioned.course_code = ps_courses.course_code and sn_timetable_versioned.term = ps_courses.term
@@ -45,10 +47,8 @@ class Utilities
                 ':this_year_half' => $yearHalf
             ]);
 
-            $optoutQry = "insert into course_optout (course_code, year, dept) values (:course, :year, :dept) on duplicate key update course_code = :course, dept = :dept";
-            $secretsQry = "insert into course_secrets (course_code, year, secret) values (:course, :year, :secret) on duplicate key update course_code = :course";
+            $optoutQry = "insert into course_optout (course_code, year, dept, workflow_id) values (:course, :year, :dept, :workflow_id) on duplicate key update course_code = :course, dept = :dept, workflow_id = :workflow_id";
             $optoutStmt = $this->dbh->prepare($optoutQry);
-            $secretsStmt = $this->dbh->prepare($secretsQry);
 
             $updateResults = [
                 'coursesFound' => $stmt->rowCount(),
@@ -60,12 +60,8 @@ class Utilities
                     $optoutStmt->execute([
                         ':course' => $row['course_code'],
                         ':year' => $row['term'],
-                        ':dept' => $row['dept']
-                    ]);
-                    $secretsStmt->execute([
-                        ':course' => $row['course_code'],
-                        ':year' => $row['term'],
-                        ':secret' => mt_rand() . '.' . bin2hex(random_bytes(16))
+                        ':dept' => $row['dept'],
+                        ':workflow_id' => $workflow['oid']
                     ]);
                     $updateResults['coursesUpdated'] += $optoutStmt->rowCount();
                 }
@@ -118,17 +114,22 @@ class Utilities
     }
 
     public function getMail($hash) {
+        $workflow = new Workflow();
+        $worfklow_details = $workflow->getWorkflow();
+
         $result = [ 'success' => 1, 'result' => null ];
         try {
             $query = "select mail.dept, mail.course, mail.state, mail.created_at, mail.name, mail.type, mail.case,
-                        `workflow`.`year`, `workflow`.`status`, `workflow`.`date_start`, `workflow`.`date_dept`, `workflow`.`date_course`, `workflow`.`date_schedule` 
-                        from uct_workflow_email mail 
-                        left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`  
-                        where hash = :hash order by created_at desc limit 1";
+                        `workflow`.`year`, `workflow`.`status`, `workflow`.`date_start`, `workflow`.`date_dept`, `workflow`.`date_course`, `workflow`.`date_schedule`
+                        from uct_workflow_email mail
+                        left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`
+                        where hash = :hash and workflow_id = :workflow_id order by created_at desc limit 1";
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute([':hash' => $hash]);
+            $stmt->execute([':hash' => $hash, ':workflow_id' => 1]);//$worfklow_details['oid']]);
             if ($stmt->rowCount() === 0) {
-                $result = [ 'success' => 0, 'err' => 'No reference mail was found.'];
+                $result = [
+                    'success' => 0,
+                    'err' => 'The refernce was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
             }
 
             $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -139,7 +140,7 @@ class Utilities
         return $result;
     }
 
-    public function getAllCourses($year = '') 
+    public function getAllCourses($year = '')
     {
 
         $workflow = new Workflow();
@@ -148,8 +149,9 @@ class Utilities
         $result = [ 'success' => true, 'result' => null ];
         try {
             $query = "select A.*, B.*,
-                    (SELECT count(distinct(`ps`.course_code)) FROM timetable.ps_courses `ps`
-                    join course_optout B on `ps`.course_code = B.course_code
+                    (SELECT count(distinct(`ps`.course_code))
+                    FROM timetable.ps_courses `ps`
+                    join timetable.course_optout `out` on `ps`.course_code = `out`.course_code
                     left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `ps`.course_code and `sn`.term = `ps`.term
                     left join timetable.opencast_venues on `sn`.venue = opencast_venues.sn_venue
                     where `ps`.active = 1 and `ps`.dept = A.dept and `ps`.term = B.year
@@ -157,19 +159,24 @@ class Utilities
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 0 and course is not null) as mail_unsent,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 1 and course is not null) as mail_sent,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 2 and course is not null) as mail_err
-                from uct_dept A left join dept_optout B on A.dept = B.dept
+                from timetable.uct_dept A left join timetable.dept_optout B on A.dept = B.dept
                 where B.year = :year";
+
             $stmt = $this->dbh->prepare($query);
             $stmt->execute([':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']]);
 
-            if ($stmt->rowCount() === 0) {
-                $result = [ 'success' => false, 'err' => 'Query failed.'];
+            if ($stmt->execute([':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']])) {
+                if ($stmt->rowCount() === 0) {
+                    $result = [ 'success' => false, 'err' => 'Query is empty', ':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']];
+                }
+            } else {
+                $result = [ 'success' => false, 'err' => $stmt->errorInfo(), ':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']];
             }
 
             # dept, name, email, firstname, lastname, alt_email, use_dept, secret, year, is_optout
             $ar = [];
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                
+
                 $d = new Department($row['dept'], null, $worfklow_details['year'], true);
                 $dept = $row;
                 $dept['hash'] = $d->getHash();
@@ -213,7 +220,7 @@ class Utilities
         $result = [ 'success' => 0, 'err' => 'Unauthorized ('.$username.')'];
         try {
             $query = "select `user`.`username`, `user`.`name`, `user`.`type`
-                        from uct_authorized_users `user` 
+                        from uct_authorized_users `user`
                         where `user`.`username` = :username limit 1";
             $stmt = $this->dbh->prepare($query);
             $stmt->execute([':username' => $username]);

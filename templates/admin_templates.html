@@ -1,5 +1,5 @@
 <script type="text/x-tmpl" id="tmpl-courses">
-    {% $.each(o.courses, function( i, course ) { %}
+    {% $.each(o.courses, function( i, course ) { if (course.eligble == '1') { %}
         <div class="row no-gutters course-title">
             <div class="col-sm-8">
                 <h6>{%=course.courseCode%}, {%=course.year%}</h6>
@@ -20,7 +20,7 @@
                     <label for="inp_{%=course.courseCode%}_EID" class="col-sm-3 col-form-label">EID</label>
                     <div class="col-sm-9">
                         <input type="text" class="form-control" id="inp_{%=course.courseCode%}_EID" placeholder="EID" data-dept="{%=o.dept%}"
-                                    data-type="course" data-field="convenorEid" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}" 
+                                    data-type="course" data-field="convenorEid" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}"
                                     data-old="{%=course.convenor.eid%}" value="{%=course.convenor.eid%}"/>
                         <span class="loader">
                             <span></span>
@@ -33,7 +33,7 @@
                     <label for="inp_{%=course.courseCode%}_convenorName" class="col-sm-3 col-form-label">Convenor Name</label>
                     <div class="col-sm-9">
                         <input type="text" class="form-control" id="inp_{%=course.courseCode%}_convenorName" placeholder="Convenor Name" data-dept="{%=o.dept%}"
-                                    data-type="course" data-field="convenorName" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}" 
+                                    data-type="course" data-field="convenorName" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}"
                                     data-old="{%=course.convenor.name%}" value="{%=course.convenor.name%}"/>
                         <span class="loader">
                             <span></span>
@@ -46,8 +46,8 @@
                     <label for="inp_{%=course.courseCode%}_convenorEmail" class="col-sm-3 col-form-label">Convenor Mail</label>
                     <div class="col-sm-9">
                         <input type="text" class="form-control" id="inp_{%=course.courseCode%}_convenorEmail" placeholder="Convenor Mail" data-dept="{%=o.dept%}"
-                                    data-type="course" data-field="convenorEmail" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}" 
-                                    data-old="{%=(course.convenor.email ? course.convenor.email.toLowerCase() :'')%}" 
+                                    data-type="course" data-field="convenorEmail" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}"
+                                    data-old="{%=(course.convenor.email ? course.convenor.email.toLowerCase() :'')%}"
                                     value="{%=(course.convenor.email ? course.convenor.email.toLowerCase() :'')%}"/>
                         <span class="loader">
                             <span></span>
@@ -55,7 +55,7 @@
                             <span></span>
                         </span>
                     </div>
-                </div>                           
+                </div>
                 <!--{%=JSON.stringify(course.convenor)%}-->
             </div>
             <div class="col-sm-4">
@@ -64,9 +64,9 @@
                 </div>
             </div>
         </div>
-        <div class="row no-gutters justify-content-end courses-timetable" id="{%=course.courseCode%}_timetable"></div>        
+        <div class="row no-gutters justify-content-end courses-timetable" id="{%=course.courseCode%}_timetable"></div>
         <hr/>
-    {% }); %}
+    {% } }); %}
 </script>
 
 <script type="text/x-tmpl" id="tmpl-courses-loading">
@@ -104,10 +104,10 @@
         <a href="#" class="danger" rel="{%=o.dept%}" data-index="{%=o.index%}">
             <i class="fa fa-minus" aria-hidden="true"></i>
         </a>
-        <input type="text" class="form-control" 
+        <input type="text" class="form-control"
                 id="inp_{%=o.dept%}_alt_{%=o.index%}" data-type="dept" data-field="altMail" data-dept="{%=o.dept%}" data-hash="{%=o.hash%}"
                 data-index="{%=o.index%}"
-                placeholder="E-mail" data-old="" value=""/>                                                
+                placeholder="E-mail" data-old="" value=""/>
         <span class="loader">
             <span></span>
             <span></span>
@@ -139,7 +139,7 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody>                           
+                <tbody>
                     {% $.each(o.LEC, function(i, lec) { %}
                         <tr>
                             <td>{%=lec.venue%}</td>
@@ -164,4 +164,4 @@
             </table>
         </div>
     </div>
-</script>    
+</script>
