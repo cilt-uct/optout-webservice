@@ -232,12 +232,12 @@ class Workflow
 
                 $dept = new Department($row['dept'], null, $this->year, true);
 
-                array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['email'] .'","'.
+                array_push($ar, '('. $this->oid .',"'. $row['dept'] .'",'. $this->year .',"'. $row['email'] .'","'.
                         $row['alt_email'] .'","'. $dept->getHash() .'","'.
                         ( strlen($row['firstname']."".$row['lastname']) < 2 ? "Colleague" : $row['firstname'] ." ". $row['lastname']) .'")');
             }
 
-            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `mail_to`, `mail_cc`, `hash`, `name`) VALUES ". implode(',', $ar);
+            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `term`, `mail_to`, `mail_cc`, `hash`, `name`) VALUES ". implode(',', $ar);
 
             $mailStmt = $this->dbh->prepare($insertQry);
             if (!$mailStmt->execute($ar)) {
