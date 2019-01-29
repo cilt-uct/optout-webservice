@@ -187,13 +187,13 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         return false;
     }
 
-    public function updateOptoutStatus($user, $data) {
+    public function updateOptoutStatus($user, $data, $workflow_id) {
         if (!$user) {
             throw new \Exception("Authorisation required (invalid user)");
         }
 
-        $updateQry = "replace into course_optout (course_code, dept, is_optout, updated_by, updated_at, year)
-                      values (:courseCode, :dept, ifnull(:status,0), :user,  now(), :year)";
+        $updateQry = "replace into course_optout (course_code, dept, is_optout, updated_by, updated_at, year, workflow_id)
+                      values (:courseCode, :dept, ifnull(:status,0), :user,  now(), :year, :workflow_id)";
 
         try {
             $updateStmt = $this->dbh->prepare($updateQry);
@@ -202,7 +202,8 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 ':dept' => $this->parentEntityCode,
                 ':status' => $data['status'],
                 ':user' => $user,
-                ':year' => $this->year
+                ':year' => $this->year,
+                ':workflow_id' => $workflow_id
             ]);
 
             $date = new \DateTime('now');

@@ -19,13 +19,13 @@ class UIController extends Controller
 {
     /**
      * View the page according to the hash it receives
-     * 
+     *
      * @Route("/view/{hash}")
      */
     public function viewFromHash($hash, Request $request)
     {
         $authenticated = ['a' => false, 'z' => '0'];
-        
+
         $now = new \DateTime();
         $utils = new Utilities();
         $data = $utils->getMail($hash);
@@ -35,7 +35,7 @@ class UIController extends Controller
                 $ldap = new LDAPService();
                 $user = $request->request->get('eid');
                 $password = $request->request->get('pw');
-            
+
                 try {
                     if ($ldap->authenticate($user, $password)) {
                         $details = $ldap->match($user);
@@ -73,16 +73,16 @@ class UIController extends Controller
         }
 
         if ($data['course'] === null ) {
-            $dept = new Department($data['dept'], $hash, $data['year'], false, false);    
+            $dept = new Department($data['dept'], $hash, $data['year'], false, false);
             $data['details'] = $dept->getDetails();
             $data['readonly'] = ($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
 
             if (count($data['details']['courses']) == 0) {
                 return $this->viewOptOut($hash, $request);
-            }       
+            }
 
             //return new Response(json_encode($data), 201);
-            return $this->render('department.html.twig', $data);   
+            return $this->render('department.html.twig', $data);
         } else {
             $vula = new SakaiWebService();
             $ocService = new OCRestService();
@@ -114,7 +114,7 @@ class UIController extends Controller
         $data = $utils->getMail($hash);
         $authenticated = ['a' => false, 'z' => '0'];
         $confirmed = false;
-        
+
         // get department
         try {
             $dept = new Department($data['result'][0]['dept'], $hash, $data['result'][0]['year']);
@@ -122,7 +122,7 @@ class UIController extends Controller
         } catch (\Exception $e) {
             $hash = null;
         }
-        
+
         switch ($request->getMethod()) {
             case 'POST':
                 $type = $request->request->get('type');
@@ -132,7 +132,7 @@ class UIController extends Controller
                         $ldap = new LDAPService();
                         $user = $request->request->get('eid');
                         $password = $request->request->get('pw');
-                    
+
                         try {
                             if ($ldap->authenticate($user, $password)) {
                                 $details = $ldap->match($user);
@@ -155,11 +155,12 @@ class UIController extends Controller
                     break;
                     case 'ask':
                         if ($dept) {
-                            
+
                             $session = $request->hasSession() ? $request->getSession() : new Session();
                             $authenticated['a'] = $session->get('username') ? true : false;
+                            $workflow = (new Workflow)->getWorkflow();
 
-                            $updated = $dept->updateOptoutStatus($session->get('username'), ['status' => $request->request->get('optout_confirm') ]);
+                            $updated = $dept->updateOptoutStatus($session->get('username'), ['status' => $request->request->get('optout_confirm') ], $workflow['oid']);
                             $confirmed = $updated['success'];
                         }
                     break;
@@ -171,7 +172,7 @@ class UIController extends Controller
             break;
         }
 
-        
+
         if (!$data['success'] || $hash == null) {
             return $this->render('error.html.twig', $data);
         } else {
@@ -219,7 +220,7 @@ class UIController extends Controller
                 $dept = new Department($data['dept'], $hash, $data['year'], false);
                 $details = $dept->getDetails();
 
-                return $this->render('department_mail.html.twig', 
+                return $this->render('department_mail.html.twig',
                     array(  'dept' => $data['dept'],
                             'dept_name' => $details['name'],
                             'name' => $data['name'],
@@ -245,7 +246,7 @@ class UIController extends Controller
                             'date' => $data['date_schedule'],
                             'out_link' => 'https://srvslscet001.uct.ac.za/optout/out/'. $hash,
                             'view_link' => 'https://srvslscet001.uct.ac.za/optout/view/'. $hash);
-                    
+
                 if ($data['type'] == 'confirm') {
                     switch($data['case']) {
                         case '1':
@@ -291,9 +292,9 @@ class UIController extends Controller
                 $course = new Course($data['course'], $hash, $data['year'], false);
                 $details = $course->getDetails();
 
-                $str = $data['course'] ." course:  Automated Setup or Opt-out of Lecture Recording" . 
+                $str = $data['course'] ." course:  Automated Setup or Opt-out of Lecture Recording" .
                         ($data['type'] == 'confirm' ? ' [Completed]' : '');
-               
+
                 return new Response($str, 201);
             }
         } else {
@@ -319,13 +320,13 @@ class UIController extends Controller
 
     /**
      * Show admin page
-     * 
+     *
      * @Route("/admin", name="admin_show")
      */
     public function getAdmin(Request $request)
     {
         $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
-        
+
         $now = new \DateTime();
         $utils = new Utilities();
         $workflow = new Workflow();
@@ -335,7 +336,7 @@ class UIController extends Controller
                 $ldap = new LDAPService();
                 $user = $request->request->get('eid');
                 $password = $request->request->get('pw');
-            
+
                 try {
                     if ($ldap->authenticate($user, $password)) {
                         $details = $ldap->match($user);
@@ -382,7 +383,7 @@ class UIController extends Controller
             }
             $data['list'] = array_unique($ar);
 
-            //$data['courses'] = 
+            //$data['courses'] =
             return $this->render('admin.html.twig', $data);
         } else {
             return $this->render('admin_login.html.twig', $authenticated['z']);

@@ -62,7 +62,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
                          return !is_null($val) && !empty($val);
                        })
                      );
-        $this->hodMail = $result[0]['email'];                     
+        $this->hodMail = $result[0]['email'];
         $this->isOptOut = $result[0]['is_optout'] === '1' ? true : false;
     }
 
@@ -114,8 +114,8 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
     public function updateDepartment($changes, $updatedBy) {
         /*
         $changes = [{
-            "field": name (convenorName / convenorEmail), 
-            "from": old value, 
+            "field": name (convenorName / convenorEmail),
+            "from": old value,
             "to": new value
           }]
         */
@@ -151,8 +151,8 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
                 throw new \Exception('bad request');
             }
         }
-        $updateQry = "update uct_dept A 
-                        set $field = :to, updated_by = :user 
+        $updateQry = "update uct_dept A
+                        set $field = :to, updated_by = :user
                         where A.dept = :dept and (A.$field = :from or A.$field is null)";
 
         try {
@@ -172,13 +172,13 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
         }
     }
 
-    public function updateOptoutStatus($user, $data) {
+    public function updateOptoutStatus($user, $data, $workflow_id) {
         if (!$user) {
             throw new \Exception("Authorisation required (invalid user)");
         }
 
-        $updateQry = "replace into dept_optout (dept, is_optout, updated_by, updated_at, year)
-                      values (:dept, ifnull(:status,0), :user,  now(), :year)";
+        $updateQry = "replace into dept_optout (dept, is_optout, updated_by, updated_at, year, workflow_id)
+                      values (:dept, ifnull(:status,0), :user,  now(), :year, :workflow_id)";
 
         try {
             $updateStmt = $this->dbh->prepare($updateQry);
@@ -186,7 +186,8 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
                 ':dept' => $this->entityCode,
                 ':status' => $data['status'],
                 ':user' => $user,
-                ':year' => $this->year
+                ':year' => $this->year,
+                ':workflow_id' => $workflow_id
             ]);
 
             $date = new \DateTime('now');

@@ -155,7 +155,7 @@ class ApiController extends Controller
 
   private function getDepartmentInfo($deptName, Request $request) {
     $deptHash = urldecode($request->headers->get('x-entity-hash'));
-    $fullCourse = urldecode($request->headers->get('x-entity-courses')) == '1';    
+    $fullCourse = urldecode($request->headers->get('x-entity-courses')) == '1';
     try {
       $department = new Department($deptName, $deptHash, '', false, !$fullCourse);
     } catch (\Exception $e) {
@@ -188,10 +188,10 @@ class ApiController extends Controller
     $data = json_decode($request->getContent(), true);
     /*
     $data = [{
-      "course": course_code, 
+      "course": course_code,
       "changes": [{
-          "field": name (convenorName / convenorEmail), 
-          "from": old value, 
+          "field": name (convenorName / convenorEmail),
+          "from": old value,
           "to": new value
         }]
     }]
@@ -211,7 +211,7 @@ class ApiController extends Controller
       $courseCodesToUpdate = array_map(function($change) {
         if (isset($change['course'])) {
           return $change['course'];
-        }        
+        }
       }, $data);
 
       //if ($courseCodesToUpdate)
@@ -219,7 +219,7 @@ class ApiController extends Controller
       $coursesToUpdate = array_filter($dept->courses, function($course) use ($courseCodesToUpdate) {
         return in_array($course->courseCode, $courseCodesToUpdate);
       });
-      
+
       $coursesToUpdate = array_reduce($coursesToUpdate, function($result, $course) {
         $result[$course->courseCode] = $course;
         return $result;
@@ -227,7 +227,7 @@ class ApiController extends Controller
 
       // loop through values
       foreach ($data as $index => $update) {
-        
+
         // we want to change a course value
         if (isset($update['course'])) {
 
@@ -254,7 +254,7 @@ class ApiController extends Controller
 
         // we want to change the dept value
         if (isset($update['dept'])) {
-          
+
           try {
             // get the correct course and run update on it
             $dept->updateDepartment($update['changes'], $session->get('username'));
@@ -266,10 +266,10 @@ class ApiController extends Controller
                     break;
                 default:
                     throw new \Exception($e->getMessage());
-            }            
+            }
           }
         } // if updating dept
-      } // foreach 
+      } // foreach
     } catch (\Exception $e) {
       $statusCode = 500;
       switch($e->getMessage()) {
@@ -295,10 +295,11 @@ class ApiController extends Controller
     $session = $request->hasSession() ? $request->getSession() : new Session();
     $deptHash = urldecode($request->headers->get('x-entity-hash'));
     $data = json_decode($request->getContent(), true);
-    
+    $workflow = (new Workflow)->getWorkflow();
+
     try {
       $dept = new Department($deptName, $deptHash, null, false);
-      $updateStatus = $dept->updateOptoutStatus($session->get('username'), $data);
+      $updateStatus = $dept->updateOptoutStatus($session->get('username'), $data, $workflow['oid']);
     } catch(\Exception $e) {
       $statusCode = 500;
       switch($e->getMessage()) {
@@ -315,10 +316,11 @@ class ApiController extends Controller
     $session = $request->hasSession() ? $request->getSession() : new Session();
     $courseHash = urldecode($request->headers->get('x-entity-hash'));
     $data = json_decode($request->getContent(), true);
+    $workflow = (new Workflow)->getWorkflow();
 
     try {
       $course = new Course($courseCode, $courseHash, null, false);
-      $updateStatus = $course->updateOptoutStatus($session->get('username'), $data);
+      $updateStatus = $course->updateOptoutStatus($session->get('username'), $data, $workflow['oid']);
     } catch(\Exception $e) {
       $statusCode = 500;
       switch($e->getMessage()) {
@@ -387,7 +389,7 @@ class ApiController extends Controller
 
   /**
    * @Route("/api/v0/timetable/{courseCode}/{year}")
-   * 
+   *
    * THIS DOESN'T WORK
    */
   public function processMail($courseCode, $year, Request $request)
@@ -401,7 +403,7 @@ class ApiController extends Controller
       return new Response($json, 201);
     }
 
-    return new Response('Error loading timetable', 201);  
+    return new Response('Error loading timetable', 201);
   }
 
   /**
@@ -497,7 +499,7 @@ class ApiController extends Controller
       set_time_limit(30);
   }
 
-  private function runWorkflowMonitor(Request $request) 
+  private function runWorkflowMonitor(Request $request)
   {
       $result = (new Workflow)->run();
 
