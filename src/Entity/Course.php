@@ -97,7 +97,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         return $this->fullHash;
     }
 
-    public function updateCourse($changes, $updatedBy) {
+    public function updateCourse($changes, $updatedBy, $workflow_id) {
         $this->dbh->beginTransaction();
         $allowedFields = [
             'convenorName' => 'name',
@@ -120,14 +120,14 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         }
     }
 
-    private function updateConvenorField($field, $change, $updatedBy) {
+    private function updateConvenorField($field, $change, $updatedBy, $workflow_id) {
         if (!isset($change['to']) || is_null($change['to']) || empty($change['to'])) {
             throw new \Exception('bad request');
         }
-        $updateQry = "insert into course_updates (course_code, year, updated_by, convenor_$field)
-                        (select ifnull(B.course_code, A.course_code), :year, :user, :to
+        $updateQry = "insert into course_updates (course_code, year, updated_by, convenor_$field, workflow_id)
+                        (select ifnull(B.course_code, A.course_code), :year, :user, :to, :workflow_id
                          from ps_courses A left join course_updates B on A.course_code = B.course_code
-                         where A.course_code = :code and A.term = :year and
+                         where A.course_code = :code and A.term = :year and B.workflow_id = :workflow_id and
                            (B.convenor_$field = :from or (B.convenor_$field is null and
                                (A.convenor_$field = :from or A.convenor_$field is null)
                              )
@@ -142,7 +142,8 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 ':year' => $this->year,
                 ':from' => $change['from'],
                 ':to' => $change['to'],
-                ':user' => $updatedBy
+                ':user' => $updatedBy,
+                ':workflow_id' => $workflow_id
             ];
             $updateStmt->execute($bind);
             if ($updateStmt->rowCount() === 0) {

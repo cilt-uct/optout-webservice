@@ -186,6 +186,8 @@ class ApiController extends Controller
 
     $deptHash = urldecode($request->headers->get('x-entity-hash'));
     $data = json_decode($request->getContent(), true);
+    $workflow = (new Workflow)->getWorkflow();
+
     /*
     $data = [{
       "course": course_code,
@@ -238,7 +240,7 @@ class ApiController extends Controller
 
           try {
               // get the correct course and run update on it
-              $coursesToUpdate[$update['course']]->updateCourse($update['changes'], $session->get('username'));
+              $coursesToUpdate[$update['course']]->updateCourse($update['changes'], $session->get('username'), $workflow['oid']);
               $someSuccess = true;
           } catch (\Exception $e) {
               switch($e->getMessage()) {
