@@ -111,7 +111,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 }
 
                 $field = $allowedFields[$change['field']];
-                $this->updateConvenorField($field, $change, $updatedBy);
+                $this->updateConvenorField($field, $change, $updatedBy, $workflow_id);
             }
             $this->dbh->commit();
         } catch (\Exception $e) {
@@ -125,15 +125,16 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
             throw new \Exception('bad request');
         }
         $updateQry = "insert into course_updates (course_code, year, updated_by, convenor_$field, workflow_id)
-                        (select ifnull(B.course_code, A.course_code), :year, :user, :to, :workflow_id
-                         from ps_courses A left join course_updates B on A.course_code = B.course_code
-                         where A.course_code = :code and A.term = :year and B.workflow_id = :workflow_id and
-                           (B.convenor_$field = :from or (B.convenor_$field is null and
-                               (A.convenor_$field = :from or A.convenor_$field is null)
-                             )
-                           )
+                    (select ifnull(B.course_code, A.course_code), :year, :user, :to, :workflow_id
+                        from ps_courses A left join course_updates B on A.course_code = B.course_code and A.term = B.year
+                        where A.course_code = :code and A.term = :year and
+                        (B.convenor_$field = :from or
+                            (B.convenor_$field is null and
+                                (A.convenor_$field = :from or A.convenor_$field is null)
+                            )
                         )
-                      on duplicate key update convenor_$field = :to, updated_by = :user";
+                    )
+                on duplicate key update convenor_$field = :to, updated_by = :user";
 
         try {
             $updateStmt = $this->dbh->prepare($updateQry);
