@@ -28,7 +28,7 @@ class Utilities
             $workflow = (new Workflow)->getWorkflow();
 
             $qry = "select distinct sn_timetable_versioned.course_code, ps_courses.term, ps_courses.dept FROM sn_timetable_versioned
-                      inner join opencast_venues on sn_timetable_versioned.venue = opencast_venues.sn_venue
+                      inner join opencast_venues on sn_timetable_versioned.archibus_id = opencast_venues.archibus_id
                       inner join ps_courses on sn_timetable_versioned.course_code = ps_courses.course_code and sn_timetable_versioned.term = ps_courses.term
                     WHERE sn_timetable_versioned.term=:year and instruction_type='Lecture'
                     and tt_version in (select max(version) from timetable_versions)
