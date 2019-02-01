@@ -16,23 +16,23 @@
                     <div class="col-sm-8">
                         <h3><span style="color: #5caad2;">Lecture Recording</span> Admin</h3>
                     </div>
-                    <div class="col-sm-2 align-self-end">
+                    <!--div class="col-sm-2 align-self-end">
                         <select disabled class="custom-select">
                             <option value="2018">2018</option>
                         </select>
-                    </div>
+                    </div-->
                 </div>
                 <br/>
                 <div class="workflow-details">
                      <!--p>{{authenticated|json_encode()}}</p-->
                      <!--p>{{workflow|json_encode()}}</p-->
-                     <!-- 
-                        TODO: 
+                     <!--
+                        TODO:
                         - Save the department, Course, and Schedulet Date Times
                         - Select a Different workflow (drop-down)
                         - Add button to create new workflow - advance workflow
                      -->
-                    
+
                     <div class="form-row form-inline">
                         <div class="col-md-3 mb-3">
                             <strong>Year: </strong>
@@ -64,7 +64,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-4" style="padding:0;">
+                                <!--div class="col-sm-4" style="padding:0;">
                                     <div class="input-group">
                                         <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_dept|date("H")}}"/>
                                         <div class="input-group-mid">
@@ -72,12 +72,12 @@
                                         </div>
                                         <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_dept|date("i")}}"/>
                                     </div>
-                                </div>
+                                </div-->
                             </div>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="worflow_date_course">Course</label>
-                            
+
                             <div class="row">
                                 <div class="col-sm-7">
                                     <div class="input-group">
@@ -90,7 +90,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-4" style="padding:0;">
+                                <!--div class="col-sm-4" style="padding:0;">
                                     <div class="input-group">
                                         <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_course|date("H")}}"/>
                                         <div class="input-group-mid">
@@ -98,12 +98,12 @@
                                         </div>
                                         <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_course|date("i")}}"/>
                                     </div>
-                                </div>
+                                </div-->
                             </div>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="worflow_date_schedule">Schedule</label>
-   
+
                             <div class="row">
                                 <div class="col-sm-7">
                                     <div class="input-group">
@@ -114,9 +114,9 @@
                                                 <i class="fa fa-calendar" aria-hidden="true"></i>
                                             </button>
                                         </div>
-                                    </div> 
+                                    </div>
                                 </div>
-                                <div class="col-sm-4" style="padding:0;">
+                                <!--div class="col-sm-4" style="padding:0;">
                                     <div class="input-group">
                                         <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_schedule|date("H")}}"/>
                                         <div class="input-group-mid">
@@ -124,8 +124,8 @@
                                         </div>
                                         <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_schedule|date("i")}}"/>
                                     </div>
-                                </div>
-                            </div>                        
+                                </div-->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -139,7 +139,7 @@
                             {% if (curTitle != newTitle) %}
                                 {% set newTitle = curTitle %}
                                 <a name="{{newTitle}}" class="anchor"></a>
-                            {% endif %}                        
+                            {% endif %}
                             <div class="row no-gutters dept-title">
                                 <div class="col-sm-6">
                                     {% if dept.eligble_courses > 0 %}
@@ -150,16 +150,16 @@
                                 </div>
                                 <div class="col-sm-2" style="padding-top:0.6em;">
                                     <label>Active</label>
-                                    <div class="switch">    
+                                    <div class="switch">
                                         <input type="checkbox" id="chk_use_{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" {% if (dept.use_dept == '1') %}checked{% endif %} /><label id="toggle_use_{{dept.dept}}" for="chk_use_{{dept.dept}}">Toggle</label>
                                     </div>
                                 </div>
                                 <div class="col-sm-4" style="padding-top:0.6em;">
                                     <label>Opted Out</label>
                                     <label class="right" id="chk_opt_{{dept.dept}}_date">
-                                        {% if dept.updated_by|length > 1 %}{{dept.updated_by}}<br/>{{dept.updated_at|date("g:ia \o\n l jS F Y")}}{% endif %}
+                                        {% if dept.updated_by|length > 1 %}{{dept.updated_by}}<br/>{{dept.updated_at|date("G:i l, jS F Y")}}{% endif %}
                                     </label>
-                                    <div class="switch">    
+                                    <div class="switch">
                                         <input type="checkbox" id="chk_opt_{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" {% if dept.is_optout %}checked{% endif %}/><label id="toggle_opt_{{dept.dept}}" for="chk_opt_{{dept.dept}}">Toggle</label>
                                     </div>
                                 </div>
@@ -168,11 +168,21 @@
                                 <div class="col-sm-8">
                                     <h6>Contact Details</h6>
                                     <div class="form-group row">
-                                        <label for="inp_{{dept.dept}}_firstname" class="col-sm-3 col-form-label">Firstname</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" class="form-control" 
-                                                    id="inp_{{dept.dept}}_firstname" data-type="dept" data-field="hodFirstname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" 
+                                        <label for="inp_{{dept.dept}}_firstname" class="col-sm-3 col-form-label">Name</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" class="form-control"
+                                                    id="inp_{{dept.dept}}_firstname" data-type="dept" data-field="hodFirstname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
                                                     placeholder="Firstname" data-old="{{dept.firstname}}" value="{{dept.firstname}}"/>
+                                            <span class="loader">
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                            </span>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <input type="text" class="form-control"
+                                                    id="inp_{{dept.dept}}_lastname" data-type="dept" data-field="hodLastname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
+                                                    placeholder="Lastname" data-old="{{dept.lastname}}" value="{{dept.lastname}}"/>
                                             <span class="loader">
                                                 <span></span>
                                                 <span></span>
@@ -181,11 +191,11 @@
                                         </div>
                                     </div>
                                     <div class="form-group row">
-                                        <label for="inp_{{dept.dept}}_lastname" class="col-sm-3 col-form-label">Lastname</label>
+                                        <label for="inp_{{dept.dept}}_eid" class="col-sm-3 col-form-label">EID</label>
                                         <div class="col-sm-8">
-                                            <input type="text" class="form-control" 
-                                                    id="inp_{{dept.dept}}_lastname" data-type="dept" data-field="hodLastname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" 
-                                                    placeholder="Lastname" data-old="{{dept.lastname}}" value="{{dept.lastname}}"/>
+                                            <input type="text" class="form-control disabled"
+                                                    id="inp_{{dept.dept}}_eid" data-type="dept" data-field="hodEID" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
+                                                    placeholder="EID" data-old="{{dept.eid}}" value="{{dept.eid}}" readonly/>
                                             <span class="loader">
                                                 <span></span>
                                                 <span></span>
@@ -196,8 +206,8 @@
                                     <div class="form-group row">
                                         <label for="inp_{{dept.dept}}_mail" class="col-sm-3 col-form-label">E-mail</label>
                                         <div class="col-sm-8">
-                                            <input type="text" class="form-control" 
-                                                    id="inp_{{dept.dept}}_mail" data-type="dept" data-field="hodMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" 
+                                            <input type="text" class="form-control"
+                                                    id="inp_{{dept.dept}}_mail" data-type="dept" data-field="hodMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
                                                     placeholder="E-mail" data-old="{{dept.email|lower}}" value="{{dept.email|lower}}"/>
                                             <span class="loader">
                                                 <span></span>
@@ -217,10 +227,10 @@
                                                 <a href="#" class="{% if loop.index == 1 %}success{% else %}danger{% endif %}" rel="{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" data-index="{{ loop.index }}">
                                                     <i class="fa {% if loop.index == 1 %}fa-plus{% else %}fa-minus{% endif %}" aria-hidden="true"></i>
                                                 </a>
-                                                <input type="text" class="form-control" 
+                                                <input type="text" class="form-control"
                                                         id="inp_{{dept.dept}}_alt_{{ loop.index }}" data-type="dept" data-field="altMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
                                                         data-index="{{ loop.index }}"
-                                                        placeholder="E-mail" data-old="{{mail}}" value="{{mail|lower}}"/>                                                
+                                                        placeholder="E-mail" data-old="{{mail}}" value="{{mail|lower}}"/>
                                                 <span class="loader">
                                                     <span></span>
                                                     <span></span>
@@ -229,7 +239,7 @@
                                             </div>
                                             {% endfor %}
                                         </div>
-                                    </div>                                    
+                                    </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <h6>&nbsp;</h6>
@@ -245,7 +255,7 @@
                                             <tr>
                                                 <td class="text-right"><strong>Course Mails:</strong>&nbsp;&nbsp;&nbsp;Sent</td>
                                                 <td>{{dept.mail_sent}}</td>
-                                            </tr>   
+                                            </tr>
                                             <tr>
                                                 <td class="text-right">To Send</td>
                                                 <td>{{dept.mail_unsent}}</td>
@@ -254,7 +264,7 @@
                                                 <td class="text-right">Error</td>
                                                 <td>{{dept.mail_err}}</td>
                                             </tr>
-                                         
+
                                         </tbody>
                                     </table>
                                     <br/>
@@ -267,8 +277,8 @@
                             </div>
                             <div class="row no-gutters justify-content-end dept-courses" id="{{dept.dept}}_courses">
                                 <div class="col-10" id="{{dept.dept}}_courses_html">
-                                    
-                                    
+
+
                                 </div>
                             </div>
                         </div>
@@ -282,7 +292,7 @@
     </div>
     <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
-    <script src="{{ asset('assets/js/moment.min.js') }}"></script>    
+    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/js/datepicker.min.js') }}"></script>
     <script>
@@ -292,7 +302,7 @@
         $(function() {
             $.fn.datepicker.setDefaults({autoHide: true});
 
-            $('#worflow_date_dept').on('pick.datepicker', function (e) {              
+            $('#worflow_date_dept').on('pick.datepicker', function (e) {
                 var d = $('#worflow_date_dept').datepicker('getDate');
 
                 $('#worflow_date_course').datepicker('setStartDate', d);
@@ -310,11 +320,11 @@
                 var d = $('#worflow_date_course').datepicker('getDate');
 
                 $('#worflow_date_dept').datepicker('setEndDate', d);
-                $('#worflow_date_schedule').datepicker('setStartDate', d);                
+                $('#worflow_date_schedule').datepicker('setStartDate', d);
                 console.log(e.type, e.namespace, e.view, d);
             }).datepicker({
                 format: 'yyyy-mm-dd'
-                ,autoHide: true                
+                ,autoHide: true
                 ,date: '{{workflow.date_course|date("Y-m-d")}}'
                 ,startDate: '{{workflow.date_dept|date("Y-m-d")}}'
                 ,endDate: '{{workflow.date_schedule|date("Y-m-d")}}'
@@ -328,7 +338,7 @@
                 console.log(e.type, e.namespace, e.view, d);
             }).datepicker({
                 format: 'yyyy-mm-dd'
-                ,autoHide: true                
+                ,autoHide: true
                 ,date: '{{workflow.date_schedule|date("Y-m-d")}}'
                 ,startDate: '{{workflow.date_course|date("Y-m-d")}}'
                 ,trigger: $('#worflow_date_schedule_btn')
@@ -354,7 +364,7 @@
 
             $('#worflow_date_dept').on('dp.change', function (e) {
                 //$('#worflow_date_course').datetimepicker('minDate', e.date);
-                
+
                 console.log(e);
             });
             $('#worflow_date_course').on('dp.change', function (e) {
@@ -373,7 +383,7 @@
                 var btn = $(this);
                 div = $('#'+ btn.data('rel') +'_courses_html');
                 console.log(btn.data('rel') +' '+ btn.data('hash'));
-               
+
                 if (btn.hasClass('btn-outline-info')) {
                     $('#'+ btn.data('rel') +'_courses').hide();
                     btn.removeClass('btn-outline-info').addClass('btn-outline-success').html('View Courses');
@@ -420,7 +430,7 @@
                     });
                 }
             });
-    
+
             // saving department active
             $('.dept-title input[id*="chk_use_"]').on('change', function(event) {
                 var chk = $(this);
@@ -428,8 +438,8 @@
 
                 d = [{  "dept": chk.data('dept'),
                         "changes": [{
-                                "field": 'active', 
-                                "from": chk.is(':checked') ? '0' : '1', 
+                                "field": 'active',
+                                "from": chk.is(':checked') ? '0' : '1',
                                 "to": chk.is(':checked') ? '1' : '0'
                             }]
                         }];
@@ -442,7 +452,7 @@
                 }).done(function() {
                     console.log('done');
                 }).fail(function(xhr) {
-                    
+
                     console.log(xhr.responseText);
                 });
             });
@@ -452,7 +462,7 @@
                 var chk = $(this),
                     dt = $('#'+ $(this).attr('id') +'_date');
                 console.log(chk.attr('id') +' '+ chk.data('dept') +' '+ chk.data('hash') +' '+ chk.is(':checked'));
-                
+
                 $.ajax({
                     headers: {"x-entity-hash": chk.data('hash')},
                     url: "/optout/api/v0/dept/"+ chk.data('dept'),
@@ -477,7 +487,7 @@
                 var chk = $(this),
                     dt = $('#'+ $(this).attr('id') +'_date');
                 console.log(chk.attr('id') +' '+ chk.data('course') +' '+ chk.data('hash') +' '+ chk.is(':checked'));
-                
+
                 $.ajax({
                     headers: {"x-entity-hash": chk.data('hash')},
                     url: "/optout/api/v0/course/"+ chk.data('course'),
@@ -502,13 +512,13 @@
                 var dept = $(this).attr('rel'),
                     cnt = parseInt($('#inp_'+ dept +'_alt_mails').val(), 10),
                     idx = parseInt($(this).data('index'), 10);
-                
+
                 console.log($('#inp_'+ dept +'_alt_mails').val() + " "+ idx);
 
                 if ($(this).hasClass('success')) {
 
                     $('#inp_'+ dept +'_alt_mails').val(cnt + 1);
-                    $('#'+ dept +'_alt_mail_container').append(tmpl('tmpl-dept-altMail', 
+                    $('#'+ dept +'_alt_mail_container').append(tmpl('tmpl-dept-altMail',
                                     {index: cnt+1, dept: $(this).data('dept'), hash: $(this).data('hash')}));
                 } else {
                     $('#inp_'+ dept +'_alt_'+ idx).parent().remove();
@@ -519,7 +529,7 @@
             $('#departments').on('focusin','input[type=text]',function(event){
                 $(this).parent().removeClass('done err updating');
             });
-            
+
             $('#departments').on('change','input[type=text]',function(event){
                 if (changeTimer !== false) clearTimeout(changeTimer);
                 var valid = true, d = [], dept = $(this).data('dept');
@@ -534,13 +544,13 @@
                 if (field.data('field') != 'altMail') {
                     d = [{  "changes": [{
                                 "field": field.data('field'),
-                                "from": field.data('old'), 
+                                "from": field.data('old'),
                                 "to": field.val()
                             }]
                         }];
 
                     if ((field.data('field') === 'hodMail') || (field.data('field') === 'convenorEmail')) {
-                        if (!email_regex.test(field.val())) { 
+                        if (!email_regex.test(field.val())) {
                             mailValidationError(field);
                             valid = false;
                         }
@@ -548,9 +558,9 @@
                         d[0]['changes'][0]['to'] = d[0]['changes'][0]['to'].toLowerCase();
                         d[0]['changes'][0]['from'] = d[0]['changes'][0]['from'].toLowerCase();
                     }
-                
+
                 } else {
-                    
+
                     var idx = field.data('index'),
                         cnt = $('#inp_'+field.data('dept')+'_alt_mails').val(),
                         new_val = [];
@@ -559,7 +569,7 @@
                         var f = $('#inp_'+ field.data('dept') +'_alt_'+ i);
                         if (f.length > 0) {
                             if (f.val() != '') {
-                                if(!email_regex.test(f.val())){ 
+                                if(!email_regex.test(f.val())){
                                     mailValidationError(f);
                                     valid = false;
                                 } else {
@@ -572,19 +582,19 @@
                     $('#'+ dept +'_alt').data('to', new_val.join(','));
                     d = [{  "changes": [{
                                 "field": field.data('field'),
-                                "from": $('#'+ dept +'_alt').val(), 
+                                "from": $('#'+ dept +'_alt').val(),
                                 "to": new_val.join(',')
                             }]
                         }];
                 }
-                
+
                 d[0][ field.data('type') ] = (field.data('type') == 'dept' ? field.data('dept') : field.data('course'));
 
                 if (valid) {
                     field.parent().addClass('updating');
 
                     console.log(d);
-                    
+
                     $.ajax({
                         headers: {"x-entity-hash": field.data('hash')},
                         url: "/optout/api/v0/dept/"+ field.data('dept'),
@@ -600,7 +610,7 @@
                         updateError(field, xhr);
                     }).always(function() {
                         field.parent().removeClass('updating');
-                    });                    
+                    });
                 }
             });
 

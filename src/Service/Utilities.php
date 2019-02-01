@@ -77,6 +77,43 @@ class Utilities
         }
     }
 
+    public function refreshDepartments() {
+        try {
+            $workflow = (new Workflow)->getWorkflow();
+
+            $qry = "";
+
+            $stmt = $this->dbh->prepare($qry);
+            $stmt->execute([
+                ':year' => date('Y'),
+                ':this_year_half' => $yearHalf
+            ]);
+
+            $updateResults = [
+                'coursesFound' => $stmt->rowCount(),
+                'coursesUpdated' => 0
+            ];
+
+            if ($stmt->rowCount() > 0) {
+                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                    $optoutStmt->execute([
+                        ':course' => $row['course_code'],
+                        ':year' => $row['term'],
+                        ':dept' => $row['dept'],
+                        ':workflow_id' => $workflow['oid']
+                    ]);
+                    $updateResults['coursesUpdated'] += $optoutStmt->rowCount();
+                }
+            }
+
+            return $updateResults;
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
+
     public function userVisibleHash(HashableInterface $hashable) {
         return substr($hashable->getFullHash(), 0, 6);
     }
@@ -148,7 +185,7 @@ class Utilities
 
         $result = [ 'success' => true, 'result' => null ];
         try {
-            $query = "select A.*, B.*,
+            $query = "select A.*, '00112233' as eid, B.*,
                     (SELECT count(distinct(`ps`.course_code))
                     FROM timetable.ps_courses `ps`
                     join timetable.course_optout `out` on `ps`.course_code = `out`.course_code

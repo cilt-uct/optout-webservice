@@ -184,11 +184,16 @@ header img.navbar-brand{
 }
 
 .post-body .departments .dept-details .col-sm-3,
+.post-body .departments .dept-details .col-sm-4,
 .post-body .departments .dept-details .col-sm-8,
 .post-body .departments .course-details .col-sm-3,
 .post-body .departments .course-details .col-sm-8  {
   padding-right: 0px;
-  padding-lefT: 8px;
+  padding-left: 8px;
+}
+
+.post-body .departments .dept-details .col-sm-4 input{
+  width: 100%;
 }
 
 .post-body .departments .dept-details .form-group .multi {

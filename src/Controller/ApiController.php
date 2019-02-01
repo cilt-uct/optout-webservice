@@ -359,6 +359,29 @@ class ApiController extends Controller
   }
 
   /**
+   * @Route("/departments")
+   */
+  public function refreshDepartments(Request $request) {
+    switch($request->getMethod()) {
+      case 'PUT':
+        $utils = new Utilities();
+        try {
+            $updateResults = $utils->refreshDepartments();
+            return new Response(json_encode($updateResults), 200, [
+                'Content-Type' => 'text/plain'
+              ]
+            );
+        } catch (\Exception $e) {
+          return new Response($e->getMessage, 500);
+        }
+        break;
+
+      default:
+        return new Response('Only PUT supported right now', 405);
+    }
+  }
+
+  /**
    * @Route("/api/v0/{entityType}/{entityName}/hash");
    */
   public function getEntityHash($entityType, $entityName, Request $request) {
