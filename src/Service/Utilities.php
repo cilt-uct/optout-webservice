@@ -32,8 +32,8 @@ class Utilities
                       inner join ps_courses on sn_timetable_versioned.course_code = ps_courses.course_code and sn_timetable_versioned.term = ps_courses.term
                     WHERE sn_timetable_versioned.term=:year and instruction_type='Lecture'
                     and tt_version in (select max(version) from timetable_versions)
-                    and ((date_add(curdate(), interval 2 week) > :this_year_half and ps_courses.end_date > :this_year_half) or
-                         (date_add(curdate(), interval 2 week) < :this_year_half and ps_courses.end_date < :this_year_half)
+                    and ((date_add(curdate(), interval 2 week) > :this_year_half and ps_courses.start_date > :this_year_half) or
+                         (date_add(curdate(), interval 2 week) < :this_year_half and ps_courses.start_date < :this_year_half)
                         )
                     and ps_courses.active = 1
                     and campus_code in ('UPPER','MIDDLE')

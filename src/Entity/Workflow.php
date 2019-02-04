@@ -292,11 +292,12 @@ class Workflow
                     array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['course_code'] .'","'.
                         $to['mail'] .'","'.
                         $course->getHash() .'","'.
-                        $to['name'] .'")');
+                        $to['name'] .'",'.
+                        $this->year .')');
                 }
             }
 
-            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`) VALUES ". implode(',', $ar);
+            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`, `term`) VALUES ". implode(',', $ar);
             //return $insertQry;
 
             $mailStmt = $this->dbh->prepare($insertQry);
