@@ -353,8 +353,8 @@ header img.navbar-brand{
 
 .post-body .departments div.err::before {
   right: auto;
-  left: 85%;
-  top: 8px;
+  left: calc(82% + 3px);
+  top: 6px;
 }
 
 .post-body .err[data-errortext]::after {
@@ -374,8 +374,8 @@ header img.navbar-brand{
 }
 .post-body div.err[data-errortext]::after {
   bottom: auto;
-  top: calc(100% - 5px);
-  left: 8px;
+  top: calc(100% - 6px);
+  left: 15px;
   width: calc(90% - 7px);
   padding: 0.68em;
 }
@@ -390,7 +390,7 @@ header img.navbar-brand{
 .post-body .departments .course-details div.err[data-errortext]::after {
   padding: 0.4em;
   font-size: 11px;
-  width: calc(80% - 6px);
+  width: calc(84% + 1px);
 }
 
 .post-body span {
@@ -447,8 +447,8 @@ header img.navbar-brand{
 
 .post-body .departments div.updating span.loader {
   right: auto;
-  left: 84%;
-  top: 11px;
+  left: 82%;
+  top: 9px;
 }
 
 .post-body span.loader > span{
@@ -658,6 +658,10 @@ div.container.post{
 
 .switch-button.done{
   border-color: #218838;
+}
+
+.post-body div.done.switch-button::before {
+  display: none;
 }
 
 .switch-button.err{

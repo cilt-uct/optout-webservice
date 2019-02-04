@@ -64,7 +64,7 @@
                         </div>
                     </div>
                 </div>
-                {% if (timetable is not empty) %}
+                {% if (timetable is not empty) and (isTimetabled) %}
                     <div class="table-responsive">
                         <h4>Timetable:</h4>
                         <table id="course_table" class="table">
@@ -87,7 +87,7 @@
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody>                           
+                            <tbody>
                                 {% for lec in timetable.LEC %}
                                     <tr>
                                         <td>{{lec.venue}}</td>
@@ -138,7 +138,7 @@
                             <div class="col-sm-10">
                                 <input type="password" class="form-control" name="pw" id="pw" placeholder="Password">
                             </div>
-                        </div>                                           
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Login</button>
@@ -150,14 +150,14 @@
     </div>
     <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
-    <script src="{{ asset('assets/js/moment.min.js') }}"></script>    
+    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
     {% if not readonly %}
     <script>
         var changeTimer = false, field = null;
 
         $(function() {
-            
+
             var switchButton 			= document.querySelector('.switch-button');
             var switchBtnRight 			= document.querySelector('.switch-button-case.right');
             var switchBtnLeft 			= document.querySelector('.switch-button-case.left');
