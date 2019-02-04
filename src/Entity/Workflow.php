@@ -259,7 +259,7 @@ class Workflow
                 left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `course`.course_code and `sn`.term = `course`.year
                 left join timetable.dept_optout `deptout` on `course`.`dept` = `deptout`.`dept`
                 left join timetable.uct_dept `dept` on `course`.`dept` = `dept`.`dept`
-                left join timetable.opencast_venues on `sn`.venue = opencast_venues.sn_venue
+                left join timetable.opencast_venues on `sn`.archibus_id = opencast_venues.archibus_id
                 where `dept`.use_dept = 1 and `deptout`.is_optOut = 0 and `ps`.active = 1
                     and `ps`.acad_career = 'UGRD' and opencast_venues.campus_code in ('UPPER','MIDDLE')";
 

@@ -190,7 +190,7 @@ class Utilities
                     FROM timetable.ps_courses `ps`
                     join timetable.course_optout `out` on `ps`.course_code = `out`.course_code
                     left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `ps`.course_code and `sn`.term = `ps`.term
-                    left join timetable.opencast_venues on `sn`.venue = opencast_venues.sn_venue
+                    left join timetable.opencast_venues on `sn`.archibus_id = opencast_venues.archibus_id
                     where `ps`.active = 1 and `ps`.dept = A.dept and `ps`.term = B.year
                     and `ps`.acad_career = 'UGRD' and opencast_venues.campus_code in ('UPPER','MIDDLE')) as eligble_courses,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 0 and course is not null) as mail_unsent,

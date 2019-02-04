@@ -51,7 +51,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                     left join timetable.course_updates C on A.course_code = C.course_code and A.term = C.year
                     left join timetable.course_optout D on A.course_code = D.course_code and A.term = D.year
                     left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = A.course_code and `sn`.term = A.term
-                    left join timetable.opencast_venues on `sn`.venue = opencast_venues.sn_venue
+                    left join timetable.opencast_venues on `sn`.archibus_id = opencast_venues.archibus_id
                 where A.active = 1 and A.course_code = :course and A.term = :year limit 1";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':course' => $this->entityCode, ':year' => $this->year]);
