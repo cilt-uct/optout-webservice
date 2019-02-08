@@ -166,7 +166,7 @@ class Utilities
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,
-                    'err' => 'The refernce was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
             }
 
             $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);

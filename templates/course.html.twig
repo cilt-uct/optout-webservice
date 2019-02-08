@@ -5,66 +5,105 @@
                 <h3><span style="color: #5caad2;">Lecture Recording</span> Automated Setup <small>or</small> Opt-Out</h3>
                 <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
                 <br/>
-                <!-- {% if readonly %}Readonly{% else %}Editable{% endif %} -->
-                <div class="row">
-                    <div class="col-md-8">
-                        <p>For the course <strong>{{course}}</strong> we have found that:</p>
-                        {% if hasVulaSite %}
-                            <div class="alert alert-success" role="alert">
-                                <i class="fa fa-3x fa-check-circle-o success"></i>
-                                <span>There is a Vula site associated with this course.</span>
-                            </div>
-
-                            {% if not hasOCSeries %}
-                                <div class="alert alert-info" role="alert">
-                                    <i class="fa fa-3x fa-check-circle-o info"></i>
-                                    <span>A lecture recording series will be created for this course.</span>
-                                </div>
-                            {% else %}
-                                {% if not isTimetabled %}
+                {% if not readonly %}
+                    <div class="row">
+                        <div class="col-md-10">
+                            <p>The pre-checks for course <strong>{{course}}</strong>, found the following:</p>
+                            <div style="padding-left: 2em;">
+                                {% if hasVulaSite %}
                                     <div class="alert alert-success" role="alert">
                                         <i class="fa fa-3x fa-check-circle-o success"></i>
-                                        <span>A lecture recording series exists for this course.</span>
+                                        <span>There is a Vula site associated with this course.</span>
                                     </div>
+
+                                    {% if not hasOCSeries %}
+                                        <div class="alert alert-info" role="alert">
+                                            <i class="fa fa-3x fa-check-circle-o info"></i>
+                                            <span>A lecture recording series can be created for this course.</span>
+                                        </div>
+                                    {% else %}
+                                        {% if not isTimetabled %}
+                                            <div class="alert alert-success" role="alert">
+                                                <i class="fa fa-3x fa-check-circle-o success"></i>
+                                                <span>A lecture recording series exists for this course.</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-danger" role="alert">
+                                                <i class="fa fa-3x fa-times-circle-o danger"></i>
+                                                <span>A lecture recording series exists for this course and there are recordings scheduled or active.</span>
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
                                 {% else %}
                                     <div class="alert alert-danger" role="alert">
                                         <i class="fa fa-3x fa-times-circle-o danger"></i>
-                                        <span>A lecture recording series exists for this course and there are recordings scheduled or active.</span>
+                                        <span>There seems to be no Vula site associated with this course code, to use automatic scheduling {% if (timetable is not empty) %}(for the timetable shown below){% endif %} please create the course site.</span>
                                     </div>
                                 {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-10">
+                            <br/>
+                            <p>Would you like to use automatic scheduling?</p>
+                            <div style="padding-left: 2em;">
+                                <div class="card mb-3 switch-container" {% if readonly %}style="height:auto;margin-top: 26px;"{% endif %}>
+                                    <div class="card-body">
+                                        <div class="switch-button">
+                                            <span class="active" {% if details.optoutStatus %}style="left: 50%;"{% else %}style="left: 0%;"{% endif %}></span>
+                                            <button class="switch-button-case left {% if not details.optoutStatus %}active-case{% endif %}">Yes, lectures will be automatically scheduled</button>
+                                            <button class="switch-button-case right {% if details.optoutStatus %}active-case{% endif %}">No, I might use self scheduling for the course</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="row">
+                        <div class="col-md-10">
+                            {% if email_case == "1" %}
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="fa fa-3x fa-times-circle-o warning" style="margin-top:0.12em"></i>
+                                    <h6 style="margin:0.4em"><strong>{{course}}</strong> is not using lecture recording or will be self scheduling. (HOD)</h6>
+                                </div>
                             {% endif %}
-                        {% else %}
-                            <div class="alert alert-danger" role="alert">
-                                <i class="fa fa-3x fa-times-circle-o danger"></i>
-                                <span>Please create a Vula site or link your class list to your course site, otherwise the timetable (below) cannot be scheduled.</span>
-                            </div>
-                        {% endif %}
-                        <div class="alert alert-light" role="alert">
-                            <u>NOTE:</u> You are welcome to schedule additional sessions after the automated setup.
+                            {% if email_case == "2" %}
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="fa fa-3x fa-times-circle-o warning" style="margin-top:0.12em"></i>
+                                    <h6 style="margin:0.4em"><strong>{{course}}</strong> is not using lecture recording or will be self scheduling. (Lecturer)</h6>
+                                </div>
+                            {% endif %}
+                            {% if email_case == "3" %}
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="fa fa-3x fa-times-circle-o warning" style="margin-top:0.12em"></i>
+                                    <h6 style="margin:0.4em"><strong>{{course}}</strong> has a lecture recording series and there are recordings scheduled or active. <br/> The timetable will not be automatically scheduled.</h6>
+                                </div>
+                            {% endif %}
+                            {% if email_case == "4" %}
+                                <div class="alert alert-success" role="alert">
+                                    <i class="fa fa-3x fa-check-circle-o success" style="margin-top:0.12em"></i>
+                                    <h6 style="margin:0.4em">Lectures was automatically scheduled for <strong>{{course}}</strong> {% if (timetable is not empty) %}(according to the timetable shown below){% endif %}.</h6>
+                                </div>
+                            {% endif %}
+                            {% if email_case == "5" %}
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="fa fa-3x fa-times-circle-o warning" style="margin-top:0.12em"></i>
+                                    <h6 style="margin:0.4em">There are multiple class lists on your <strong>{{course}}</strong> site in Vula, it is not currently possible to do automated setup of your lecture recordings.</h6>
+                                </div>
+                            {% endif %}
+                            {% if email_case == "6" %}
+                                <div class="alert alert-danger" role="alert">
+                                    <i class="fa fa-3x fa-times-circle-o danger" style="margin-top:0.12em"></i>
+                                    <h6 style="margin:0.4em">There is no Vula site associated with <strong>{{course}}</strong>, so the timetable will not be automatically scheduled.</h6>
+                                </div>
+                            {% endif %}
+                            <br/>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card mb-3 switch-container" {% if readonly %}style="height:auto;margin-top: 26px;"{% endif %}>
-                            <div id="click-here">Click button to change your preference:</div>
-                            <div class="card-body">
-                                {% if not readonly %}
-                                    <div class="switch-button">
-                                        <span class="active" {% if details.optoutStatus %}style="top: 0%;"{% else %}style="top: 50%;"{% endif %}></span>
-                                        <button class="switch-button-case left {% if details.optoutStatus %}active-case{% endif %}">Not using lecture recording<br/> or <br/> I will schedule my own recordings</button>
-                                        <button class="switch-button-case right {% if not details.optoutStatus %}active-case{% endif %}">Please automatically schedule my lectures</button>
-                                    </div>
-                                {% else %}
-                                    {% if details.optoutStatus %}
-                                        <h6>Not using lecture recording or<br/> will be self scheduling for the course.</h6>
-                                    {% else %}
-                                        <h6>Lectures will be automatically scheduled.</h6>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% if (timetable is not empty) and (isTimetabled) %}
+                {% endif %}
+                {% if (timetable is not empty) %}
                     <div class="table-responsive">
                         <h4>Timetable:</h4>
                         <table id="course_table" class="table">
@@ -110,6 +149,10 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="alert alert-light" role="alert">
+                        <u>NOTE:</u> You are welcome to schedule additional sessions after the automated setup.
                     </div>
                 {% endif %}
             </div>
@@ -177,13 +220,13 @@
             function switchLeft(){
                 switchBtnRight.classList.remove('active-case');
                 switchBtnLeft.classList.add('active-case');
-                activeSwitch.style.top 						= '0%';
+                activeSwitch.style.left 						= '0%';
 
                 $.ajax({
                     headers: {"x-entity-hash": "{{hash}}"},
                     url: "/optout/api/v0/course/{{course}}",
                     method: 'PUT',
-                    data: '{"status": 1}'
+                    data: '{"status": 0}'
                 }).done(function() {
                     updateSuccess();
                 }).fail(function(xhr) {
@@ -196,13 +239,13 @@
             function switchRight(){
                 switchBtnRight.classList.add('active-case');
                 switchBtnLeft.classList.remove('active-case');
-                activeSwitch.style.top 						= '50%';
+                activeSwitch.style.left 						= '50%';
 
                 $.ajax({
                     headers: {"x-entity-hash": "{{hash}}"},
                     url: "/optout/api/v0/course/{{course}}",
                     method: 'PUT',
-                    data: '{"status": 0}'
+                    data: '{"status": 1}'
                 }).done(function() {
                     updateSuccess();
                 }).fail(function(xhr) {

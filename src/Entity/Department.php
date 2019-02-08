@@ -73,7 +73,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             $this->connectLocally();
         }
 
-        $qry = "select A.course_code from ps_courses A join course_optout B on A.course_code = B.course_code where A.active = 1 and A.dept = :dept and A.term = :year and A.acad_career = 'UGRD'";
+        $qry = "select A.course_code from ps_courses A join course_optout B on A.course_code = B.course_code and A.term = B.year where A.active = 1 and A.dept = :dept and A.term = :year and A.acad_career = 'UGRD'";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {

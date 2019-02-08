@@ -26,6 +26,8 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
     private $secret;
     private $fullHash;
 
+    private $mails;
+
     public function __construct($entityCode, $hash, $year = '', $skipHashCheck = false) {
         $this->entityCode = $this->courseCode = $entityCode;
         $this->hash = $hash;
@@ -74,6 +76,29 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         $this->updatedBy = $result[0]['updated_by'];
         $this->parentEntityCode = $result[0]['dept'];
         $this->eligble = $result[0]['eligble'];
+
+        $this->mails = $this->fetchMails();
+    }
+
+    public function fetchMails() {
+        if (!$this->dbh) {
+            $this->connectLocally();
+        }
+
+        try {
+            $qry = "SELECT `state`, `updated_at` as `sent`,`type`,`case` FROM timetable.uct_workflow_email
+                    where course = :course and term = :year";
+            $stmt = $this->dbh->prepare($qry);
+            $stmt->execute([':course' => $this->entityCode, ':year' => $this->year]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new \Exception("no emails");
+            }
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $result[0];
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 
     public function getDetails() {
@@ -85,6 +110,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         }
         if ($details['optoutStatus']) $details['optoutStatus'] = (int) $details['optoutStatus'];
         if ($details['eligble']) $details['eligble'] = (int) $details['eligble'];
+        $details['mails'] = $this->mails;
         return $details;
     }
 

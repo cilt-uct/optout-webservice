@@ -59,14 +59,51 @@
                 <!--{%=JSON.stringify(course.convenor)%}-->
             </div>
             <div class="col-sm-4">
+                <div style="height:55px;">
+                    <!--{%=JSON.stringify(course.mails)%}-->
+                    {%
+                    if (typeof(course.mails) == "object") {
+                        include('tmpl-courses-email', course.mails);
+                    } else {
+                        if (course.mails.length > 0) {
+                            $.each(course.mails, function( j, mail ) {
+                                include('tmpl-courses-email', mail);
+                            });
+                        }
+                    } %}
+                </div>
                 <div class="text-center">
-                    <button class="btn btn-outline-success btn-sm" style="margin-top: 4.4em; width:60%" id="btn_timetable_{%=course.courseCode%}" data-rel="{%=course.courseCode%}" data-year="{%=course.year%}">View Timetable</button>
+                    <button class="btn btn-outline-success btn-sm" style="margin-top: 0.6em; width:60%" id="btn_timetable_{%=course.courseCode%}" data-rel="{%=course.courseCode%}" data-year="{%=course.year%}">View Timetable</button>
                 </div>
             </div>
         </div>
         <div class="row no-gutters justify-content-end courses-timetable" id="{%=course.courseCode%}_timetable"></div>
         <hr/>
     {% } }); %}
+</script>
+
+<script type="text/x-tmpl" id="tmpl-courses-email">
+    <label class="text-left" style="margin-top: 4px;">
+            {%  switch (o.state) {
+                    case '-1' : print("No mail"); break;
+                    case '0' : print("Not sent yet"); break;
+                    case '1' : print("Sent on <small>"+ o.sent +"</small>", true); break;
+                }
+                print("</br>", true);
+                switch (o.type) {
+                    case "notification": print("Notification"); break;
+                    case "confirm":
+                    switch (o.case) {
+                        case '1': print("Dep opted out"); break;
+                        case '2': print("Course opted out"); break;
+                        case '3': print("has schedule on Vula"); break;
+                        case '4': print("Scheduled recordings"); break;
+                        case '5': print("Multiple class lists"); break;
+                        case '6': print("No Vula site"); break;
+                    }
+                    break;
+                } %}
+        </label>
 </script>
 
 <script type="text/x-tmpl" id="tmpl-courses-loading">

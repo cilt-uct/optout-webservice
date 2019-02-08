@@ -94,6 +94,8 @@ class UIController extends Controller
             $data['hasVulaSite'] = $vula->hasProviderId($data['course'], $data['year']);
             $data['hasOCSeries'] = $ocService->hasOCSeries($data['course'], $data['year']);
             $data['isTimetabled'] = $data['hasOCSeries'] ? $course->checkIsTimetabled() : false;
+            $data['email_case'] = $data['case'];
+            $data['email_type'] = $data['type'];
 
             // retrieve timetable information
             $json = file_get_contents('https://srvslscet001.uct.ac.za/timetable/?course='. $data['course'] .','. $data['year']);
