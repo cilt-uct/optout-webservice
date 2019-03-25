@@ -25,6 +25,8 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
     private $isTimetabled;
     private $secret;
     private $fullHash;
+    private $eligble;
+    private $semester;
 
     private $mails;
 
@@ -46,6 +48,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
 
         $qry = "select A.course_code, A.term, A.dept, A.secret, A.start_date, A.end_date,
                 if(A.acad_career = 'UGRD' and opencast_venues.campus_code in ('UPPER','MIDDLE'), 1, 0) as eligble,
+                if((date_add(curdate(), interval 2 week) < :this_year_half and A.start_date < :this_year_half), 'S1', 'S2') as sem,
                 ifnull(C.convenor_name, A.convenor_name) as convenor_name,
                 ifnull(C.convenor_eid, A.convenor_eid) as convenor_eid, D.is_optout, D.updated_at, D.updated_by,
                 ifnull(C.convenor_email, (select E.email from vula_archive.SAKAI_USER_ARCHIVE E where C.convenor_eid = E.EID or (C.convenor_eid is null and A.convenor_eid = E.EID))) as email
@@ -55,8 +58,10 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                     left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = A.course_code and `sn`.term = A.term
                     left join timetable.opencast_venues on `sn`.archibus_id = opencast_venues.archibus_id
                 where A.active = 1 and A.course_code = :course and A.term = :year limit 1";
+
+        $yearHalf = date('Y-m-d', strtotime(date("Y") . "-07-01"));
         $stmt = $this->dbh->prepare($qry);
-        $stmt->execute([':course' => $this->entityCode, ':year' => $this->year]);
+        $stmt->execute([':course' => $this->entityCode, ':this_year_half' => $yearHalf, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {
             throw new \Exception("no such course");
         }
@@ -76,6 +81,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         $this->updatedBy = $result[0]['updated_by'];
         $this->parentEntityCode = $result[0]['dept'];
         $this->eligble = $result[0]['eligble'];
+        $this->semester = $result[0]['sem'];
 
         $this->mails = $this->fetchMails();
     }
@@ -86,7 +92,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
         }
 
         try {
-            $qry = "SELECT `state`, `updated_at` as `sent`,`type`,`case` FROM timetable.uct_workflow_email
+            $qry = "SELECT `state`, `updated_at` as `sent`,`type`,`case`,`hash` FROM timetable.uct_workflow_email
                     where course = :course and term = :year";
             $stmt = $this->dbh->prepare($qry);
             $stmt->execute([':course' => $this->entityCode, ':year' => $this->year]);
@@ -95,14 +101,14 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 throw new \Exception("no emails");
             }
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            return $result[0];
+            return $result;
         } catch (\Exception $e) {
             return [];
         }
     }
 
     public function getDetails() {
-        $fields = ['courseCode', 'year', 'convenor', 'optoutStatus', 'updatedAt', 'updatedBy', 'eligble'];
+        $fields = ['courseCode', 'year', 'convenor', 'optoutStatus', 'updatedAt', 'updatedBy', 'eligble', 'semester'];
 
         $details = ['hash' => $this->getHash()];
         foreach ($fields as $idx => $field) {

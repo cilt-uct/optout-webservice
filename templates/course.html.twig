@@ -99,6 +99,12 @@
                                     <h6 style="margin:0.4em">There is no Vula site associated with <strong>{{course}}</strong>, so the timetable will not be automatically scheduled.</h6>
                                 </div>
                             {% endif %}
+                            {% if email_case == "0" %}
+                                <div class="alert alert-danger" role="alert">
+                                    <i class="fa fa-3x fa-times-circle-o danger" style="margin-top:0.12em"></i>
+                                    <h6 style="margin:0.4em">Something went terribly wrong in scheduling <strong>{{course}}</strong>, please contact <a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording for {{course}}" title="Help at Vula">help@vula.uct.ac.za</a>.</h6>
+                                </div>
+                            {% endif %}
                             <br/>
                         </div>
                     </div>

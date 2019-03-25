@@ -46,7 +46,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             $this->connectLocally();
         }
 
-        $qry = "select A.*, '002200' as hod_eid, B.year, B.is_optout from uct_dept A left join dept_optout B on A.dept = B.dept where A.dept = :dept and B.year = :year order by year desc limit 1";
+        $qry = "select A.*, B.year, B.is_optout from uct_dept A left join dept_optout B on A.dept = B.dept where A.dept = :dept and B.year = :year order by year desc limit 1";
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {
@@ -73,7 +73,19 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             $this->connectLocally();
         }
 
-        $qry = "select A.course_code from ps_courses A join course_optout B on A.course_code = B.course_code and A.term = B.year where A.active = 1 and A.dept = :dept and A.term = :year and A.acad_career = 'UGRD'";
+        $qry = "select distinct `ps`.course_code
+            from timetable.ps_courses `ps`
+                join timetable.course_optout `out` on `ps`.course_code = `out`.course_code and `ps`.term = `out`.year
+                left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `ps`.course_code and `sn`.term = `ps`.term
+                left join timetable.opencast_venues `venue` on `sn`.archibus_id =  `venue` .archibus_id
+            where
+                `ps`.active = 1
+                and `ps`.dept = :dept
+                and `ps`.term = :year
+                and `ps`.acad_career = 'UGRD'
+                and `sn`.instruction_type='Lecture'
+                and `venue`.campus_code in ('UPPER','MIDDLE')";
+
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
         if ($stmt->rowCount() === 0) {

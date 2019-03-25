@@ -142,7 +142,7 @@
                             {% endif %}
                             <div class="row no-gutters dept-title">
                                 <div class="col-sm-6">
-                                    {% if dept.eligble_courses > 0 %}
+                                    {% if (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
                                     <h5><a href="https://srvslscet001.uct.ac.za/optout/view/{{dept.hash}}" target="_blank">{{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small></a></h5>
                                     {% else %}
                                     <h5 style="margin:0.4em;">{{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small></h5>
@@ -247,28 +247,41 @@
                                         <tbody>
                                             <tr>
                                                 <td class="text-right"><strong>Eligble Courses:</strong></td>
-                                                <td>{{dept.eligble_courses}}</td>
+                                                <td>
+                                                    <small style="color: #888;">S1</small>
+                                                    <span style="padding-right: 15px;">{{dept.eligble_courses_S1}}</span>
+                                                    <small style="color: #888;">S2</small>
+                                                    <span>{{dept.eligble_courses_S2}}</span>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td colspan="2"><hr/></td>
                                             </tr>
                                             <tr>
                                                 <td class="text-right"><strong>Course Mails:</strong>&nbsp;&nbsp;&nbsp;Sent</td>
-                                                <td>{{dept.mail_sent}}</td>
+                                                {% if dept.mail_sent_note > 0 %}
+                                                    {% if dept.mail_sent_note > 0 %}
+                                                        <td>{{dept.mail_sent_note|default('0')}} / {{dept.mail_sent_confirm|default('0')}}</td>
+                                                    {% else %}
+                                                        <td>{{dept.mail_sent_confirm|default('0')}}</td>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <td>0</td>
+                                                {% endif %}
                                             </tr>
                                             <tr>
                                                 <td class="text-right">To Send</td>
-                                                <td>{{dept.mail_unsent}}</td>
+                                                <td>{{dept.mail_unsent|default('0')}}</td>
                                             </tr>
                                             <tr>
                                                 <td class="text-right">Error</td>
-                                                <td>{{dept.mail_err}}</td>
+                                                <td>{{dept.mail_err|default('0')}}</td>
                                             </tr>
 
                                         </tbody>
                                     </table>
                                     <br/>
-                                    {% if dept.eligble_courses > 0 %}
+                                    {% if (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
                                     <div class="text-center">
                                         <button class="btn btn-outline-success btn-sm" style="width:60%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
                                     </div>

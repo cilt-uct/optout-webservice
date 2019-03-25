@@ -1,109 +1,111 @@
 <script type="text/x-tmpl" id="tmpl-courses">
     {% $.each(o.courses, function( i, course ) { if (course.eligble == '1') { %}
-        <div class="row no-gutters course-title">
-            <div class="col-sm-8">
-                <h6>{%=course.courseCode%}, {%=course.year%}</h6>
-            </div>
-            <div class="col-sm-4" style="padding-top:0.6em;">
-                <label>Opted Out</label>
-                <label class="right" id="chk_opt_{%=course.courseCode%}_date">
-                    {% if (course.updatedBy != null) { %}{%=course.updatedBy%} - {%=course.updatedAt%}{% } %}
-                </label>
-                <div class="switch">
-                    <input type="checkbox" id="chk_opt_{%=course.courseCode%}" data-course="{%=course.courseCode%}" data-hash="{%=course.hash%}" {% if (course.optoutStatus==1) { %}checked{% } %}/><label id="toggle_opt_{%=course.courseCode%}" for="chk_opt_{%=course.courseCode%}">Toggle</label>
+        <div class="{%=course.semester%}">
+            <div class="row no-gutters course-title">
+                <div class="col-sm-8">
+                    <h6>{%=course.courseCode%}, {%=course.year%}</h6>
                 </div>
-            </div>
-        </div>
-        <div class="row no-gutters course-details">
-            <div class="col-sm-8">
-                <div class="form-group row">
-                    <label for="inp_{%=course.courseCode%}_EID" class="col-sm-3 col-form-label">EID</label>
-                    <div class="col-sm-9">
-                        <input type="text" class="form-control" id="inp_{%=course.courseCode%}_EID" placeholder="EID" data-dept="{%=o.dept%}"
-                                    data-type="course" data-field="convenorEid" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}"
-                                    data-old="{%=course.convenor.eid%}" value="{%=course.convenor.eid%}"/>
-                        <span class="loader">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </span>
+                <div class="col-sm-4" style="padding-top:0.6em;">
+                    <label>Opted Out</label>
+                    <label class="right" id="chk_opt_{%=course.courseCode%}_date">
+                        {% if (course.updatedBy != null) { %}{%=course.updatedBy%} - {%=course.updatedAt%}{% } %}
+                    </label>
+                    <div class="switch">
+                        <input type="checkbox" id="chk_opt_{%=course.courseCode%}" data-course="{%=course.courseCode%}" data-hash="{%=course.hash%}" {% if (course.optoutStatus==1) { %}checked{% } %}/><label id="toggle_opt_{%=course.courseCode%}" for="chk_opt_{%=course.courseCode%}">Toggle</label>
                     </div>
                 </div>
-                <div class="form-group row">
-                    <label for="inp_{%=course.courseCode%}_convenorName" class="col-sm-3 col-form-label">Convenor Name</label>
-                    <div class="col-sm-9">
-                        <input type="text" class="form-control" id="inp_{%=course.courseCode%}_convenorName" placeholder="Convenor Name" data-dept="{%=o.dept%}"
-                                    data-type="course" data-field="convenorName" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}"
-                                    data-old="{%=course.convenor.name%}" value="{%=course.convenor.name%}"/>
-                        <span class="loader">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </span>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="inp_{%=course.courseCode%}_convenorEmail" class="col-sm-3 col-form-label">Convenor Mail</label>
-                    <div class="col-sm-9">
-                        <input type="text" class="form-control" id="inp_{%=course.courseCode%}_convenorEmail" placeholder="Convenor Mail" data-dept="{%=o.dept%}"
-                                    data-type="course" data-field="convenorEmail" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}"
-                                    data-old="{%=(course.convenor.email ? course.convenor.email.toLowerCase() :'')%}"
-                                    value="{%=(course.convenor.email ? course.convenor.email.toLowerCase() :'')%}"/>
-                        <span class="loader">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </span>
-                    </div>
-                </div>
-                <!--{%=JSON.stringify(course.convenor)%}-->
             </div>
-            <div class="col-sm-4">
-                <div style="height:55px;">
-                    <!--{%=JSON.stringify(course.mails)%}-->
-                    {%
-                    if (typeof(course.mails) == "object") {
-                        include('tmpl-courses-email', course.mails);
-                    } else {
+            <div class="row no-gutters course-details">
+                <div class="col-sm-8">
+                    <div class="form-group row">
+                        <label for="inp_{%=course.courseCode%}_EID" class="col-sm-3 col-form-label">EID</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="inp_{%=course.courseCode%}_EID" placeholder="EID" data-dept="{%=o.dept%}"
+                                        data-type="course" data-field="convenorEid" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}"
+                                        data-old="{%=course.convenor.eid%}" value="{%=course.convenor.eid%}"/>
+                            <span class="loader">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="inp_{%=course.courseCode%}_convenorName" class="col-sm-3 col-form-label">Convenor Name</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="inp_{%=course.courseCode%}_convenorName" placeholder="Convenor Name" data-dept="{%=o.dept%}"
+                                        data-type="course" data-field="convenorName" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}"
+                                        data-old="{%=course.convenor.name%}" value="{%=course.convenor.name%}"/>
+                            <span class="loader">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="inp_{%=course.courseCode%}_convenorEmail" class="col-sm-3 col-form-label">Convenor Mail</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="inp_{%=course.courseCode%}_convenorEmail" placeholder="Convenor Mail" data-dept="{%=o.dept%}"
+                                        data-type="course" data-field="convenorEmail" data-course="{%=course.courseCode%}" data-hash="{%=o.hash%}"
+                                        data-old="{%=(course.convenor.email ? course.convenor.email.toLowerCase() :'')%}"
+                                        value="{%=(course.convenor.email ? course.convenor.email.toLowerCase() :'')%}"/>
+                            <span class="loader">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                        </div>
+                    </div>
+                    <!--{%=JSON.stringify(course.convenor)%}-->
+                </div>
+                <div class="col-sm-4">
+                    <div class="emails" style="height:55px;">
+                        <!--{%=JSON.stringify(course.mails)%}-->
+                        {%
                         if (course.mails.length > 0) {
                             $.each(course.mails, function( j, mail ) {
                                 include('tmpl-courses-email', mail);
                             });
-                        }
-                    } %}
-                </div>
-                <div class="text-center">
-                    <button class="btn btn-outline-success btn-sm" style="margin-top: 0.6em; width:60%" id="btn_timetable_{%=course.courseCode%}" data-rel="{%=course.courseCode%}" data-year="{%=course.year%}">View Timetable</button>
+                        } %}
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-outline-success btn-sm" style="margin-top: 0.6em; width:60%" id="btn_timetable_{%=course.courseCode%}" data-rel="{%=course.courseCode%}" data-year="{%=course.year%}">View Timetable</button>
+                    </div>
                 </div>
             </div>
+            <div class="row no-gutters justify-content-end courses-timetable" id="{%=course.courseCode%}_timetable"></div>
         </div>
-        <div class="row no-gutters justify-content-end courses-timetable" id="{%=course.courseCode%}_timetable"></div>
         <hr/>
     {% } }); %}
 </script>
 
 <script type="text/x-tmpl" id="tmpl-courses-email">
-    <label class="text-left" style="margin-top: 4px;">
-            {%  switch (o.state) {
-                    case '-1' : print("No mail"); break;
-                    case '0' : print("Not sent yet"); break;
-                    case '1' : print("Sent on <small>"+ o.sent +"</small>", true); break;
+    <label>
+        <a href="https://srvslscet001.uct.ac.za/optout/view/{%=o.hash%}" target="_blank"
+        {%  switch (o.type) {
+                case "notification": print(" class='label label-default'>Notification", true); break;
+                case "confirm":
+                switch (o.case) {
+                    case '1': print(" class='label label-primary'>Dep opted out", true); break;
+                    case '2': print(" class='label label-primary'>Course opted out", true); break;
+                    case '3': print(" class='label label-info'>has schedule on Vula", true); break;
+                    case '4': print(" class='label label-success'>Scheduled recordings", true); break;
+                    case '5': print(" class='label label-warning'>Multiple class lists", true); break;
+                    case '6': print(" class='label label-danger'>No Vula site", true); break;
+                    case '7': print(" class='label label-default'>Follow-up", true); break;
                 }
-                print("</br>", true);
-                switch (o.type) {
-                    case "notification": print("Notification"); break;
-                    case "confirm":
-                    switch (o.case) {
-                        case '1': print("Dep opted out"); break;
-                        case '2': print("Course opted out"); break;
-                        case '3': print("has schedule on Vula"); break;
-                        case '4': print("Scheduled recordings"); break;
-                        case '5': print("Multiple class lists"); break;
-                        case '6': print("No Vula site"); break;
-                    }
-                    break;
-                } %}
-        </label>
+                break;
+            }
+            print("</a><span>", true);
+            switch (o.state) {
+                case '-1' : print("No mail"); break;
+                case '0' : print("Not sent yet"); break;
+                case '1' : print("Sent on "+ o.sent +"", true); break;
+            }
+            print("</span>", true);
+        %}
+    </label>
 </script>
 
 <script type="text/x-tmpl" id="tmpl-courses-loading">

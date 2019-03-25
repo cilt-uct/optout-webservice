@@ -27,18 +27,21 @@ class Utilities
         try {
             $workflow = (new Workflow)->getWorkflow();
 
-            $qry = "select distinct sn_timetable_versioned.course_code, ps_courses.term, ps_courses.dept FROM sn_timetable_versioned
-                      inner join opencast_venues on sn_timetable_versioned.archibus_id = opencast_venues.archibus_id
-                      inner join ps_courses on sn_timetable_versioned.course_code = ps_courses.course_code and sn_timetable_versioned.term = ps_courses.term
-                    WHERE sn_timetable_versioned.term=:year and instruction_type='Lecture'
-                    and tt_version in (select max(version) from timetable_versions)
-                    and ((date_add(curdate(), interval 2 week) > :this_year_half and ps_courses.start_date > :this_year_half) or
-                         (date_add(curdate(), interval 2 week) < :this_year_half and ps_courses.start_date < :this_year_half)
-                        )
-                    and ps_courses.active = 1
-                    and campus_code in ('UPPER','MIDDLE')
-                    and sn_timetable_versioned.course_code not in (select course_code from course_optout where year = :year)
-                    order by course_code";
+            $qry = "select distinct `sn`.course_code, `ps`.term, `ps`.dept
+                    FROM sn_timetable_versioned `sn`
+                        inner join opencast_venues  `venue`  on `sn`.archibus_id =  `venue`.archibus_id
+                        inner join ps_courses `ps` on `sn`.course_code = `ps`.course_code and `sn`.term = `ps`.term
+                    WHERE
+                        `sn`.term=2019
+                        and `ps`.active = 1
+                        and `ps`.acad_career = 'UGRD'
+                        and `venue`.campus_code in ('UPPER','MIDDLE')
+                        and `sn`.instruction_type='Lecture'
+                        and `sn`.tt_version in (select max(version) from timetable_versions)
+                        and ((date_add(curdate(), interval 2 week) > :this_year_half and `ps`.start_date > :this_year_half) or
+                                (date_add(curdate(), interval 2 week) < :this_year_half and `ps`.start_date < :this_year_half))
+                        and `sn`.course_code not in (select course_code from course_optout where year = :year)
+                        order by `sn`.course_code";
 
             $yearHalf = date('Y-m-d', strtotime(date("Y") . "-07-01"));
             $stmt = $this->dbh->prepare($qry);
@@ -78,6 +81,11 @@ class Utilities
     }
 
     public function refreshDepartments() {
+        /*
+        UPDATE timetable.uct_dept t1
+            INNER JOIN timetable.uct_dept t2 ON t2.dept = t1.dept
+            SET t1.hod_eid = if (getUserEIDFromMail(t1.email) REGEXP '^-?[0-9]{8}$' > 0, getUserEIDFromMail(t1.email),  getUserEIDFromMail(SUBSTRING_INDEX(t1.alt_email, ',',1)))
+        */
         try {
             $workflow = (new Workflow)->getWorkflow();
 
@@ -185,24 +193,44 @@ class Utilities
 
         $result = [ 'success' => true, 'result' => null ];
         try {
-            $query = "select A.*, '00112233' as eid, B.*,
+            $query = "select A.*, A.hod_eid as eid, B.*,
                     (SELECT count(distinct(`ps`.course_code))
-                    FROM timetable.ps_courses `ps`
-                    join timetable.course_optout `out` on `ps`.course_code = `out`.course_code
-                    left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `ps`.course_code and `sn`.term = `ps`.term
-                    left join timetable.opencast_venues on `sn`.archibus_id = opencast_venues.archibus_id
-                    where `ps`.active = 1 and `ps`.dept = A.dept and `ps`.term = B.year
-                    and `ps`.acad_career = 'UGRD' and opencast_venues.campus_code in ('UPPER','MIDDLE')) as eligble_courses,
+                        FROM timetable.ps_courses `ps`
+                            join timetable.course_optout `out` on `ps`.course_code = `out`.course_code and `ps`.term = `out`.year
+                            left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `ps`.course_code and `sn`.term = `ps`.term
+                            left join timetable.opencast_venues `venue` on `sn`.archibus_id =  `venue` .archibus_id
+                        WHERE
+                            `ps`.dept = A.dept and `ps`.term = B.year
+                            and `ps`.active = 1
+                            and `ps`.acad_career = 'UGRD'
+                            and  `venue` .campus_code in ('UPPER','MIDDLE')
+                            and `sn`.instruction_type='Lecture'
+                            and `sn`.tt_version in (select max(version) from timetable_versions)
+                            and (date_add(curdate(), interval 2 week) < :this_year_half and `ps`.start_date < :this_year_half)) as eligble_courses_S1,
+                    (SELECT count(distinct(`ps`.course_code))
+                        FROM timetable.ps_courses `ps`
+                            join timetable.course_optout `out` on `ps`.course_code = `out`.course_code and `ps`.term = `out`.year
+                            left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `ps`.course_code and `sn`.term = `ps`.term
+                            left join timetable.opencast_venues `venue` on `sn`.archibus_id =  `venue` .archibus_id
+                        WHERE
+                            `ps`.dept = A.dept and `ps`.term = B.year
+                            and `ps`.active = 1
+                            and `ps`.acad_career = 'UGRD'
+                            and  `venue` .campus_code in ('UPPER','MIDDLE')
+                            and `sn`.instruction_type='Lecture'
+                            and `sn`.tt_version in (select max(version) from timetable_versions)
+                            and (date_add(curdate(), interval 2 week) > :this_year_half and `ps`.start_date > :this_year_half)) as eligble_courses_S2,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 0 and course is not null) as mail_unsent,
-                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 1 and course is not null) as mail_sent,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 1 and course is not null) as mail_sent_note,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 1 and course is not null) as mail_sent_confirm,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 2 and course is not null) as mail_err
                 from timetable.uct_dept A left join timetable.dept_optout B on A.dept = B.dept
                 where B.year = :year";
 
+            $yearHalf = date('Y-m-d', strtotime(date("Y") . "-07-01"));
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute([':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']]);
 
-            if ($stmt->execute([':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']])) {
+            if ($stmt->execute([':year' => $worfklow_details['year'], ':this_year_half' => $yearHalf, ':workflow_id' => $worfklow_details['oid']])) {
                 if ($stmt->rowCount() === 0) {
                     $result = [ 'success' => false, 'err' => 'Query is empty', ':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']];
                 }

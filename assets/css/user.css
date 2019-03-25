@@ -183,6 +183,55 @@ header img.navbar-brand{
   font-size: 12px;
 }
 
+.post-body .departments .course-details .emails label {
+  text-align: left;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.post-body .departments .course-details .emails span {
+  padding-left: 8px;
+}
+
+.post-body .departments .course-details .emails a.label,
+.post-body .departments .course-details .emails a.label:hover ,
+.post-body .departments .course-details .emails a.label:active {
+  text-decoration: none;
+}
+
+.post-body .departments .course-details .emails .label {
+  display: inline;
+  padding: .3em .6em .3em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+
+.label-default {
+  background-color: #777;
+}
+.label-primary {
+  background-color: #337ab7;
+}
+.label-success {
+  background-color: #5cb85c;
+}
+.label-info {
+  background-color: #5bc0de;
+}
+.label-warning {
+  background-color: #f0ad4e;
+}
+.label-danger {
+  background-color: #d9534f;
+}
+
+
 .post-body .departments .dept-details .col-sm-3,
 .post-body .departments .dept-details .col-sm-4,
 .post-body .departments .dept-details .col-sm-8,
@@ -243,6 +292,7 @@ header img.navbar-brand{
   margin-bottom: 1em;
   padding: 1em;
   border-radius: 0 0 4px 4px;
+  position: relative;
 }
 
 .post-body .dept-courses .loading span,
@@ -253,6 +303,33 @@ header img.navbar-brand{
 
 .post-body .dept-courses hr:last-child {
   display: none;
+}
+
+.post-body .dept-courses .S1,
+.post-body .dept-courses .S2 {
+  position: relative;
+}
+
+.post-body .dept-courses .S1::before,
+.post-body .dept-courses .S2::before {
+  content: "Semester 1";
+  background-color: #909DF9;
+  position: absolute;
+  left: -35px;
+  top: 66px;
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
+  transform: rotate(-90deg);
+  padding: 3px;
+  opacity: 0.5;
+  width: 100px;
+  text-align: center;
+}
+.post-body .dept-courses .S2::before {
+  content: "Semester 2";
+  background-color: #6674D7;
 }
 
 .post-body .departments .courses-timetable > div {
