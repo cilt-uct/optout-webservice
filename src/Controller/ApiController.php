@@ -531,5 +531,24 @@ class ApiController extends Controller
       return new Response(json_encode($result), 201);
   }
 
+  /**
+   * @Route("/api/v0/series/")
+   */
+  public function getSeries( Request $request) {
+    // https://media.uct.ac.za/admin-ng/series/series.json?sortorganizer=&sort=&filter=&offset=0&optedOut=false&limit=100
+    switch ($request->getMethod()) {
+      case 'GET':
+        $ocService = new OCRestService();
+        try {
+          $response = $ocService->getAll();
+          return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
+        } catch (\Exception $e) {
+          return new Response($e->getMessage(), 500);
+        }
+      default:
+        return new Response('Method not implemented', 405, ['Content-Type' => 'text/plain']);
+
+    }
+  }
 
 }

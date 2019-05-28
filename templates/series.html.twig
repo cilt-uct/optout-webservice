@@ -1,0 +1,68 @@
+{% include 'header.html' %}
+    <a name="top" class="anchor"></a>
+    <div class="container post">
+        <div class="row no-gutters" style="position: absolute; top: -38px; width: 100%;">
+            <div class="col-sm-8" style="padding-top: 10px;padding-left: 84px;">
+                <span style="color: #222;font-size: 0.8em;">Hi {{authenticated.z.result.0.name}},</span>
+            </div>
+            <div class="col-sm-4 align-self-end">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://srvslscet001.uct.ac.za/optout/admin/">Courses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="https://srvslscet001.uct.ac.za/optout/series/">Series</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="row post-body">
+            <div class="col-md-12 post-title">
+                <h3><span style="color: #5caad2;">Lecture Recording</span> Series</h3>
+                <br/>
+                <div id="main-table" class="workflow-details">
+                     <!--p>{{authenticated|json_encode()}}</p-->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/js/tmpl.js') }}"></script>
+    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
+    <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/js/datepicker.min.js') }}"></script>
+    <script>
+        var changeTimer = false, field = null, div = null;
+        var rentention_cycle = { "forever": "Keep Forever", "normal": "Default (4 years)", "long": "Long (8 years)" };
+
+        function getObj(id, arr, key) { key = key || 'id'; var o = null; $.each(arr, function (i, el) { if (el[key] == id) { o=el; return; } }); return o; };
+
+        function showSeries() {
+            $('#main-table')
+                .html(tmpl('tmpl-table-series', {}))
+                .on('click','th.sort', function(event) {
+                    event.preventDefault();
+                });
+
+            $.ajax({
+                //headers: {"x-entity-hash": btn.data('hash'), "x-entity-courses": '1'},
+                url: "/optout/api/v0/series/",
+                method: 'GET',
+                dataType: 'json'
+            }).done(function(data) {
+                console.log(data);
+                $('#main-table').html(tmpl('tmpl-table-series', data))
+            }).fail(function(xhr) {
+                console.log(xhr);
+            });
+        }
+
+        $(function() {
+            showSeries();
+        });
+    </script>
+    {{ source('series_templates.html') }}
+    {% include 'footer.html' %}
+    <!-- https://www.pexels.com/photo/auditorium-benches-chairs-class-207691/ -->
+</body>
+</html>

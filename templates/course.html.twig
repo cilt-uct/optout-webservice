@@ -12,31 +12,31 @@
                             <div style="padding-left: 2em;">
                                 {% if hasVulaSite %}
                                     <div class="alert alert-success" role="alert">
-                                        <i class="fa fa-3x fa-check-circle-o success"></i>
+                                        <i class="far fa-3x fa-check-circle"> success"></i>
                                         <span>There is a Vula site associated with this course.</span>
                                     </div>
 
                                     {% if not hasOCSeries %}
                                         <div class="alert alert-info" role="alert">
-                                            <i class="fa fa-3x fa-check-circle-o info"></i>
+                                            <i class="far fa-3x fa-check-circle"> info"></i>
                                             <span>A lecture recording series can be created for this course.</span>
                                         </div>
                                     {% else %}
                                         {% if not isTimetabled %}
                                             <div class="alert alert-success" role="alert">
-                                                <i class="fa fa-3x fa-check-circle-o success"></i>
+                                                <i class="far fa-3x fa-check-circle"> success"></i>
                                                 <span>A lecture recording series exists for this course.</span>
                                             </div>
                                         {% else %}
                                             <div class="alert alert-danger" role="alert">
-                                                <i class="fa fa-3x fa-times-circle-o danger"></i>
+                                                <i class="far fa-3x fa-times-circle danger"></i>
                                                 <span>A lecture recording series exists for this course and there are recordings scheduled or active.</span>
                                             </div>
                                         {% endif %}
                                     {% endif %}
                                 {% else %}
                                     <div class="alert alert-danger" role="alert">
-                                        <i class="fa fa-3x fa-times-circle-o danger"></i>
+                                        <i class="far fa-3x fa-times-circle danger"></i>
                                         <span>There seems to be no Vula site associated with this course code, to use automatic scheduling {% if (timetable is not empty) %}(for the timetable shown below){% endif %} please create the course site.</span>
                                     </div>
                                 {% endif %}
@@ -65,43 +65,43 @@
                         <div class="col-md-10">
                             {% if email_case == "1" %}
                                 <div class="alert alert-warning" role="alert">
-                                    <i class="fa fa-3x fa-times-circle-o warning" style="margin-top:0.12em"></i>
+                                    <i class="far fa-3x fa-times-circle warning" style="margin-top:0.12em"></i>
                                     <h6 style="margin:0.4em"><strong>{{course}}</strong> is not using lecture recording or will be self scheduling. (HOD)</h6>
                                 </div>
                             {% endif %}
                             {% if email_case == "2" %}
                                 <div class="alert alert-warning" role="alert">
-                                    <i class="fa fa-3x fa-times-circle-o warning" style="margin-top:0.12em"></i>
+                                    <i class="far fa-3x fa-times-circle warning" style="margin-top:0.12em"></i>
                                     <h6 style="margin:0.4em"><strong>{{course}}</strong> is not using lecture recording or will be self scheduling. (Lecturer)</h6>
                                 </div>
                             {% endif %}
                             {% if email_case == "3" %}
                                 <div class="alert alert-warning" role="alert">
-                                    <i class="fa fa-3x fa-times-circle-o warning" style="margin-top:0.12em"></i>
+                                    <i class="far fa-3x fa-times-circle warning" style="margin-top:0.12em"></i>
                                     <h6 style="margin:0.4em"><strong>{{course}}</strong> has a lecture recording series and there are recordings scheduled or active. <br/> The timetable will not be automatically scheduled.</h6>
                                 </div>
                             {% endif %}
                             {% if email_case == "4" %}
                                 <div class="alert alert-success" role="alert">
-                                    <i class="fa fa-3x fa-check-circle-o success" style="margin-top:0.12em"></i>
+                                    <i class="far fa-3x fa-check-circle"> success" style="margin-top:0.12em"></i>
                                     <h6 style="margin:0.4em">Lectures was automatically scheduled for <strong>{{course}}</strong> {% if (timetable is not empty) %}(according to the timetable shown below){% endif %}.</h6>
                                 </div>
                             {% endif %}
                             {% if email_case == "5" %}
                                 <div class="alert alert-warning" role="alert">
-                                    <i class="fa fa-3x fa-times-circle-o warning" style="margin-top:0.12em"></i>
+                                    <i class="far fa-3x fa-times-circle warning" style="margin-top:0.12em"></i>
                                     <h6 style="margin:0.4em">There are multiple class lists on your <strong>{{course}}</strong> site in Vula, it is not currently possible to do automated setup of your lecture recordings.</h6>
                                 </div>
                             {% endif %}
                             {% if email_case == "6" %}
                                 <div class="alert alert-danger" role="alert">
-                                    <i class="fa fa-3x fa-times-circle-o danger" style="margin-top:0.12em"></i>
+                                    <i class="far fa-3x fa-times-circle danger" style="margin-top:0.12em"></i>
                                     <h6 style="margin:0.4em">There is no Vula site associated with <strong>{{course}}</strong>, so the timetable will not be automatically scheduled.</h6>
                                 </div>
                             {% endif %}
                             {% if email_case == "0" %}
                                 <div class="alert alert-danger" role="alert">
-                                    <i class="fa fa-3x fa-times-circle-o danger" style="margin-top:0.12em"></i>
+                                    <i class="far fa-3x fa-times-circle danger" style="margin-top:0.12em"></i>
                                     <h6 style="margin:0.4em">Something went terribly wrong in scheduling <strong>{{course}}</strong>, please contact <a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording for {{course}}" title="Help at Vula">help@vula.uct.ac.za</a>.</h6>
                                 </div>
                             {% endif %}
@@ -135,7 +135,7 @@
                             <tbody>
                                 {% for lec in timetable.LEC %}
                                     <tr>
-                                        <td>{{lec.venue}}</td>
+                                        <td>{{lec.sn_venue}}</td>
                                         <td>
                                             {{lec.start_date}} <small>to</small> {{lec.end_date}}
                                         </td>

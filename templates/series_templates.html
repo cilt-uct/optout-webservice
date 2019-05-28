@@ -1,0 +1,181 @@
+<script type="text/x-tmpl" id="tmpl-table-series">
+    <table  class="main-tbl">
+        <thead>
+            <tr>
+                <th style="min-width: 80px;" class="sort">
+                    <span>
+                        Series
+                        <i></i>
+                    </span>
+                </th>
+                <th style="min-width: 110px;" class="sort">
+                    <span>
+                        Organizer(s)
+                        <i></i>
+                    </span>
+                </th>
+                <th style="width: 100px;" class="sort">
+                    <span>
+                        Course Code
+                        <i></i>
+                    </span>
+                </th>
+                <th style="width: 100px;" class="sort">
+                    <span>
+                        Retention
+                        <i></i>
+                    </span>
+                </th>
+                <th style="width: 91px;" class="sort desc">
+                    <span>
+                        Created
+                        <i></i>
+                    </span>
+                </th>
+                <th style="min-width: 88px;">
+                    <span>
+                        Actions
+                        <i></i>
+                    </span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if (o.results) {
+                    include('tmpl-row', o.results);
+               } else {
+                    include('tmpl-row-loading', {});
+               }
+            %}
+        </tbody>
+    </table>
+    <!--
+        total: 2176,
+        offset: 0,
+        count: 10,
+        limit: 10,
+    -->
+    <p>{%=o.total%} - {%=o.offset%} - {%=o.count%} - {%=o.limit%}</p>
+    <div class="pagination">
+        <a class="prev disabled" ng-class="{disabled: !table.isNavigatePrevious()}" ng-click="table.goToPage(table.pagination.offset - 1)"></a>
+        <a ng-repeat-start="page in table.getDirectAccessiblePages()" ng-class="{wide: table.maxLabel.length > 2}" ng-if="page.active" class="active ng-binding ng-scope" style="">1</a>
+        <a class="next disabled" ng-class="{disabled: !table.isNavigateNext()}" ng-click="table.goToPage(table.pagination.offset + 1)" style=""></a>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-row">
+    {% $.each(o, function( i, series ) {
+        var r = getObj('retention-cycle',series.ext).value;
+            if (r != '') { r = rentention_cycle[r]; } %}
+        <tr>
+            <td>{%=series.title%}</td>
+            <td>
+                <div>{%=series.organizers.join(',')%}</div>
+                <div>{%=getObj('creator-id',series.ext).value%}</div>
+            </td>
+            <td>{%=getObj('course',series.ext).value%}</td>
+            <td>
+                <div>{%=r%}</div>
+                <div>{%=getObj('series-expiry-date',series.ext).value%}</div>
+            </td>
+            <td>{%=moment(series.creation_date).calendar()%}</td>
+            <td><a href=#">view ({%=series.hash%})</a></td>
+        </tr>
+    {% } ); %}
+</script>
+
+<script type="text/x-tmpl" id="tmpl-row-loading">
+    <tr>
+        <td colspan="6"><i class="fas fa-cog fa-spin fa-2x"></i><span>Loading series information...</span></td>
+    </tr>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-timetable-loading">
+    <div class="col-sm-12">
+        <div class="text-info loading">
+            <i class="fas fa-cog fa-spin fa-2x"></i>
+            <span>Loading timetable information...</span>
+        </div>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-courses-error">
+    <div class="text-danger">
+        <span>Error loading courses</span>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-timetable-error">
+    <div class="col-sm-12">
+        <div class="text-danger">
+            <span>Error loading courses</span>
+        </div>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-dept-altMail">
+    <div class="multi" id="{%=o.dept%}_alt_{%=o.index%}">
+        <a href="#" class="danger" rel="{%=o.dept%}" data-index="{%=o.index%}">
+            <i class="fa fa-minus" aria-hidden="true"></i>
+        </a>
+        <input type="text" class="form-control"
+                id="inp_{%=o.dept%}_alt_{%=o.index%}" data-type="dept" data-field="altMail" data-dept="{%=o.dept%}" data-hash="{%=o.hash%}"
+                data-index="{%=o.index%}"
+                placeholder="E-mail" data-old="" value=""/>
+        <span class="loader">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>
+    </div>
+</script>
+
+<script type="text/x-tmpl" id="tmpl-course-timetable">
+    <div class="col-sm-12">
+        <div class="table-responsive">
+            <table id="course_table" class="table">
+                <thead>
+                    <tr class="notop">
+                        <th rowspan="2">Venue</th>
+                        <th rowspan="2">Dates</th>
+                        <th rowspan="2">Times</th>
+                        <th class="header">Days</th>
+                    </tr>
+                    <tr>
+                        <th class="days">
+                            <div>Mon</div>
+                            <div>Tue</div>
+                            <div>Wed</div>
+                            <div>Thu</div>
+                            <div>Fri</div>
+                            <div>Sat</div>
+                            <div>Sun</div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% $.each(o.LEC, function(i, lec) { %}
+                        <tr>
+                            <td>{%=lec.venue%}</td>
+                            <td>
+                                {%=lec.start_date%} <small>to</small> {%=lec.end_date%}
+                            </td>
+                            <td>
+                                {%=lec.start_time%} <small>-</small> {%=lec.end_time%}
+                            </td>
+                            <td class="days">
+                                <div class="{% if (lec.days.mon) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.tue) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.wed) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.thu) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.fri) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.sat) { %}use{% } %}"></div>
+                                <div class="{% if (lec.days.sun) { %}use{% } %}"></div>
+                            </td>
+                        </tr>
+                    {% }); %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</script>

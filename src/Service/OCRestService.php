@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use Symfony\Component\Dotenv\Dotenv;
+use App\Entity\OpencastSeries;
 
 class OCRestService
 {
@@ -20,6 +21,30 @@ class OCRestService
         $this->ocHost = getenv('OC_HOST');
         $this->ocUser = getenv('OC_USER');
         $this->ocPass = getenv('OC_PASS');
+    }
+
+    public function getAll($filter = '', $sort = '', $offset = 0, $limit = 10) {
+        $url = $this->ocHost . "/admin-ng/series/series.json?offset=$offset&limit=$limit&sort=createdDateTime:DESC";
+        $headers = ['X-Requested-Auth: Digest'];
+
+        $data = json_decode($this->getRequest($url, $headers), true);
+        if (!is_array($data) || !sizeof($data)) {
+            return [];
+        } else {
+            $data['results'] = array_map (function($s) {
+                    $headers = ['X-Requested-Auth: Digest'];
+                    //https://media.uct.ac.za/api/series/006182a0-70c6-4f31-ae7d-0fcaddcc2ceb/metadata?type=ext%2Fseries
+                    $ext = json_decode($this->getRequest($this->ocHost . "/api/series/".$s['id']."/metadata?type=ext%2Fseries", $headers), true);
+                    if (!is_array($ext) || !sizeof($ext)) {
+                        return [];
+                    }
+                    $oc_series = new OpencastSeries($s['id']);
+                    $s['hash'] = $oc_series->getHash();
+                    $s['ext'] = $ext;
+                    return $s;
+                }, $data['results']);
+        }
+        return $data;
     }
 
     private function getOCSeries($courseCode, $year) {

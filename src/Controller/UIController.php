@@ -311,13 +311,13 @@ class UIController extends Controller
      */
     public function defaultMain(Request $request)
     {
-	$pathInfo = $request->getPathInfo();
+	    $pathInfo = $request->getPathInfo();
         $requestUri = $request->getRequestUri();
 
         $url = $requestUri .'admin';
 
-	return $this->redirect($url, 301);
-	#return new Response("$url", 200);
+	    return $this->redirect($url, 301);
+	    #return new Response("$url", 200);
     }
 
     /**
@@ -391,4 +391,77 @@ class UIController extends Controller
             return $this->render('admin_login.html.twig', $authenticated['z']);
         }
     }
+
+    /**
+     * Show series admin page
+     *
+     * @Route("/series", name="series_admin_show")
+     */
+    public function showSeries(Request $request)
+    {
+        $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
+
+        $now = new \DateTime();
+        $utils = new Utilities();
+        $workflow = new Workflow();
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                        $authenticated['z'] = $utils->getAuthorizedUsers($details[0]['cn']);
+                    } else {
+                        $authenticated['z']['err'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z']['err'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z']['err'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+                if ($session->get('username')) {
+                    $authenticated['z'] = $utils->getAuthorizedUsers($session->get('username'));
+                }
+            break;
+        }
+
+        $data = [ 'dept' => 'CILT', 'authenticated' => $authenticated, 'workflow' => $workflow->getWorkflow() ];
+        //return new Response(json_encode($data), 201);
+        //return new Response(json_encode($authenticated['z']), 201);
+
+        if ($authenticated['z']['success']) {
+
+            $data['departments'] = $utils->getAllCourses();
+
+            $ar = [];
+            if ($data['departments']['success'] == '1') {
+                foreach ($data['departments']['result'] as $a) {
+                    array_push($ar, substr($a['dept'], 0, 1));
+                }
+            }
+            $data['list'] = array_unique($ar);
+
+            //$data['courses'] =
+            return $this->render('series.html.twig', $data);
+        } else {
+            return $this->render('series_login.html.twig', $authenticated['z']);
+        }
+    }
+
 }
