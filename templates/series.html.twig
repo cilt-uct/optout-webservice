@@ -26,11 +26,17 @@
             </div>
         </div>
     </div>
-    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
-    <script src="{{ asset('assets/js/tmpl.js') }}"></script>
-    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
-    <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('assets/js/datepicker.min.js') }}"></script>
+
+    <!--script src="{{ asset('assets/node_modules/@webcomponents/webcomponents-loader.js') }}"></script>
+    <script type="module" src="{{ asset('assets/node_modules/@polymer/paper-button/paper-button.js') }}"></script>
+
+    <paper-button raised class="indigo">raised</paper-button-->
+    <script src="{{ asset('public/build/app.js') }}"></script>
+    <script src="{{ asset('public/build/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('public/build/js/moment.min.js') }}"></script>
+    <script src="{{ asset('public/build/js/bootstrap.js') }}"></script>
+    <script src="{{ asset('public/build/js/tmpl.js') }}"></script>
+
     <script>
         var changeTimer = false, field = null, div = null;
         var rentention_cycle = { "forever": "Keep Forever", "normal": "Default (4 years)", "long": "Long (8 years)" };

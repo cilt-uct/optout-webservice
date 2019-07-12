@@ -6,18 +6,24 @@
     <div class="container post">
         <div class="row post-body">
             <div class="col-md-12 post-title">
-                <h3><span style="color: #5caad2;">Lecture Recording</span> Automated Setup <small>or</small> Opt-Out</h3>
+                <h3><span style="color: #5caad2;">{{details.name}}</span><small>&nbsp;:&nbsp;Automated setup of lecture recording</small></h3>
                 <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
                 <br/>
                 <!-- {% if readonly %}Readonly{% else %}Editable{% endif %} -->
                 <div class="row">
                     {% if not readonly %}
                         <div class="col-md-8">
-                            <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the following {{st.course}} would have automated lecture recording set up.</p>
-                            <p>Please check and update the course convenor details below. A course-level opt-out email will be sent to {{st.all}} by <strong>{{date_course|date("l, d F")}}</strong>. Should the course convener information not be available for a particular course, the course opt-out email will default to the Head of Department.</p>
+                            <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the following {{st.course}} are eligible for automated lecture recording set up.</p>
+                            <p>Please check and update the course convenor details below. A course-level opt-out email will be sent to {{st.all}} by <strong>{{date_course|date("l, d F")}}</strong>. Should the course convenor information not be available for a particular course, the course opt-out email will default to the Head of Department.</p>
+
+                            <div style="margin: 15px 0px;"  id="semester-select">
+                                <span style="display: inline-block;padding-right:6px;">Select semester:</span>
+                                <a href="#" rel="s1" class="badge badge-info" style="font-size:14px;margin: 0px 8px;">Semester 1 &nbsp;<span class="badge badge-light">{{counts.s1}}</span></a>
+                                <a href="#" rel="s2" class="badge badge-light" style="font-size:14px;margin: 0px 8px;">Semester 2 &nbsp;<span class="badge badge-dark">{{counts.s2}}</span></a>
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="card bg-light mb-3">
+                            <div class="card bg-light mb-3" style="border: 1px solid #ccc;position: relative;top: -24px;">
                                 <div class="card-body">
                                     <p>If your department as a whole chooses to opt-out from automated setup of lecture recording, please click the link below:</p>
                                     <div style="text-align:center;">
@@ -28,7 +34,7 @@
                         </div>
                     {% else %}
                         <div class="col-md-10">
-                            {% if details.is_optout %}
+                            {# {% if details.is_optout %}
                                 <p>This department has opted to <i>NOT</i> automatically schedule lecture recordings for the following {{st.course}}:</p>
                             {% else %}
                                 <p>The course {{st.convenor}} {{st.were}} notified, on <strong>{{date_course|date("l, d F Y")}}</strong>, that their {{st.course}} {{st.are}} eligible for automatic scheduling according to their timetable.</p>
@@ -37,7 +43,13 @@
                                 {% else %}
                                     <p>The recordings were automatically scheduled on <strong>{{date_schedule|date("l, d F Y")}}</strong>.</p>
                                 {% endif %}
-                            {% endif %}
+                            {% endif %} #}
+
+                            <div style="margin: 15px 0px;"  id="semester-select">
+                                <span style="display: inline-block;padding-right:6px;">Select semester:</span>
+                                <a href="#" rel="s1" class="badge badge-info" style="font-size:14px;margin: 0px 8px;">Semester 1 &nbsp;<span class="badge badge-light">{{counts.s1}}</span></a>
+                                <a href="#" rel="s2" class="badge badge-light" style="font-size:14px;margin: 0px 8px;">Semester 2 &nbsp;<span class="badge badge-dark">{{counts.s2}}</span></a>
+                            </div>
                         </div>
                     {% endif %}
                     </div>
@@ -55,81 +67,149 @@
                     {% endif %}
                 {% endif %}
                 <div class="table-responsive">
-                    <table id="course_table" class="table">
+                    <table class="table" id="tbl_s1">
                         <thead>
                             <tr>
-                                <th>Course</th>
+                                <th style="width: 120px;">Course</th>
                                 <th>Convenor</th>
-                                {% if readonly %}
-                                    <th class="text-center">
+                                {% if readonly_s1 %}
+                                    <!--th class="text-center">
                                         {% if date() < date(date_schedule) %}To Schedule{% else %}Scheduled{% endif %}
-                                        </th>
-                                    <!--th>Vula Site</th>
-                                    <th>Lecture Recording</th-->
+                                    </th-->
+                                    <th class="text-center">Vula Site</th>
+                                    <th class="text-center">Lecture Recording</th>
                                 {% endif %}
                             </tr>
                         </thead>
                         <tbody>
-                            {% for course in details.courses %}
-                                <!--{ % if course.eligble % }-->
-                                    <tr>
-                                        <td>
-                                            <label>
-                                                <strong>
-                                                    {{course.courseCode}}
-                                                </strong>
-                                            </label>
-                                        </td>
-                                        <td>
-                                            {% if authenticated.a and (not readonly) %}
-                                                <span>
-                                                    <input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name">
-                                                    <span class="loader">
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                    </span>
+                            {% for course in details.courses if course.semester == 's1' %}
+                                <tr>
+                                    <td>
+                                        <label>
+                                            <strong {% if not course.eligble %}style="color:#888"{% endif %}>
+                                            {{course.courseCode}}
+                                            </strong>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        {% if authenticated.a and (not readonly_s1) %}
+                                            <span>
+                                                <input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name">
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
                                                 </span>
-                                                <span class="edit">
-                                                    <input id="{{course.courseCode}}_c_mail"type="text" placeholder="convenor@uct.ac.za" value="{{course.convenor.email}}" data-old="{{course.convenor.email}}" data-course="{{course.courseCode}}" data-type="email">
-                                                    <span class="loader">
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                    </span>
+                                            </span>
+                                            <span class="edit">
+                                                <input id="{{course.courseCode}}_c_mail"type="text" placeholder="convenor@uct.ac.za" value="{{course.convenor.email}}" data-old="{{course.convenor.email}}" data-course="{{course.courseCode}}" data-type="email">
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
                                                 </span>
+                                            </span>
+                                        {% else %}
+                                            <span class="input">{{course.convenor.name}}</span>
+                                            <span class="input">{{course.convenor.email}}</span>
+                                        {% endif %}
+                                    </td>
+                                    {% if readonly_s1 %}
+                                        <!--td class="text-center">
+                                            {% if details.is_optout %}
+                                                <span class="no">No</span>
                                             {% else %}
-                                                <span class="input">{{course.convenor.name}}</span>
-                                                <span class="input">{{course.convenor.email}}</span>
-                                            {% endif %}
-                                        </td>
-                                        {% if readonly %}
-                                            <td class="text-center">
-                                                {% if details.is_optout %}
+                                                {% if course.optoutStatus == "1" %}
                                                     <span class="no">No</span>
                                                 {% else %}
-                                                    {% if course.optoutStatus == "1" %}
-                                                        <span class="no">No</span>
-                                                    {% else %}
-                                                        <span class="yes">Yes</span>
-                                                    {% endif %}
+                                                    <span class="yes">Yes</span>
                                                 {% endif %}
-                                            </td>
-                                            <!--td>
-                                                Yes/No
-                                            </td>
-                                            <td>
-                                                Not Scheduled / Scheduled
-                                            </td-->
+                                            {% endif %}
+                                        </td-->
+                                        <td class="text-center">
+                                            {% if course.hasVulaSite %}<span class="yes">Yes</span>{% else %}<span class="no">No</span>{% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                           {% if course.hasOCSeries %}<span class="yes">Yes</span>{% else %}<span class="no">No</span>{% endif %}
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <table class="table" id="tbl_s2" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;">Course</th>
+                                <th>Convenor</th>
+                                {% if readonly_s2 %}
+                                    <!--th class="text-center">
+                                        {% if date() < date(date_schedule) %}To Schedule{% else %}Scheduled{% endif %}
+                                    </th-->
+                                    <th class="text-center">Vula Site</th>
+                                    <th class="text-center">Lecture Recording</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in details.courses if course.semester == 's2' %}
+                                <tr>
+                                    <td>
+                                        <label>
+                                            <strong {% if not course.eligble %}style="color:#888"{% endif %}>
+                                            {{course.courseCode}}
+                                            </strong>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        {% if authenticated.a and (not readonly_s2) %}
+                                            <span>
+                                                <input id="{{course.courseCode}}_c_name" type="text" placeholder="Course Convenor" value="{{course.convenor.name}}" data-old="{{course.convenor.name}}" data-course="{{course.courseCode}}" data-type="name">
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
+                                                </span>
+                                            </span>
+                                            <span class="edit">
+                                                <input id="{{course.courseCode}}_c_mail"type="text" placeholder="convenor@uct.ac.za" value="{{course.convenor.email}}" data-old="{{course.convenor.email}}" data-course="{{course.courseCode}}" data-type="email">
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
+                                                </span>
+                                            </span>
+                                        {% else %}
+                                            <span class="input">{{course.convenor.name}}</span>
+                                            <span class="input">{{course.convenor.email}}</span>
                                         {% endif %}
-                                    </tr>
-                                <!--{ % endif % }-->
+                                    </td>
+                                    {% if readonly_s2 %}
+                                        <!--td class="text-center">
+                                            {% if details.is_optout %}
+                                                <span class="no">No</span>
+                                            {% else %}
+                                                {% if course.optoutStatus == "1" %}
+                                                    <span class="no">No</span>
+                                                {% else %}
+                                                    <span class="yes">Yes</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td-->
+                                        <td class="text-center">
+                                            {% if course.hasVulaSite %}<span class="yes">Yes</span>{% else %}<span class="no">No</span>{% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                           {% if course.hasOCSeries %}<span class="yes">Yes</span>{% else %}<span class="no">No</span>{% endif %}
+                                        </td>
+                                    {% endif %}
+                                </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 <br/>
-                {% if not readonly %}
+                {# {% if not readonly %}
                     <div class="row justify-content-center">
                         <div class="col-sm-6">
                             <div class="card bg-light mb-3">
@@ -142,7 +222,7 @@
                             </div>
                         </div>
                     </div>
-                {% endif %}
+                {% endif %} #}
             </div>
         </div>
     </div>
@@ -182,17 +262,33 @@
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    {% if authenticated.a and (not readonly) %}
+    <script>
+        $(function() {
+            $('#semester-select > a').on('click',function(event){
+                event.preventDefault();
+                var $el = $(this);
+                if (!$el.hasClass('badge-info')) {
+                    $('#semester-select > a')
+                        .addClass('badge-light').removeClass('badge-info')
+                        .children('.badge').addClass('badge-dark').removeClass('badge-light');
+                    $el.addClass('badge-info').removeClass('badge-light')
+                        .children('.badge').addClass('badge-light').removeClass('badge-dark');
+                    $('.table-responsive table').hide();
+                    $('#tbl_'+ $el.attr('rel')).show();
+                }
+            });
+        });
+    </script>
+    {% if authenticated.a and ((not readonly_s1) or (not readonly_s2)) %}
     <script>
         var changeTimer = false, field = null;
 
         $(function() {
-
-            $('#course_table').on('focusin','input',function(event){
+            $('#tbl_s1, #tbl_s2').on('focusin','input',function(event){
                 $(this).removeClass('done err');
             });
 
-            $('#course_table').on('change','input',function(event){
+            $('#tbl_s1, #tbl_s2').on('change','input',function(event){
                     if (changeTimer !== false) clearTimeout(changeTimer);
                     field = $(this);
 

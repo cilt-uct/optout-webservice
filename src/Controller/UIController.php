@@ -26,6 +26,11 @@ class UIController extends Controller
     {
         $authenticated = ['a' => false, 'z' => '0'];
 
+        // testing
+        if ($hash == 'zzz000') {
+            $hash = 'b6ef9b';
+        }
+
         $now = new \DateTime();
         $utils = new Utilities();
         $data = $utils->getMail($hash);
@@ -73,35 +78,40 @@ class UIController extends Controller
         }
 
         if ($data['course'] === null ) {
-            $dept = new Department($data['dept'], $hash, $data['year'], false, false);
+            $dept = new Department($data['dept'], $hash, $data['year'], false, false, true);
             $data['details'] = $dept->getDetails();
-            $data['readonly'] = ($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
+            $data['readonly'] = 1; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
+            $data['readonly_s1'] = 1; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
+            $data['readonly_s2'] = 0; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
 
             if (count($data['details']['courses']) == 0) {
-                return $this->viewOptOut($hash, $request);
+            //     return $this->viewOptOut($hash, $request);
+            } else {
+                $semester_vals = array_column($data['details']['courses'], 'semester'); // take all 'semester' values
+                $data['counts'] = array_count_values($semester_vals);
             }
 
-            //return new Response(json_encode($data), 201);
+            // return new Response(json_encode($data), 201);
             return $this->render('department.html.twig', $data);
         } else {
             $vula = new SakaiWebService();
             $ocService = new OCRestService();
 
-            $course = new Course($data['course'], $hash, $data['year'], false);
+            $course = new Course($data['course'], $hash, $data['year'], false, false); // last could be set to true
 
             $data['details'] = $course->getDetails();
             $data['readonly'] = ($now->diff(new \DateTime($data['date_schedule']))->format('%R') == '-');
             $data['hasVulaSite'] = $vula->hasProviderId($data['course'], $data['year']);
             $data['hasOCSeries'] = $ocService->hasOCSeries($data['course'], $data['year']);
-            $data['isTimetabled'] = $data['hasOCSeries'] ? $course->checkIsTimetabled() : false;
+            $data['isTimetabled'] = $data['hasOCSeries'] ? $course->checkIsTimetabledInOC() : false;
             $data['email_case'] = $data['case'];
             $data['email_type'] = $data['type'];
 
             // retrieve timetable information
-            $json = file_get_contents('https://srvslscet001.uct.ac.za/timetable/?course='. $data['course'] .','. $data['year']);
+            $json = file_get_contents('https://srvslscet001.uct.ac.za/timetable/?historic=1&course='. $data['course'] .','. $data['year']);
             $data['timetable'] = json_decode($json);
 
-            //return new Response(json_encode($data), 201);
+            // return new Response(json_encode($data), 201);
             return $this->render('course.html.twig', $data);
         }
     }
@@ -211,8 +221,13 @@ class UIController extends Controller
     public function getMail($hash, Request $request)
     {
         $utils = new Utilities();
-        $data = $utils->getMail($hash);
 
+        // testing
+        if ($hash == 'zzz000') {
+            $hash = 'b6ef9b';
+        }
+
+        $data = $utils->getMail($hash);
         //return new Response(json_encode($data), 201);
 
         if ($data['success']) {
@@ -278,6 +293,12 @@ class UIController extends Controller
     public function getMailSubject($hash, Request $request)
     {
         $utils = new Utilities();
+
+        // testing
+        if ($hash == 'zzz000') {
+            $hash = 'b6ef9b';
+        }
+
         $data = $utils->getMail($hash);
 
         //return new Response(json_encode($data), 201);
@@ -294,7 +315,7 @@ class UIController extends Controller
                 $course = new Course($data['course'], $hash, $data['year'], false);
                 $details = $course->getDetails();
 
-                $str = $data['course'] ." course:  Automated Setup or Opt-out of Lecture Recording" .
+                $str = $data['course'] ." course: Automated Setup or Opt-out of Lecture Recording" .
                         ($data['type'] == 'confirm' ? ' [Completed]' : '');
 
                 return new Response($str, 201);
@@ -462,6 +483,190 @@ class UIController extends Controller
         } else {
             return $this->render('series_login.html.twig', $authenticated['z']);
         }
+    }
+
+    /**
+     * View the series according to the hash it receives
+     *
+     * @Route("/view-series/{hash}")
+     */
+    public function viewSeriesFromHash($hash, Request $request)
+    {
+        $authenticated = ['a' => false, 'z' => '0'];
+
+        $now = new \DateTime();
+        $utils = new Utilities();
+        $data = $utils->getSeries($hash);
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                    } else {
+                        $authenticated['z'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+            break;
+        }
+
+        if (!$data['success']) {
+            return $this->render('error.html.twig', $data);
+        }
+        $data = $data['result'][0];
+
+        $data['hash'] = $hash;
+        $data['authenticated'] = $authenticated;
+
+
+        $ocService = new OCRestService();
+        $metadata = $ocService->getSeriesMetadata($data['series_id']);
+        foreach($metadata as $struct) {
+            $tmp = [];
+            foreach($struct['fields'] as $field) {
+                $tmp[ str_replace("-","_",$field['id'])] = $field['value'];
+            }
+            switch ($struct['flavor']) {
+                case 'dublincore/series':
+                    $data['dublincore'] = $tmp;
+                    break;
+                case 'ext/series':
+                    $data['ext'] = $tmp;
+                    break;
+            }
+        }
+        $ar = $ocService->getEventsForSeries($data['series_id']);
+
+        if (isset($ar['result'])) {
+
+            $ar['result'] = array_filter($ar['result'], function($obj){
+                if (isset($obj['mediaType'])) {
+                    return ($obj['mediaType'] == "AudioVisual");
+                }
+                return false;
+            });
+
+            $func = function($event) {
+
+                if ($event['mediaType'] == "AudioVisual") {
+                    if (isset($event['mediapackage'])) {
+                        $p = $event['mediapackage'];
+
+        //                 $videoName = 'Presenter';
+        //                 if ()
+        //    if (track.type.indexOf('presentation2') > -1) {
+        //      videoName = 'Presentation 2';
+        //    }
+        //    else if (track.type.indexOf('presentation') > -1) {
+        //      videoName = 'Presentation';
+        //    }
+        //    else if (track.type.indexOf('composite') > -1) {
+        //      videoName = 'Side by side';
+        //    }
+        //    else if (track.type.indexOf('pic-in-pic') > -1) {
+        //      videoName = 'Picture-in-Picture';
+        //    }
+
+                        // get downloads
+                        $downloads = array_filter(
+                                array_map(function($track){
+                                    // "engage-download"
+                                    if (($track["mimetype"] == "video/mp4") && (in_array("atom", $track["tags"]["tag"]))) {
+                                        return (object) array(
+                                            'flavor' => $track['type'],
+                                            'quality' => implode(array_filter($track["tags"]["tag"], function($str) {
+                                                return(strpos($str, 'quality'));
+                                                })),
+                                            'url' => $track['url'],
+                                            'video' => $track['video']['resolution']
+                                        );
+                                    }
+                                }, $p['media']['track']), function($item) {
+                                    return (gettype($item) != "NULL");
+                                });
+
+                        // get preview
+                        $previews = array_filter(
+                                array_map(function($track){
+                                    $pass = ($track["mimetype"] == "image/jpeg") && strpos($track['type'], "search+preview");
+                                    if (gettype($track["tags"]["tag"]) == 'string') {
+                                        $pass = $pass && ($track["tags"]["tag"] == "engage-download");
+                                    } else {
+                                        $pass = $pass && in_array("engage-download", $track["tags"]["tag"]);
+                                    }
+
+                                    if ($pass) {
+                                        return (object) array('flavor' => $track['type'],
+                                            'url' => $track['url'],
+                                            'ref' => $track['ref']
+                                        );
+                                    }
+                                }, $p['attachments']['attachment']), function($item) {
+                                    return (gettype($item) != "NULL");
+                                });
+
+                        $q_ar = array_column($downloads, 'quality');
+
+                        if (array_search('high-quality', $q_ar) >= 0) {
+                            // we have high quality
+                            $downloads = array_filter($downloads, function($item) {
+                                return ($item->quality == "high-quality");
+                            });
+                        } elseif (array_search('medium-quality', $q_ar) >= 0) {
+                            // we have medium quality
+                            $downloads = array_filter($downloads, function($item) {
+                                return ($item->quality == "medium-quality");
+                            });
+                        } elseif (array_search('low-quality', $q_ar) >= 0) {
+                            // we have low quality
+                            $downloads = array_filter($downloads, function($item) {
+                                return ($item->quality == "low-quality");
+                            });
+                        }
+
+                        $event['media']  = (object) array('previews' => $previews, 'downloads' => $downloads);
+                    }
+
+                    // remove unwanted fields
+                    unset($event['mediapackage']);
+                    unset($event['ocMediapackage']);
+                    unset($event['segments']);
+                    unset($event['keywords']);
+                    unset($event['score']);
+                    unset($event['org']);
+
+                    return $event; //array_keys($event); //gettype($event);
+                }
+            };
+
+            $data['events'] = (object) array('offset' => $ar['offset'], 'limit' => $ar['limit'], 'total' => $ar['total'], //'query' => $ar['query'],
+                                            'result' => array_map($func, $ar['result']));
+        } else {
+            $data['events'] = $ar;
+        }
+
+        return new Response(json_encode($data), 201);
+        // return $this->render('series_view.html.twig', $data);
     }
 
 }

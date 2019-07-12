@@ -13,3 +13,5 @@ src/Controller/.gitignore
 public/
 .DS_Store
 *.swp
+node_modules
+package-lock.json

@@ -9,6 +9,7 @@ use App\Entity\HashableInterface;
 use App\Entity\Course;
 use App\Entity\Department;
 use App\Entity\Workflow;
+use App\Entity\OpencastSeries;
 
 class Utilities
 {
@@ -27,30 +28,26 @@ class Utilities
         try {
             $workflow = (new Workflow)->getWorkflow();
 
-            $qry = "select distinct `sn`.course_code, `ps`.term, `ps`.dept
-                    FROM sn_timetable_versioned `sn`
+            $qry = "select distinct `sn`.course_code, `ps`.term, `ps`.dept,
+                    (select id from timetable.uct_workflow `w` where `w`.year = :year and `w`.semester = if(`sn`.course_code REGEXP '". Course::SEM1 ."', 's1', if(`sn`.course_code REGEXP '". Course::SEM2 ."', 's2', 's0'))) as workflow_id
+                    FROM timetable.sn_timetable_versioned `sn`
                         inner join opencast_venues  `venue`  on `sn`.archibus_id =  `venue`.archibus_id
                         inner join ps_courses `ps` on `sn`.course_code = `ps`.course_code and `sn`.term = `ps`.term
                     WHERE
-                        `sn`.term=2019
+                        `sn`.term = :year
                         and `ps`.active = 1
                         and `ps`.acad_career = 'UGRD'
-                        and `venue`.campus_code in ('UPPER','MIDDLE')
+                        and `venue`.campus_code in (". Course::ELIGIBLE .")
                         and `sn`.instruction_type='Lecture'
-                        and `sn`.tt_version in (select max(version) from timetable_versions)
-                        and ((date_add(curdate(), interval 2 week) > :this_year_half and `ps`.start_date > :this_year_half) or
-                                (date_add(curdate(), interval 2 week) < :this_year_half and `ps`.start_date < :this_year_half))
                         and `sn`.course_code not in (select course_code from course_optout where year = :year)
                         order by `sn`.course_code";
 
-            $yearHalf = date('Y-m-d', strtotime(date("Y") . "-07-01"));
             $stmt = $this->dbh->prepare($qry);
             $stmt->execute([
                 ':year' => date('Y'),
-                ':this_year_half' => $yearHalf
             ]);
 
-            $optoutQry = "insert into course_optout (course_code, year, dept, workflow_id) values (:course, :year, :dept, :workflow_id) on duplicate key update course_code = :course, dept = :dept, workflow_id = :workflow_id";
+            $optoutQry = "insert into course_optout (course_code, year, dept, semester, workflow_id) values (:course, :year, :dept, semester, :workflow_id) on duplicate key update course_code = :course, dept = :dept, workflow_id = :workflow_id";
             $optoutStmt = $this->dbh->prepare($optoutQry);
 
             $updateResults = [
@@ -60,13 +57,16 @@ class Utilities
 
             if ($stmt->rowCount() > 0) {
                 while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                    $optoutStmt->execute([
-                        ':course' => $row['course_code'],
-                        ':year' => $row['term'],
-                        ':dept' => $row['dept'],
-                        ':workflow_id' => $workflow['oid']
-                    ]);
-                    $updateResults['coursesUpdated'] += $optoutStmt->rowCount();
+                    if ($row['workflow_id']) {
+                        $optoutStmt->execute([
+                            ':course' => $row['course_code'],
+                            ':year' => $row['term'],
+                            ':dept' => $row['dept'],
+                            ':semester' => $workflow->semester,
+                            ':workflow_id' => $row['workflow_id']
+                        ]);
+                        $updateResults['coursesUpdated'] += $optoutStmt->rowCount();
+                    }
                 }
                 //$this->updateVulaSites(); TODO
                 //$this->updateOCSeries();  TODO
@@ -168,9 +168,9 @@ class Utilities
                         `workflow`.`year`, `workflow`.`status`, `workflow`.`date_start`, `workflow`.`date_dept`, `workflow`.`date_course`, `workflow`.`date_schedule`
                         from uct_workflow_email mail
                         left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`
-                        where hash = :hash and workflow_id = :workflow_id order by created_at desc limit 1";
+                        where hash = :hash order by created_at desc limit 1"; // and workflow_id = :workflow_id
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute([':hash' => $hash, ':workflow_id' => $worfklow_details['oid']]);
+            $stmt->execute([':hash' => $hash]); // ':workflow_id' => $worfklow_details['oid']
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,
@@ -203,10 +203,10 @@ class Utilities
                             `ps`.dept = A.dept and `ps`.term = B.year
                             and `ps`.active = 1
                             and `ps`.acad_career = 'UGRD'
-                            and  `venue` .campus_code in ('UPPER','MIDDLE')
+                            and  `venue` .campus_code in (". Course::ELIGIBLE .")
                             and `sn`.instruction_type='Lecture'
-                            and `sn`.tt_version in (select max(version) from timetable_versions)
-                            and (date_add(curdate(), interval 2 week) < :this_year_half and `ps`.start_date < :this_year_half)) as eligble_courses_S1,
+                            and `ps`.course_code REGEXP '". Course::SEM1 ."'
+						having (max(`sn`.tt_version)) ) as eligble_courses_S1,
                     (SELECT count(distinct(`ps`.course_code))
                         FROM timetable.ps_courses `ps`
                             join timetable.course_optout `out` on `ps`.course_code = `out`.course_code and `ps`.term = `out`.year
@@ -216,21 +216,25 @@ class Utilities
                             `ps`.dept = A.dept and `ps`.term = B.year
                             and `ps`.active = 1
                             and `ps`.acad_career = 'UGRD'
-                            and  `venue` .campus_code in ('UPPER','MIDDLE')
+                            and  `venue` .campus_code in (". Course::ELIGIBLE .")
                             and `sn`.instruction_type='Lecture'
-                            and `sn`.tt_version in (select max(version) from timetable_versions)
-                            and (date_add(curdate(), interval 2 week) > :this_year_half and `ps`.start_date > :this_year_half)) as eligble_courses_S2,
-                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 0 and course is not null) as mail_unsent,
-                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 1 and course is not null) as mail_sent_note,
-                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 1 and course is not null) as mail_sent_confirm,
-                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.workflow_id=:workflow_id and mail.state = 2 and course is not null) as mail_err
+                            and `ps`.course_code REGEXP '". Course::SEM2 ."'
+						having (max(`sn`.tt_version)) ) as eligble_courses_S2,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 0 and course REGEXP '". Course::SEM1 ."') as s1_mail_unsent,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 0 and course REGEXP '". Course::SEM1 ."') as s1_mail_unsent,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 1 and `type` = 'notification' and course REGEXP '". Course::SEM1 ."') as s1_mail_sent_note,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 1 and `type` = 'confirm' and course REGEXP '". Course::SEM1 ."') as s1_mail_sent_confirm,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 2 and course REGEXP '". Course::SEM1 ."') as s1_mail_err,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 0 and course REGEXP '". Course::SEM2 ."') as s2_mail_unsent,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 1 and `type` = 'notification' and course REGEXP '". Course::SEM2 ."') as s2_mail_sent_note,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 1 and `type` = 'confirm' and course REGEXP '". Course::SEM2 ."') as s2_mail_sent_confirm,
+                (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 2 and course REGEXP '". Course::SEM2 ."') as s2_mail_err
                 from timetable.uct_dept A left join timetable.dept_optout B on A.dept = B.dept
                 where B.year = :year";
 
-            $yearHalf = date('Y-m-d', strtotime(date("Y") . "-07-01"));
             $stmt = $this->dbh->prepare($query);
 
-            if ($stmt->execute([':year' => $worfklow_details['year'], ':this_year_half' => $yearHalf, ':workflow_id' => $worfklow_details['oid']])) {
+            if ($stmt->execute([':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']])) {
                 if ($stmt->rowCount() === 0) {
                     $result = [ 'success' => false, 'err' => 'Query is empty', ':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']];
                 }
@@ -298,6 +302,76 @@ class Utilities
             }
         } catch (\PDOException $e) {
             $result['err'] = $e->getMessage();
+        }
+
+        return $result;
+    }
+
+    private function getSeriesCount($where = "") {
+        $q = $this->dbh->query("select count(*) as cnt from `timetable`.`view_oc_series` `series` $where");
+        $f = $q->fetch();
+        $result = $f['cnt'];
+        return $result;
+    }
+
+    public function getAllSeries($offset = 0, $limit = 15, $sort_dir = 'ASC', $sort_field = 'title') {
+
+        $result = [ 'success' => true, 'result' => null, "offset" => $offset, "limit" => $limit ];
+        try {
+            $query = "select `series`.id, `series`.series, `series`.title,
+                `series`.contributor, `series`.creator, `series`.username,
+                `series`.created_date, `series`.first_recording, `series`.last_recording,
+                `series`.`count`, `series`.`archive_count`, `series`.`retention`
+                from `timetable`.`view_oc_series` `series`
+                order by $sort_field $sort_dir
+                LIMIT $limit OFFSET $offset";
+
+            $stmt = $this->dbh->prepare($query);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount() === 0) {
+                    $result = [ 'success' => false, 'err' => 'Query is empty'];
+                }
+                $result['total'] = $this->getSeriesCount();
+                $result['count'] = $this->getSeriesCount();
+
+                $ar = [];
+                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+
+                    $r = $row;
+                    $oc_series = new OpencastSeries($row['series']);
+                    $r['hash'] = $oc_series->getHash();
+                    array_push($ar, $r);
+                }
+                $result['result'] = $ar;
+            } else {
+                $result = [ 'success' => false, 'err' => $stmt->errorInfo()];
+            }
+
+
+        } catch (\PDOException $e) {
+            $result = [ 'success' => false, 'err' => $e->getMessage()];
+        }
+
+        return $result;
+    }
+
+    public function getSeries($hash) {
+        $result = [ 'success' => 1, 'result' => null ];
+        try {
+            $query = "select series_id from opencast_series_hash series
+                        where short_code = :hash order by created_at desc limit 1"; // and workflow_id = :workflow_id
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':hash' => $hash]); // ':workflow_id' => $worfklow_details['oid']
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
         }
 
         return $result;

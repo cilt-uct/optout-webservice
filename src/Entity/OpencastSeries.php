@@ -148,7 +148,7 @@ class OpencastSeries
             " SET short_code = :short_code WHERE id = :id";
         $stmnt = $this->dbh->prepare($query);
         $params = array(
-            "short_code" => $code,
+            "short_code" => 'S'.$code,
             "id" => $id
         );
         $stmnt->execute($params);

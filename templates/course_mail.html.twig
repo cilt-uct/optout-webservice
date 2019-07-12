@@ -146,7 +146,7 @@
         </tr>
     </table>
     <!-- pre-header end -->
-    <!-- header -->
+    <!-- header
     <table border="0" width="100%" cellpadding="0" cellspacing="0" bgcolor="ffffff">
         <tr>
             <td align="center">
@@ -178,7 +178,7 @@
             </td>
         </tr>
     </table>
-    <!-- end header -->
+    end header -->
 
     <!-- big image section -->
     <table border="0" width="100%" cellpadding="0" cellspacing="0" bgcolor="ffffff" class="bg_color">
@@ -224,18 +224,22 @@
                                         <div style="line-height: 24px">
                                             <p>Dear {{name}},</p>
                                             <br/>
+                                            <p>You are receiving this because you are the course convenor for <strong>{{course}}</strong>. If not please reply to this email and let us know so that we can correct the course information.</p>
+                                            <br/>
                                             <p>Lecture recording facilitates learning and is highly valued by students. At UCT, there has been significant growth in the use of lecture recording. An opt-out provision was introduced through the <a href="https://www.uct.ac.za/sites/default/files/image_tool/images/328/about/policies/Lecture_Recording_Policy_2017.pdf" title="UCT Lecture Recording Policy (.PDF)">UCT Lecture Recording Policy</a> to streamline the lecture recording process. According to this provision, timetabled course lectures will be recorded unless the Head of Department or course convener opts out. This applies to all <strong>undergraduate courses</strong> taught on <strong>Upper and Middle campus</strong> in <a href="https://ictsapps.uct.ac.za/lectureRecording.php" title="ICTS: Lecture Recording Venues">equipped teaching venues</a>.</p>
                                             <br/>
-                                            <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the {{course}} course will have automated lecture recording set up. However, as the course convener, you can choose to opt out of <strong>automated setup of lecture recording</strong> for this course.</p>
+                                            <p>Based on the current <a href="http://coursetimetable.uct.ac.za" title="UCT Timetables Site">venue bookings</a>, the <strong>{{course}}</strong> course will have automated lecture recording set up. However, as the course convener, you can choose to opt out of <strong>automated setup of lecture recording</strong> for this course.</p>
                                             <br/>
-                                            <p>Before {{date|date("l, d F")}}, you would need to either:</p>
+                                            <br/>
+                                            <p>Before {{date|date("l, d F Y")}}, please:</p>
                                             <ol type="a">
-                                                <li>Indicate if the course wishes to opt out of automated lecture recording setup - see “View course” link below; OR</li>
+                                                <li><a href="{{view_link}}" title="">Opt out of automatic recording setup for {{course}}</a>; OR</li>
                                                 <li>If there is no course site in Vula yet and the course is not opting out, create a Vula course site (with attached classlist) for the automated setup of lecture recording.</li>
                                             </ol>
                                             <br/>
                                             <p>Opting out is recommended if the course does not strictly follow the venue timetable schedule. For a department or course that opts out of the automated setup, <a href="http://www.cilt.uct.ac.za/cilt/lecture-recording#howto" title="Lecture recording: How To">self-service setup</a> of recordings is still available in Vula, if you would like to record your lectures.</p>
                                             <br/>
+                                            <p>You can verify or change the course scheduling setting at any time before {{date|date("l, d F Y")}} at this page:</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -247,7 +251,7 @@
                     </tr>
                     <tr>
                         <td align="center">
-                            <table border="0" align="center" width="160" cellpadding="0" cellspacing="0" bgcolor="5caad2" style="">
+                            <table border="0" align="center" width="240" cellpadding="0" cellspacing="0" bgcolor="5caad2" style="">
 
                                 <tr>
                                     <td height="10" style="font-size: 10px; line-height: 10px;">&nbsp;</td>
@@ -258,7 +262,7 @@
 
 
                                         <div style="line-height: 26px;">
-                                            <a href="{{view_link}}" style="color: #ffffff; text-decoration: none;">View Course</a>
+                                            <a href="{{view_link}}" style="color: #ffffff; text-decoration: none;">{{course}} Recording Selection</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -279,6 +283,8 @@
                                 <tr>
                                     <td align="left" style="color: #333; font-size: 14px; font-family: 'Work Sans', Calibri, sans-serif; line-height: 24px;">
                                         <div style="line-height: 24px">
+                                            <p>To change the recording schedule for this course after {{date|date("l d F Y")}}, please use the Lecture Videos tool in the Vula site for the course.</p>
+                                            <br/>
                                             <p>Please note:</p>
                                             <br/>
                                             <ul type="circle">

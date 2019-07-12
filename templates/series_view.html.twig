@@ -1,0 +1,208 @@
+{% include 'header.html' %}
+    <div class="container post">
+        <div class="row post-body">
+            <div class="col-md-12 post-title">
+                <h3><span style="color: #5caad2;">Series</span>&nbsp;&nbsp;&nbsp;&nbsp;{{dublincore.title}}</h3>
+                <br/>
+
+                <div class="row series">
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            <label class="col-md-3 control-label text-right" for="txt_subject">Subject:</label>
+                            <div class="col-md-5 txt">
+                                {{dublincore.subject}}
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-3 control-label text-right" for="txt_creator">Creator:</label>
+                            <div class="col-md-5 txt">
+                                {{dublincore.creator|join(', ')}}
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-3 control-label text-right" for="txt_contributor">Contributor:</label>
+                            <div class="col-md-5 txt">
+                                {{dublincore.contributor|join(', ')}}
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-3 control-label text-right" for="txt_desc">Description:</label>
+                            <div class="col-md-5 txt">
+                                {{dublincore.description}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            <label class="col-md-3 control-label text-right" for="txt_subject">Vula:</label>
+                            <div class="col-md-5 txt">
+                                {{ext.site_id}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if (events.total > 0) %}
+                    <h6>Events:</h6>
+
+                    <table class="main-tbl" style="margin-left:20px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 220px;">Title</th>
+                                <th style="width: 220px;">Presenter</th>
+                                <th style="width: 160px;">Date</th>
+                                <th style="width: 120px;">Venue</th>
+                                <th style="width: 100px;">Status</th>
+                                <th style="width: 250px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    {% for event in events.results %}
+                        <tr data-id="{{event.id}}"
+                            data-preview="{{event.has_preview}}"
+                            data-comments="{{event.has_comments}}"
+                            data-open-comments="{{event.has_open_comments}}">
+                            <td>{{event.title}}</td>
+                            <td>{{event.presenters|join(', ')}}</td>
+                            <td>{{event.start_date|date("F jS \\a\\t g:ia")}}</td>
+                            <td>{{event.location}}</td>
+                            <td>
+                            {% if event.event_status == 'EVENTS.EVENTS.STATUS.SCHEDULED' %}
+                                {% if date() < date(event.start_date) %}
+                                    Upcoming
+                                {% else %}
+                                    Expired
+                                {% endif %}
+                                Available
+                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.RECORDING' %}
+                                Capturing
+                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.PROCESSING_FAILURE' %}
+                                Failed
+                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.RECORDING_FAILURE' %}
+                                Failed
+                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.INGESTING' %}
+                                Processing
+                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.PROCESSING' %}
+                                Processing
+                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.PROCESSED' %}
+                                {% set engage = "" %}
+                                {% for item in event.publications %}
+                                    {% if (item.id == 'engage-player') %}
+                                        {% set engage = 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if (engage) %}
+                                    Published
+                                {% else %}
+                                    {% if (event.has_open_comments == 'false') %}
+                                        Unwanted
+                                    {% else %}
+                                        Awaiting Review
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                            </td>
+                            <td data-ref="download">
+                                {% if (event.publications|length > 0) %}
+                                    <i class="fas fa-cog fa-spin"></i>
+                                    <span style="display: inline-block; position: relative; left: 10px;top: 0px;">Loading ...</span>
+                                {% endif %}
+                            </td>
+                        </div>
+                    {% endfor %}
+                        </tbody>
+                    </table>
+
+<!--
+title: "Querying the Vula Archive",
+has_open_comments: false,
+has_preview: true,
+has_comments: true,
+technical_end: "",
+presenters: [
+    "Sam Lee Pan"
+],
+technical_start: "2018-05-17T09:19:25Z",
+location: "hahn763",
+managedAcl: "",
+workflow_state: "",
+id: "072ee289-ed10-4065-9fc2-f058cbb701c4",
+review_status: "UNSENT",
+start_date: "2018-05-17T09:19:25Z",
+event_status: "EVENTS.EVENTS.STATUS.PROCESSED",
+publications: [
+    {
+        name: "EVENTS.EVENTS.DETAILS.PUBLICATIONS.ENGAGE",
+        id: "engage-player",
+        url: "http://media.uct.ac.za/engage/theodul/ui/core.html?id=072ee289-ed10-4065-9fc2-f058cbb701c4"
+    }
+]
+-->
+
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% include 'footer.html' %}
+    <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModal" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="loginForm" method="post" action="/optout/view/{{hash}}">
+                    <input type="hidden" id="type" name="type" value="login"/>
+                    <div class="modal-header">
+                        <h5 class="modal-title">Login</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Please login to change your preference.</p>
+                        <div class="form-group row">
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" name="eid" id="eid" value="" placeholder="User ID">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" name="pw" id="pw" placeholder="Password">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/js/tmpl.js') }}"></script>
+    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
+    <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+
+    <script>
+        $(function() {
+
+            $("tr > td[data-ref]").each(function(i,el){
+                var p = $(el).parent();
+                console.log(p.data('id').replace(/-/g,'_'));
+
+                $.ajax({
+                    url: "/optout/api/v0/episode/"+ p.data('id').replace(/-/g,'_'),
+                    method: 'GET',
+                    dataType: 'json'
+                }).done(function(data) {
+                    console.log(data);
+                }).fail(function(xhr) {
+                    console.log(xhr);
+                });
+            });
+        });
+    </script>
+    <!-- https://www.pexels.com/photo/auditorium-benches-chairs-class-207691/ -->
+</body>
+</html>

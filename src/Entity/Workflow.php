@@ -14,6 +14,7 @@ class Workflow
 
     private $oid;
     private $year;
+    private $semester;
     private $status;
     private $active;
     /**
@@ -49,6 +50,7 @@ class Workflow
 
                 $this->oid = $result[0]['id'];
                 $this->year = $result[0]['year'];
+                $this->semester = $result[0]['semester'];
                 $this->status = $result[0]['status'];
                 $this->date_start = new \DateTime($result[0]['date_start']);
                 $this->date_dept = new \DateTime($result[0]['date_dept']);
@@ -70,6 +72,7 @@ class Workflow
         return [
             'oid' => $this->oid,
             'year' => $this->year,
+            'semester' => $this->semester,
             'status' => $this->status,
             'date_start' => $this->date_start,
             'date_dept' => $this->date_dept,
@@ -151,7 +154,9 @@ class Workflow
                 if ($now->diff($this->date_schedule)->format('%R') == '-') {
 
                     // do scheduling
-                    // TODO
+                    // TODO -
+                    //    - srvubuopc001:/usr/local/cetscripts/peoplesoft/automaticScheduling.pl
+                    //    - srvslscet001:/usr/local/sakaiscripts/jira/optout_dept.pl
 
                     // > state: done
                     $this->setState('done');
@@ -253,27 +258,55 @@ class Workflow
     private function createCourseMails(){
         try {
             // get list of courses - only eligible courses
-            $query = "SELECT distinct(`course`.course_code) as course_code, `course`.dept as dept
-                FROM timetable.course_optout `course`
-                left join timetable.ps_courses `ps` on `ps`.course_code =  `course`.course_code and `ps`.term = `course`.year
-                left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `course`.course_code and `sn`.term = `course`.year
-                left join timetable.dept_optout `deptout` on `course`.`dept` = `deptout`.`dept`
-                left join timetable.uct_dept `dept` on `course`.`dept` = `dept`.`dept`
-                left join timetable.opencast_venues on `sn`.archibus_id = opencast_venues.archibus_id
-                where `dept`.use_dept = 1 and `deptout`.is_optOut = 0 and `ps`.active = 1
-                    and `ps`.acad_career = 'UGRD' and opencast_venues.campus_code in ('UPPER','MIDDLE')";
+            // $query = "SELECT distinct(`course`.course_code) as course_code, `course`.dept as dept
+            //     FROM timetable.course_optout `course`
+            //     left join timetable.ps_courses `ps` on `ps`.course_code =  `course`.course_code and `ps`.term = `course`.year
+            //     left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `course`.course_code and `sn`.term = `course`.year
+            //     left join timetable.dept_optout `deptout` on `course`.`dept` = `deptout`.`dept`
+            //     left join timetable.uct_dept `dept` on `course`.`dept` = `dept`.`dept`
+            //     left join timetable.opencast_venues on `sn`.archibus_id = opencast_venues.archibus_id
+            //     where `dept`.use_dept = 1 and `deptout`.is_optOut = 0 and `ps`.active = 1
+            //         and `ps`.acad_career = 'UGRD' and opencast_venues.campus_code in (". Course::ELIGIBLE .")";
+            $query = "SELECT DISTINCT
+                            `versioned`.`course_code` AS `course_code`,
+                            `ps`.`dept`
+                        FROM
+                            `timetable`.`sn_timetable_versioned` `versioned`
+                            JOIN `timetable`.`opencast_venues` `venues` ON `versioned`.`archibus_id` = `venues`.`archibus_id`
+                            JOIN `timetable`.`ps_courses` `ps` ON
+                                (`versioned`.`course_code` = `ps`.`course_code` AND `versioned`.`term` = `ps`.`term`)
+                            LEFT JOIN `timetable`.`dept_optout` `deptout` ON
+                                (`deptout`.`dept` = `ps`.`dept` AND `deptout`.`year` = `versioned`.`term`)
+                            LEFT JOIN `timetable`.`uct_dept` `dept` ON `ps`.`dept` = `dept`.`dept`
+                        WHERE
+                            ((`versioned`.`term` = '2019')
+                                AND (`dept`.use_dept = 1) and (`deptout`.is_optOut = 0)
+                                AND (`versioned`.`instruction_type` IN ('Lecture' , 'Module'))
+                                AND `versioned`.`tt_version` IN (SELECT
+                                    MAX(`timetable`.`timetable_versions`.`version`)
+                                FROM
+                                    `timetable`.`timetable_versions`)
+                                AND (`ps`.`course_code` REGEXP :codes)
+                                AND (`venues`.`campus_code` IN ('UPPER' , 'MIDDLE'))
+                                AND (`ps`.`acad_career` = 'UGRD'))
+                        ORDER BY `versioned`.`course_code`";
 
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute();
+
+            if ($this->semester == 's1') {
+                $stmt->execute([':codes' => Course::SEM1]);
+            } else {
+                $stmt->execute([':codes' => Course::SEM2]);
+            }
 
             $ar = [];
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
                 $course = new Course($row['course_code'], null, $this->year, true);
                 $details = $course->getDetails();
-                $timetabled = $course->checkIsTimetabled();
+                $has_oc_series = $course->checkIsTimetabledInOC();
 
-                if ($timetabled == false) {
+                if ($has_oc_series == false) {
                     $to = [ 'mail' => $details['convenor']['email'],
                             'name' => $details['convenor']['name']];
 
@@ -294,9 +327,11 @@ class Workflow
                         $course->getHash() .'","'.
                         $to['name'] .'",'.
                         $this->year .')');
-                }
+               }
             }
 
+            // test
+            array_push($ar, '('. $this->oid .',"ZZZ","ZZZ1000S","stephen.marquard@uct.ac.za","zzz000","Stephen Marquard",'. $this->year .')');
             $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`, `term`) VALUES ". implode(',', $ar);
             //return $insertQry;
 

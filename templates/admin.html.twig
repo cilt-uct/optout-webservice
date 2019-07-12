@@ -41,7 +41,7 @@
                     <div class="form-row form-inline">
                         <div class="col-md-3 mb-3">
                             <strong>Year: </strong>
-                            <span>{{workflow.year}}</span>
+                            <span>{{workflow.year}} - {{workflow.semester|upper}}</span>
                         </div>
                         <div class="col-md-3 mb-3">
                             <strong>Status: </strong>
@@ -148,7 +148,12 @@
                             <div class="row no-gutters dept-title">
                                 <div class="col-sm-6">
                                     {% if (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
-                                    <h5><a href="https://srvslscet001.uct.ac.za/optout/view/{{dept.hash}}" target="_blank">{{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small></a></h5>
+                                    <h5>
+                                        <a href="https://srvslscet001.uct.ac.za/optout/view/{{dept.hash}}" target="_blank">
+                                            <i class="far fa-envelope"></i>
+                                            {{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small>
+                                        </a>
+                                    </h5>
                                     {% else %}
                                     <h5 style="margin:0.4em;">{{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small></h5>
                                     {% endif %}
@@ -248,56 +253,111 @@
                                 </div>
                                 <div class="col-sm-4">
                                     <h6>&nbsp;</h6>
-                                    <table>
-                                        <tbody>
-                                            <tr>
-                                                <td class="text-right"><strong>Eligble Courses:</strong></td>
-                                                <td>
-                                                    <small style="color: #888;">S1</small>
-                                                    <span style="padding-right: 15px;">{{dept.eligble_courses_S1}}</span>
-                                                    <small style="color: #888;">S2</small>
-                                                    <span>{{dept.eligble_courses_S2}}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="2"><hr/></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="text-right"><strong>Course Mails:</strong>&nbsp;&nbsp;&nbsp;Sent</td>
-                                                {% if dept.mail_sent_note > 0 %}
-                                                    {% if dept.mail_sent_note > 0 %}
-                                                        <td>{{dept.mail_sent_note|default('0')}} / {{dept.mail_sent_confirm|default('0')}}</td>
-                                                    {% else %}
-                                                        <td>{{dept.mail_sent_confirm|default('0')}}</td>
-                                                    {% endif %}
-                                                {% else %}
-                                                    <td>0</td>
-                                                {% endif %}
-                                            </tr>
-                                            <tr>
-                                                <td class="text-right">To Send</td>
-                                                <td>{{dept.mail_unsent|default('0')}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="text-right">Error</td>
-                                                <td>{{dept.mail_err|default('0')}}</td>
-                                            </tr>
-
-                                        </tbody>
-                                    </table>
-                                    <br/>
                                     {% if (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
-                                    <div class="text-center">
-                                        <button class="btn btn-outline-success btn-sm" style="width:60%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
-                                    </div>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th colspan="2" style="width: 180px;">&nbsp;</th>
+                                                    <th class="text-center" style="width: 80px;"><small style="color: #888;">S1</small></th>
+                                                    <th class="text-center" style="width: 80px;"><small style="color: #888;">S2</small></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td colspan="2" class="text-right">
+                                                        <strong>Eligble Courses:</strong>
+                                                    </td>
+                                                    <td class="text-center">{{dept.eligble_courses_S1}}</td>
+                                                    <td class="text-center">{{dept.eligble_courses_S2}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="2"><hr/></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-right" rowspan="4">
+                                                        <strong>Mails:</strong>
+                                                    </td>
+                                                    <td class="text-right"><small>Notification</td>
+                                                    </td>
+                                                    <td class="text-center">{{dept.s1_mail_sent_note|default('0')}}</td>
+                                                    <td class="text-center">{{dept.s2_mail_sent_note|default('0')}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-right"><small>Confirmation</small></td>
+                                                    <td class="text-center">{{dept.s1_mail_sent_confirm|default('0')}}</td>
+                                                    <td class="text-center">{{dept.s2_mail_sent_confirm|default('0')}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-right"><small>To Send</small></td>
+                                                    <td class="text-center">
+                                                        {% if (dept.s1_mail_unsent > 0) %}
+                                                            <span class="info">{{dept.s1_mail_unsent|default('0')}}</span>
+                                                        {% else %}
+                                                            <small class="info">-</small>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        {% if (dept.s2_mail_unsent > 0) %}
+                                                            <span class="info">{{dept.s2_mail_unsent|default('0')}}</span>
+                                                        {% else %}
+                                                            <small class="info">-</small>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-right"><small>Error</small></td>
+                                                    <td class="text-center">
+                                                        {% if (dept.s1_mail_err > 0) %}
+                                                            <span class="danger">{{dept.s1_mail_err|default('0')}}</span>
+                                                        {% else %}
+                                                            <small class="danger">-</small>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        {% if (dept.s2_mail_err > 0) %}
+                                                            <span class="danger">{{dept.s2_mail_err|default('0')}}</span>
+                                                        {% else %}
+                                                            <small class="danger">-</small>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <br/>
+                                        <div class="text-center">
+                                            {% set out_semester = workflow.semester ~"|"~ dept.eligble_courses_S1 ~"|"~ dept.eligble_courses_S2 %}
+                                            {% set out_s1 = "s1|"~ dept.eligble_courses_S1 ~"|"~ dept.eligble_courses_S2 %}
+                                            {% set out_s2 = "s2|"~ dept.eligble_courses_S1 ~"|"~ dept.eligble_courses_S2 %}
+                                            {% if (dept.eligble_courses_S1 > 0) and (dept.eligble_courses_S2 > 0) %}
+                                                <div class="btn-group" style="width:60%">
+                                                    <button type="button" ref="btn_view_course" data-sem="{{out_semester}}" class="btn btn-outline-success btn-sm" style="width:80%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
+                                                    <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <a class="dropdown-item" href="#" ref="btn_view_course" data-sem="{{out_s1}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">Semester 1</a>
+                                                        <a class="dropdown-item" href="#" ref="btn_view_course" data-sem="{{out_s2}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">Semester 2</a>
+                                                    </div>
+                                                </div>
+                                            {% elseif (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
+                                                <button type="button" ref="btn_view_course" data-sem="{{out_semester}}" class="btn btn-outline-success btn-sm" style="width:60%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
+                                            {% endif %}
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="row no-gutters justify-content-end dept-courses" id="{{dept.dept}}_courses">
-                                <div class="col-10" id="{{dept.dept}}_courses_html">
-
-
-                                </div>
+                            <div class="row no-gutters dept-courses" id="{{dept.dept}}_courses">
+                                <ul class="nav nav-tabs">
+                                    {% if (dept.eligble_courses_S1 > 0) %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if (workflow.semester == 's1') %}active{% endif %}" id="{{dept.dept}}_courses-s1_tab" data-toggle="tab" href="#{{dept.dept}}_courses-s1" role="tab" aria-controls="{{dept.dept}}_courses-s1" aria-selected="{% if (workflow.semester == 's1') %}true{% endif %}">Semester 1</a>
+                                    </li>
+                                    {% endif %}
+                                    {% if (dept.eligble_courses_S2 > 0) %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if (workflow.semester == 's2') %}active{% endif %}" id="{{dept.dept}}_courses-s2_tab" data-toggle="tab" href="#{{dept.dept}}_courses-s2" role="tab" aria-controls="{{dept.dept}}_courses-s2" aria-selected="{% if (workflow.semester == 's2') %}false{% endif %}">Semester 2</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                                <div class="tab-content" id="{{dept.dept}}_courses_html"></div>
                             </div>
                         </div>
                         {% endfor %}
@@ -311,7 +371,7 @@
     <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>
-    <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/js/datepicker.min.js') }}"></script>
     <script>
         var changeTimer = false, field = null, div = null,
@@ -396,31 +456,56 @@
             });
             */
 
+            $('.dropdown-toggle').dropdown();
+
             // view courses
-            $('#departments .dept-details').on('click','button.btn-sm', function(event) {
-                var btn = $(this);
-                div = $('#'+ btn.data('rel') +'_courses_html');
-                console.log(btn.data('rel') +' '+ btn.data('hash'));
+            function display_courses(hash, rel, sem) {
+                var btn = $('#btn_view_'+ rel),
+                    s = sem[0] == 's1' ? (sem[1] ? 's1' : 's2') : (sem[2] ? 's2' : 's1');
+                btn.removeClass('btn-outline-success').addClass('btn-outline-info').html('Hide Courses');
+                console.log(s);
 
-                if (btn.hasClass('btn-outline-info')) {
-                    $('#'+ btn.data('rel') +'_courses').hide();
-                    btn.removeClass('btn-outline-info').addClass('btn-outline-success').html('View Courses');
+                $('#'+ rel +'_courses_html').html(tmpl('tmpl-courses-loading',{}));
+                $('#'+ rel +'_courses').show();
+                $('#'+ rel +'_courses-'+ s +'_tab').tab('show');
+                $.ajax({
+                    headers: {"x-entity-hash": hash, "x-entity-courses": '1'},
+                    url: "/optout/api/v0/dept/"+rel,
+                    method: 'GET',
+                    dataType: 'json'
+                }).done(function(data) {
+                    var o = data;
+                    o['semester'] = s;
+                    $('#'+ data.dept +'_courses_html').html(tmpl('tmpl-courses', { 'hash' : hash, 'data': data}));
+
+                }).fail(function(xhr) {
+                    div.html(tmpl('tmpl-courses-error',{}));
+                });
+            }
+
+            $('#departments .dept-details').on('click','button.btn-sm[ref="btn_view_course"], a.dropdown-item[ref="btn_view_course"]', function(event) {
+                event.preventDefault();
+
+                var item = $(this),
+                    div = $('#'+ item.data('rel') +'_courses_html'),
+                    btn = $('#btn_view_'+ item.data('rel')),
+                    sem = item.data('sem').split("|");
+                console.log(item.prop('nodeName') +' '+ btn.data('rel') +' '+ btn.data('hash'));
+
+                if (item.prop('nodeName') == 'A') {
+                    if (btn.hasClass('btn-outline-info')) {
+                        // we are already open - toggle tab
+                        $('#'+ item.data('rel') +'_courses-'+ sem[0] +'_tab').tab('show');
+                    } else {
+                        display_courses(btn.data('hash'), btn.data('rel'), sem);
+                    }
                 } else {
-                    btn.removeClass('btn-outline-success').addClass('btn-outline-info').html('Hide Courses');
-                    $('#'+ btn.data('rel') +'_courses_html').html(tmpl('tmpl-courses-loading',{}));
-                    $('#'+ btn.data('rel') +'_courses').show();
-
-                    $.ajax({
-                        headers: {"x-entity-hash": btn.data('hash'), "x-entity-courses": '1'},
-                        url: "/optout/api/v0/dept/"+ btn.data('rel'),
-                        method: 'GET',
-                        dataType: 'json'
-                    }).done(function(data) {
-                        console.log(data)
-                        $('#'+ data.dept +'_courses_html').html(tmpl('tmpl-courses', data));
-                    }).fail(function(xhr) {
-                        div.html(tmpl('tmpl-courses-error',{}));
-                    });
+                    if (btn.hasClass('btn-outline-info')) {
+                        $('#'+ btn.data('rel') +'_courses').hide();
+                        btn.removeClass('btn-outline-info').addClass('btn-outline-success').html('View Courses');
+                    } else {
+                       display_courses(btn.data('hash'), btn.data('rel'), sem);
+                    }
                 }
             });
 
@@ -607,6 +692,7 @@
                 }
 
                 d[0][ field.data('type') ] = (field.data('type') == 'dept' ? field.data('dept') : field.data('course'));
+                d['hash'] = (field.data('type') == 'dept' ? field.data('hash') : field.data('dept_hash'));
 
                 if (valid) {
                     field.parent().addClass('updating');
@@ -614,7 +700,7 @@
                     console.log(d);
 
                     $.ajax({
-                        headers: {"x-entity-hash": field.data('hash')},
+                        headers: {"x-entity-hash": d['hash']},
                         url: "/optout/api/v0/dept/"+ field.data('dept'),
                         method: 'patch',
                         data: JSON.stringify(d)

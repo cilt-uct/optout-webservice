@@ -11,7 +11,7 @@ header::after {
   z-index: -1;
   width: 100%;
   height:100px;
-  background:url(../../assets/img/auditorium-benches-chairs-207691.jpg) no-repeat center;
+  background:url(../images/auditorium-benches-chairs-207691.jpg) no-repeat center;
   background-size:cover;
   background-position-y: 11%;
   opacity: 0.4;
@@ -66,9 +66,14 @@ header img.navbar-brand{
 .post-body .alert i {
   float: left;
   position: relative;
-  top: -10px;
+  top: -11px;
   left: -12px;
 }
+
+.post-body .alert i.zero {
+  top: 0px;
+}
+
 
 .post-body input[type=checkbox]{
   position: relative;
@@ -287,6 +292,21 @@ header img.navbar-brand{
   display: none;
 }
 
+.post-body .departments .btn-group a.dropdown-item {
+  font-size: 14px;
+}
+
+.post-body .dept-courses .nav-tabs {
+  position: relative;
+  z-index: 10;
+}
+.post-body .dept-courses .nav-tabs .nav-link {
+  border-color: #ddd;
+}
+.post-body .dept-courses .nav-tabs .nav-link.active {
+  border-bottom-color: #fff;
+}
+
 .post-body .dept-courses > div {
   border: 1px solid #ddd;
   margin-bottom: 1em;
@@ -313,7 +333,8 @@ header img.navbar-brand{
 .post-body .dept-courses .S1::before,
 .post-body .dept-courses .S2::before {
   content: "Semester 1";
-  background-color: #909DF9;
+  background-color: rgba(26,67,140, 0.5);
+  color: #646464;
   position: absolute;
   left: -35px;
   top: 66px;
@@ -323,13 +344,12 @@ header img.navbar-brand{
   -o-transform: rotate(-90deg);
   transform: rotate(-90deg);
   padding: 3px;
-  opacity: 0.5;
   width: 100px;
   text-align: center;
 }
 .post-body .dept-courses .S2::before {
   content: "Semester 2";
-  background-color: #6674D7;
+  background-color: rgba(107,70,116, 0.5);
 }
 
 .post-body .departments .courses-timetable > div {
@@ -467,7 +487,7 @@ header img.navbar-brand{
 .post-body .departments .course-details div.err[data-errortext]::after {
   padding: 0.4em;
   font-size: 11px;
-  width: calc(84% + 1px);
+  width: calc(85% + 1px);
 }
 
 .post-body span {
@@ -527,6 +547,11 @@ header img.navbar-brand{
   left: 82%;
   top: 9px;
 }
+
+.post-body .series > div > .row > div:last-child {
+  padding: 0;
+}
+
 
 .post-body span.loader > span{
 	width: 10px;
@@ -790,7 +815,7 @@ div.container.post .nav-tabs a.nav-link.active {
   left: auto;
   width: 8px;
   height: 13px;
-  background-image: url(../img/tbl-sort.png);
+  background-image: url(../images/tbl-sort.png);
 }
 
 .main-tbl th.sort.asc span i {
@@ -798,7 +823,7 @@ div.container.post .nav-tabs a.nav-link.active {
   left: auto;
   width: 8px;
   height: 13px;
-  background-image: url(../img/tbl-sort-up.png);
+  background-image: url(../images/tbl-sort-up.png);
 }
 
 .main-tbl th.sort.desc span i {
@@ -806,7 +831,7 @@ div.container.post .nav-tabs a.nav-link.active {
   left: auto;
   width: 8px;
   height: 13px;
-  background-image: url(../img/tbl-sort-down.png);
+  background-image: url(../images/tbl-sort-down.png);
 }
 
 .main-tbl td {
@@ -892,20 +917,21 @@ div.container.post .nav-tabs a.nav-link.active {
 }
 
 .switch-button-case.active-case:before {
-  font: normal normal normal 14px/1 FontAwesome;
-  content: "\f05d";
-  font-size: 3em;
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  content: "\f00c";
+  font-size: 2.6em;
   display: inline;
   position: absolute;
   left: -15%;
-  top: 10%;
+  top: -5%;
 }
 .switch-button-case.left.active-case:before {
-  content: "\f05d";
+  content: "\f00c";
 }
 
 .switch-button-case.right.active-case:before {
-  content: "\f05c";
+  content: "\f00d";
   left: 105%;
 }
 

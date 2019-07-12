@@ -1,0 +1,38 @@
+{
+  "name": "optout-webservice",
+  "version": "1.0.0",
+  "description": "opt out webservice pacakges",
+  "main": "index.php",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cilt-uct/optout-webservice.git"
+  },
+  "keywords": [
+    "optout",
+    "php",
+    "symfony",
+    "twig"
+  ],
+  "author": "Corne Oosthuizen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cilt-uct/optout-webservice/issues"
+  },
+  "homepage": "https://github.com/cilt-uct/optout-webservice#readme",
+  "devDependencies": {
+    "@symfony/webpack-encore": "^0.27.0",
+    "@webcomponents/webcomponentsjs": "^2.2.10",
+    "copy-webpack-plugin": "^5.0.3",
+    "jquery": "^3.4.1",
+    "moment": "^2.24.0",
+    "webpack-notifier": "^1.8.0"
+  },
+  "dependencies": {
+    "@vaadin/vaadin-button": "^2.2.0",
+    "@vaadin/vaadin-grid": "^5.4.6",
+    "@vaadin/vaadin-text-field": "^2.4.7"
+  }
+}

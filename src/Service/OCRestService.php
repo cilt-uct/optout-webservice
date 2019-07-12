@@ -23,7 +23,19 @@ class OCRestService
         $this->ocPass = getenv('OC_PASS');
     }
 
-    public function getAll($filter = '', $sort = '', $offset = 0, $limit = 10) {
+    public function getSeriesMetadata($seriesId) {
+
+        $url = $this->ocHost . "/admin-ng/series/$seriesId/metadata.json";
+        $headers = ['X-Requested-Auth: Digest'];
+
+        $data = json_decode($this->getRequest($url, $headers), true);
+        if (!is_array($data) || !sizeof($data)) {
+            return [];
+        }
+        return $data;
+    }
+
+    public function getAllSeries($filter = '', $sort = '', $offset = 0, $limit = 10) {
         $url = $this->ocHost . "/admin-ng/series/series.json?offset=$offset&limit=$limit&sort=createdDateTime:DESC";
         $headers = ['X-Requested-Auth: Digest'];
 
@@ -43,6 +55,39 @@ class OCRestService
                     $s['ext'] = $ext;
                     return $s;
                 }, $data['results']);
+        }
+        return $data;
+    }
+
+    //https://media.uct.ac.za/admin-ng/event/events.json?filter=textFilter:2ef7d00a-7fc3-420a-9c4b-238c029d25e3,series:2ef7d00a-7fc3-420a-9c4b-238c029d25e3&limit=50&offset=0&sort=series_name:ASC
+    public function getEventsForSeries($seriesId) {
+
+        // $url = $this->ocHost . "/admin-ng/event/events.json?filter=series:$seriesId&sort=technical_start:ASC";
+        // series.{format:xml|json}?id={id}&q={q}&episodes=false&sort={sort}&limit=20&offset=0&admin=false
+        $url = $this->ocHost . "/search/series.json?id=$seriesId&episodes=true&limit=0&admin=true&sort=TITLE";
+        $headers = ['X-Requested-Auth: Digest', "X-Opencast-Matterhorn-Authorization: true"];
+
+        $data = json_decode($this->getRequest($url, $headers), true);
+        if (!is_array($data) || !sizeof($data)) {
+            return [];
+        }
+        if ($data['search-results']) {
+            return $data['search-results'];
+        }
+        return $data;
+    }
+
+    /**
+     * Get event details for downloads - episode
+     */
+    public function getEventForPlayback($eventId) {
+
+        $url = $this->ocHost . "/search/episode.json?id=596ff927-79bc-4a15-a39f-80ea8c7f16e0"; //"/search/episode.json?id=$eventId";
+        $headers = ['X-Requested-Auth: Digest', "X-Opencast-Matterhorn-Authorization: true"];
+
+        $data = json_decode($this->getRequest($url, $headers), true);
+        if (!is_array($data) || !sizeof($data)) {
+            return [];
         }
         return $data;
     }
@@ -137,10 +182,8 @@ class OCRestService
         // Check for errors
         if ($info['http_code'] >= 400) {
             $response = json_decode($response, true);
-
             $message = json_encode($info);
-
-            //throw new \Exception($message);
+            //throw new \Exception($response);
         }
 
         // Close request and clear some resources

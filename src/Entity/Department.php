@@ -14,6 +14,8 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
     private $hash;
     private $year;
     private $skipHashCheck;
+    private $authorizeREST;
+    private $skipCourses;
 
     private $deptName;
     private $hod;
@@ -23,18 +25,20 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
     public $courses;
     private $fullHash;
 
-    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = false, $skipCourses = true) {
+    public function __construct($entityCode, $hash, $year = '', $skipHashCheck = false, $skipCourses = true, $authorizeREST = false ) {
         $this->entityCode = $entityCode;
         $this->hash = $hash;
         $this->year = !empty($year) ? $year : date('Y');
         $this->skipHashCheck = $skipHashCheck;
+        $this->skipCourses = $skipCourses;
+        $this->authorizeREST = $authorizeREST;
 
         parent::__construct($entityCode, $hash, $year, $skipHashCheck);
 
         try {
             $this->fetchDetails();
             if (!$skipCourses) {
-                $this->fetchCourses();
+                $this->fetchCourses($this->authorizeREST);
             }
         } catch (\Exception $e) {
             $this->courses = [];
@@ -68,7 +72,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
         $this->isOptOut = $result[0]['is_optout'] === '1' ? true : false;
     }
 
-    public function fetchCourses() {
+    public function fetchCourses($authorizeREST = false) {
         if (!$this->dbh) {
             $this->connectLocally();
         }
@@ -84,7 +88,8 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
                 and `ps`.term = :year
                 and `ps`.acad_career = 'UGRD'
                 and `sn`.instruction_type='Lecture'
-                and `venue`.campus_code in ('UPPER','MIDDLE')";
+                and `venue`.campus_code in (". Course::ELIGIBLE .")
+            order by `ps`.course_code";
 
         $stmt = $this->dbh->prepare($qry);
         $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
@@ -94,7 +99,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         $year = $this->year;
         $this->courses = array_map(function($course) use ($year) {
-                             return new Course($course['course_code'], null, $year, true);
+                              return new Course($course['course_code'], null, $year, true, $this->authorizeREST);
                          }, $result);
     }
 
@@ -107,7 +112,9 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             'eid' => $this->hodEID,
             'is_optout' => $this->isOptOut,
             'hash' => $this->getHash(),
-            'courses' => []
+            'rest' => $this->authorizeREST,
+            'skipCourses' => $this->skipCourses,
+            'courses' => $this->courses
         ];
 
         if ((!$skipCourses) && (gettype($this->courses) == 'array')) {

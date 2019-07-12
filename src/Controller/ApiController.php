@@ -69,14 +69,14 @@ class ApiController extends Controller
   public function searchVulaEndpoint($searchStr, Request $request) {
     try {
       $result = [];
-//      if ($isUctEmail) {
+    //  if ($isUctEmail) {
           $result['vula'] = $this->searchVula(null, null, $searchStr);
           $result['ldap'] = $this->searchLdap($result['vula']['username']);
-//      }
-//      else if ($isNumeric) {
- //         $result['ldap'] = $this->searchLdap($searchStr);
-//          $result['vula'] = $this->searchVula($result['ldap'][0]['cn'], null, null);
-//      }
+      // }
+      // else if ($isNumeric) {
+      //    $result['ldap'] = $this->searchLdap($searchStr);
+      //    $result['vula'] = $this->searchVula($result['ldap'][0]['cn'], null, null);
+      // }
 
       return new Response(
         json_encode($result),
@@ -247,6 +247,11 @@ class ApiController extends Controller
                   case 'conflict':
                       $coursesToUpdate[$update['course']]->fetchDetails();
                       $conflicts[] = $coursesToUpdate[$update['course']]->getDetails();
+                      $conflicts[] = [
+                        'changes' => $update['changes'],
+                        'username' => $session->get('username'),
+                        'wid' => $workflow['oid']
+                      ];
                       break;
                   default:
                       throw new \Exception($e->getMessage());
@@ -458,7 +463,7 @@ class ApiController extends Controller
       $response = $course->getDetails();
       $response['hasVulaSite'] = $vula->hasProviderId($courseCode, $year);
       $response['hasOCSeries'] = $ocService->hasOCSeries($courseCode, $year);
-      $response['isTimetabled'] = $response['hasOCSeries'] ? $course->checkIsTimetabled() : false;
+      $response['isTimetabled'] = $response['hasOCSeries'] ? $course->checkIsTimetabledInOC() : false;
       return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
     } catch (\Exception $e) {
       return new Response($e->getMessage(), 500);
@@ -524,8 +529,7 @@ class ApiController extends Controller
       set_time_limit(30);
   }
 
-  private function runWorkflowMonitor(Request $request)
-  {
+  private function runWorkflowMonitor(Request $request) {
       $result = (new Workflow)->run();
 
       return new Response(json_encode($result), 201);
@@ -535,19 +539,45 @@ class ApiController extends Controller
    * @Route("/api/v0/series/")
    */
   public function getSeries( Request $request) {
-    // https://media.uct.ac.za/admin-ng/series/series.json?sortorganizer=&sort=&filter=&offset=0&optedOut=false&limit=100
     switch ($request->getMethod()) {
       case 'GET':
-        $ocService = new OCRestService();
+        $utils = new Utilities();
         try {
-          $response = $ocService->getAll();
+          $response = $utils->getAllSeries();
           return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
         } catch (\Exception $e) {
           return new Response($e->getMessage(), 500);
         }
-      default:
+    // https://media.uct.ac.za/admin-ng/series/series.json?sortorganizer=&sort=&filter=&offset=0&optedOut=false&limit=100
+    //   case 'GET':
+    //     $ocService = new OCRestService();
+    //     try {
+    //       $response = $ocService->getAll();
+    //       return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
+    //     } catch (\Exception $e) {
+    //       return new Response($e->getMessage(), 500);
+    //     }
+    default:
         return new Response('Method not implemented', 405, ['Content-Type' => 'text/plain']);
+    }
+  }
 
+  /**
+   * @Route("/api/v0/episode/{eventId}")
+   */
+  public function getEpisode($eventId, Request $request) {
+    switch ($request->getMethod()) {
+    // https://mediadev.uct.ac.za/search/episode.json?id=596ff927-79bc-4a15-a39f-80ea8c7f16e0
+      case 'GET':
+        $ocService = new OCRestService();
+        try {
+          $response = $ocService->getEventForPlayback(str_replace('_','-',$eventId));
+          return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
+        } catch (\Exception $e) {
+          return new Response($e->getMessage(), 500);
+        }
+    default:
+        return new Response('Method not implemented', 405, ['Content-Type' => 'text/plain']);
     }
   }
 
