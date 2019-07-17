@@ -7,7 +7,7 @@
                 <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
                 <br/>
                 <!--p>{{authenticated|json_encode()}}</p-->
-                {% if not readonly %}
+                {# {% if not readonly %} #}
                     <div class="row">
                         <div class="col-md-10">
                             <p>The pre-checks for course <strong>{{course}}</strong>, found the following:</p>
@@ -29,9 +29,9 @@
                                                 <span>A lecture recording series exists for this course.</span>
                                             </div>
                                         {% else %}
-                                            <div class="alert alert-danger" role="alert">
-                                                <i class="far fa-3x fa-times-circle danger"></i>
-                                                <span>A lecture recording series exists for this course and there are recordings scheduled or active.</span>
+                                            <div class="alert alert-info" role="alert">
+                                                <i class="fas fa-3x fa-exclamation-circle info" style="margin-top:0.32em"></i>
+                                                <span>A lecture recording series exists for this course and there are recordings scheduled or active.<br/> The timetable will not be automatically scheduled.</span>
                                             </div>
                                         {% endif %}
                                     {% endif %}
@@ -62,24 +62,24 @@
                             </div>
                         </div>
                     </div>
-                {% else %}
+                {# {% else %} #}
                     <div class="row">
                         <div class="col-md-10">
                             {% if email_case == "1" %}
-                                <div class="alert alert-warning" role="alert">
-                                    <i class="far fa-3x fa-times-circle warning" style="margin-top:0.12em"></i>
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fas fa-3x fa-exclamation-circle info" style="margin-top:0.12em"></i>
                                     <h6 style="margin:0.4em"><strong>{{course}}</strong> is not using lecture recording or will be self scheduling. (HOD)</h6>
                                 </div>
                             {% endif %}
                             {% if email_case == "2" %}
-                                <div class="alert alert-warning" role="alert">
-                                    <i class="far fa-3x fa-times-circle warning" style="margin-top:0.12em"></i>
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fas fa-3x fa-exclamation-circle info" style="margin-top:0.12em"></i>
                                     <h6 style="margin:0.4em"><strong>{{course}}</strong> is not using lecture recording or will be self scheduling. (Lecturer)</h6>
                                 </div>
                             {% endif %}
                             {% if email_case == "3" %}
-                                <div class="alert alert-warning" role="alert">
-                                    <i class="far fa-3x fa-times-circle warning" style="margin-top:0.32em"></i>
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fas fa-3x fa-exclamation-circle info" style="margin-top:0.32em"></i>
                                     <h6 style="margin:0.4em"><strong>{{course}}</strong> has a lecture recording series and there are recordings scheduled or active. <br/> The timetable will not be automatically scheduled.</h6>
                                 </div>
                             {% endif %}
@@ -118,7 +118,7 @@
                             <br/>
                         </div>
                     </div>
-                {% endif %}
+                {# {% endif %} #}
                 {% if (timetable is not empty) %}
                     <div class="table-responsive">
                         <h4>Timetable:</h4>
