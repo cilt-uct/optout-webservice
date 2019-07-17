@@ -7,7 +7,7 @@
                 <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
                 <br/>
                 <!--p>{{authenticated|json_encode()}}</p-->
-                {# {% if not readonly %} #}
+                {% if not readonly %}
                     <div class="row">
                         <div class="col-md-10">
                             <p>The pre-checks for course <strong>{{course}}</strong>, found the following:</p>
@@ -62,7 +62,7 @@
                             </div>
                         </div>
                     </div>
-                {# {% else %} #}
+                {% else %}
                     <div class="row">
                         <div class="col-md-10">
                             {% if email_case == "1" %}
@@ -118,7 +118,7 @@
                             <br/>
                         </div>
                     </div>
-                {# {% endif %} #}
+                {% endif %}
                 {% if (timetable is not empty) %}
                     <div class="table-responsive">
                         <h4>Timetable:</h4>
