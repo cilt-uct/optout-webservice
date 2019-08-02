@@ -538,12 +538,25 @@ class ApiController extends Controller
   /**
    * @Route("/api/v0/series/")
    */
-  public function getSeries( Request $request) {
+  public function getSeries(Request $request) {
+
+    // GET /api/v0/series/?order=series,asc&limit=20
     switch ($request->getMethod()) {
       case 'GET':
         $utils = new Utilities();
         try {
-          $response = $utils->getAllSeries();
+          $order = explode(',', $request->query->get('order') != null ? $request->query->get('order') : "title,asc");
+          $filter = urldecode($request->query->get('filter') != null ? $request->query->get('filter') : "");
+          $page = $request->query->get('page') != null ? $request->query->get('page') : 1;
+          $limit = $request->query->get('limit') != null ? $request->query->get('limit') : 15;
+          $ret = $request->query->get('ret') != null ? $request->query->get('ret') : "all";
+          $offset = ($page - 1) * $limit;
+
+          if (count($order) != 2) {
+            $order = ['title','asc'];
+          }
+
+          $response = $utils->getAllSeries($offset, $limit, $order[1], $order[0], $filter, $ret);
           return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
         } catch (\Exception $e) {
           return new Response($e->getMessage(), 500);
@@ -560,7 +573,7 @@ class ApiController extends Controller
     default:
         return new Response('Method not implemented', 405, ['Content-Type' => 'text/plain']);
     }
-  }
+}
 
   /**
    * @Route("/api/v0/episode/{eventId}")

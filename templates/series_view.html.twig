@@ -1,4 +1,26 @@
 {% include 'header.html' %}
+    {% if (authenticated.z) %}
+        {% if (authenticated.z.type == "admin") %}
+            <a name="top" class="anchor"></a>
+            <div class="container post">
+                <div class="row no-gutters" style="position: absolute; top: -38px; width: 100%;">
+                    <div class="col-sm-8" style="padding-top: 10px;padding-left: 84px;">
+                        <span style="color: #222;font-size: 0.8em;">Hi {{authenticated.z.name}},</span>
+                    </div>
+                    <div class="col-sm-4 align-self-end">
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://srvslscet001.uct.ac.za/optout/admin/">Courses</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active" href="https://srvslscet001.uct.ac.za/optout/series/">Series</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
     <div class="container post">
         <div class="row post-body">
             <div class="col-md-12 post-title">
@@ -6,142 +28,141 @@
                 <br/>
 
                 <div class="row series">
-                    <div class="col-md-6">
+                    <div class="col-md-8">
                         <div class="form-group row">
-                            <label class="col-md-3 control-label text-right" for="txt_subject">Subject:</label>
-                            <div class="col-md-5 txt">
-                                {{dublincore.subject}}
+                            <label class="col-md-2 control-label text-right" for="txt_creator">Creator:</label>
+                            <div class="col-md-2 txt">
+                                <div class="input">{{ext.creator_id}}</div>
+                            </div>
+                            <div class="col-md-8 txt" style="padding:0px 0.2em;">
+                                <div class="input">{{dublincore.creator|join(', ')}}</div>
                             </div>
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-md-3 control-label text-right" for="txt_creator">Creator:</label>
-                            <div class="col-md-5 txt">
-                                {{dublincore.creator|join(', ')}}
+                            <label class="col-md-2 control-label text-right" for="txt_contributor">Contributor:</label>
+                            <div class="col-md-10 txt">
+                                <div class="input">{{dublincore.contributor|join(', ')}}</div>
                             </div>
                         </div>
-
                         <div class="form-group row">
-                            <label class="col-md-3 control-label text-right" for="txt_contributor">Contributor:</label>
-                            <div class="col-md-5 txt">
-                                {{dublincore.contributor|join(', ')}}
+                            <label class="col-md-2 control-label text-right" for="txt_desc">Notification:</label>
+                            <div class="col-md-10 txt">
+                                <input type="text" class="input" id="txt_notification" value="{{ext.notification_list}}"/>
                             </div>
                         </div>
-
+                        {% if (authenticated.z) %}
+                            {% if (authenticated.z.type == "admin") %}
+                            <div class="form-group row">
+                                <label class="col-md-2 control-label text-right" for="txt_desc">Series Notes:</label>
+                                <div class="col-md-10 txt">
+                                    <textarea id="txt_notes">{% for note in ext.series_notes|split(';') %}{{note}}&#13;&#10;{% endfor %}</textarea>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endif %}
                         <div class="form-group row">
-                            <label class="col-md-3 control-label text-right" for="txt_desc">Description:</label>
-                            <div class="col-md-5 txt">
-                                {{dublincore.description}}
+                            <label class="col-md-2 control-label text-right" for="txt_desc" style="position: relative; top: 5px;">Retention:</label>
+                            <div class="col-md-6 txt">
+                                <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
+                                    <label class="btn btn-secondary active">
+                                        <input type="radio" name="options" id="option1" autocomplete="off" data-val="normal" checked> Default (4 years)
+                                    </label>
+                                    <label class="btn btn-secondary">
+                                        <input type="radio" name="options" id="option2" autocomplete="off" data-val="long"> Long (8 years)
+                                    </label>
+                                    <label class="btn btn-secondary">
+                                        <input type="radio" name="options" id="option3" autocomplete="off" data-val="forever"> Keep Forever
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 txt">
+                                {{ext.series_expiry_date}}
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group row">
-                            <label class="col-md-3 control-label text-right" for="txt_subject">Vula:</label>
-                            <div class="col-md-5 txt">
-                                {{ext.site_id}}
-                            </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <a href="https://vula.uct.ac.za/portal/site/{{ext.site_id}}" target="_blank"
+                                class="btn btn-light btn-lg active" role="button" aria-pressed="true" style="background-color: #fff"
+                                {% if ext.site_id|length < 4 %}disabled{% endif %}>
+                                <img src="{{ asset('public/build/images/vula.gif') }}" alt="Vula"/>
+                            </a>
+                        </div>
+                        <div class="text-right">
+                        {% if (authenticated.z) %}
+                            {% if (authenticated.z.type == "admin") %}
+                                <div class="emails">
+                                    <label>
+                                        <a href="#" class="label label-default">Notification</a><span>Sent on 2019-07-10 08:42:01</span>
+                                    </label>
+
+                                    <label>
+                                        <a href="#" class="label label-success">Scheduled recordings</a><span>Sent on 2019-07-12 14:50:44</span>
+                                    </label>
+                                </div>
+                            {% endif %}
+                        {% endif %}
                         </div>
                     </div>
                 </div>
 
                 {% if (events.total > 0) %}
-                    <h6>Events:</h6>
-
-                    <table class="main-tbl" style="margin-left:20px;">
+                    <table id="series-events" class="main-tbl" style="margin-left:20px;">
                         <thead>
                             <tr>
-                                <th style="width: 220px;">Title</th>
-                                <th style="width: 220px;">Presenter</th>
-                                <th style="width: 160px;">Date</th>
-                                <th style="width: 120px;">Venue</th>
-                                <th style="width: 100px;">Status</th>
-                                <th style="width: 250px;"></th>
+                                <th style="width: 220px;" class="sort" data-rel="title">
+                                    <span>
+                                        Title
+                                        <i></i>
+                                    </span>
+                                </th>
+                                <th style="width: 220px;" class="sort" data-rel="created">
+                                    <span>
+                                        Created
+                                        <i></i>
+                                    </span>
+                                </th>
+                                <th style="width: 120px;" class="sort" data-rel="venue">
+                                    <span>
+                                        Venue
+                                        <i></i>
+                                    </span>
+                                </th>
+                                <th style="width: 280px;" class="text-right">
+                                    <!--div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
+                                        <label class="btn btn-secondary">
+                                            <input type="radio" name="options" id="option1" autocomplete="off"><i class="fas fa-grip-vertical"></i></i>
+                                        </label>
+                                        <label class="btn btn-secondary active">
+                                            <input type="radio" name="options" id="option2" autocomplete="off" checked> <i class="fas fa-table"></i>
+                                        </label>
+                                    </div-->
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                    {% for event in events.results %}
-                        <tr data-id="{{event.id}}"
-                            data-preview="{{event.has_preview}}"
-                            data-comments="{{event.has_comments}}"
-                            data-open-comments="{{event.has_open_comments}}">
-                            <td>{{event.title}}</td>
-                            <td>{{event.presenters|join(', ')}}</td>
-                            <td>{{event.start_date|date("F jS \\a\\t g:ia")}}</td>
-                            <td>{{event.location}}</td>
-                            <td>
-                            {% if event.event_status == 'EVENTS.EVENTS.STATUS.SCHEDULED' %}
-                                {% if date() < date(event.start_date) %}
-                                    Upcoming
-                                {% else %}
-                                    Expired
-                                {% endif %}
-                                Available
-                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.RECORDING' %}
-                                Capturing
-                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.PROCESSING_FAILURE' %}
-                                Failed
-                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.RECORDING_FAILURE' %}
-                                Failed
-                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.INGESTING' %}
-                                Processing
-                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.PROCESSING' %}
-                                Processing
-                            {% elseif event.event_status == 'EVENTS.EVENTS.STATUS.PROCESSED' %}
-                                {% set engage = "" %}
-                                {% for item in event.publications %}
-                                    {% if (item.id == 'engage-player') %}
-                                        {% set engage = 1 %}
-                                    {% endif %}
-                                {% endfor %}
-                                {% if (engage) %}
-                                    Published
-                                {% else %}
-                                    {% if (event.has_open_comments == 'false') %}
-                                        Unwanted
-                                    {% else %}
-                                        Awaiting Review
-                                    {% endif %}
-                                {% endif %}
-                            {% endif %}
-                            </td>
+                    {% for event in events.result %}
+                        <tr data-id="{{event.id}}">
+                            <td data-sort="{{event.dcTitle}}">{{event.dcTitle}}</td>
+                            <td data-sort="{{event.dcCreated}}">{{event.dcCreated|date("F jS \\a\\t g:ia")}}</td>
+                            <td data-sort="{{event.dcSpatial|default('')}}">{{event.dcSpatial|default('')}}</td>
                             <td data-ref="download">
-                                {% if (event.publications|length > 0) %}
-                                    <i class="fas fa-cog fa-spin"></i>
-                                    <span style="display: inline-block; position: relative; left: 10px;top: 0px;">Loading ...</span>
-                                {% endif %}
+                                <div class="row no-gutters">
+                                {% for track in event.media.downloads %}
+                                    <div class="col">
+                                        <a href="{{track.url}}" target="_blank"
+                                            style="background-image:url('{% if 'pic-in-pic' in track.flavor %}{{ asset('public/build/images/pic_in_pic.png') }}{% elseif 'composite' in track.flavor %}{{ asset('public/build/images/side_by_side.png') }}{% else %}{{track.img}}{% endif %}')">
+                                            <i class="fas fa-arrow-alt-circle-down"></i>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                                </div>
                             </td>
                         </div>
                     {% endfor %}
                         </tbody>
                     </table>
-
-<!--
-title: "Querying the Vula Archive",
-has_open_comments: false,
-has_preview: true,
-has_comments: true,
-technical_end: "",
-presenters: [
-    "Sam Lee Pan"
-],
-technical_start: "2018-05-17T09:19:25Z",
-location: "hahn763",
-managedAcl: "",
-workflow_state: "",
-id: "072ee289-ed10-4065-9fc2-f058cbb701c4",
-review_status: "UNSENT",
-start_date: "2018-05-17T09:19:25Z",
-event_status: "EVENTS.EVENTS.STATUS.PROCESSED",
-publications: [
-    {
-        name: "EVENTS.EVENTS.DETAILS.PUBLICATIONS.ENGAGE",
-        id: "engage-player",
-        url: "http://media.uct.ac.za/engage/theodul/ui/core.html?id=072ee289-ed10-4065-9fc2-f058cbb701c4"
-    }
-]
--->
-
                 {% endif %}
             </div>
         </div>
@@ -183,24 +204,47 @@ publications: [
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.email.multiple.js') }}"></script>
 
     <script>
+        function sortTable(tid) {
+            var $tbl = $(tid);
+            $tbl.find('th.asc, th.desc')
+        }
+
+        function comparer(index) {
+            return function(a, b) {
+                var valA = getCellValue(a, index), valB = getCellValue(b, index)
+                return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+            }
+        }
+        function getCellValue(row, index){ return $(row).children('td').eq(index).data("sort"); }
+
         $(function() {
 
-            $("tr > td[data-ref]").each(function(i,el){
-                var p = $(el).parent();
-                console.log(p.data('id').replace(/-/g,'_'));
+            $("#series-events").on('click','th.sort', function(event){
+                event.preventDefault();
+                    event.preventDefault();
+                    var $el = $(this);
 
-                $.ajax({
-                    url: "/optout/api/v0/episode/"+ p.data('id').replace(/-/g,'_'),
-                    method: 'GET',
-                    dataType: 'json'
-                }).done(function(data) {
-                    console.log(data);
-                }).fail(function(xhr) {
-                    console.log(xhr);
-                });
+                    if ($el.is('.asc,.desc')) {
+                        $el.toggleClass('asc desc');
+                    } else {
+                        $el.addClass('asc').siblings().removeClass('asc desc');
+                    }
+
+                    var table = $(this).parents('table').eq(0)
+                    var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+                    this.asc = $(this).hasClass('asc');
+                    if (!this.asc){rows = rows.reverse()}
+                    for (var i = 0; i < rows.length; i++){table.append(rows[i])}
             });
+
+            $("#txt_notification").on("change", function(event) {
+                    console.log($(this).val());
+                }).email_multiple({ data: $('#txt_notification').val().split(';') });
+
+
         });
     </script>
     <!-- https://www.pexels.com/photo/auditorium-benches-chairs-class-207691/ -->

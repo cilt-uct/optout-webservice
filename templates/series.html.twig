@@ -27,36 +27,34 @@
         </div>
     </div>
 
-    <!--script src="{{ asset('assets/node_modules/@webcomponents/webcomponents-loader.js') }}"></script>
-    <script type="module" src="{{ asset('assets/node_modules/@polymer/paper-button/paper-button.js') }}"></script>
-
-    <paper-button raised class="indigo">raised</paper-button-->
     <script src="{{ asset('public/build/app.js') }}"></script>
     <script src="{{ asset('public/build/js/jquery.min.js') }}"></script>
     <script src="{{ asset('public/build/js/moment.min.js') }}"></script>
-    <script src="{{ asset('public/build/js/bootstrap.js') }}"></script>
     <script src="{{ asset('public/build/js/tmpl.js') }}"></script>
-
+    <script src="{{ asset('public/build/js/utils.js') }}"></script>
     <script>
-        var changeTimer = false, field = null, div = null;
-        var rentention_cycle = { "forever": "Keep Forever", "normal": "Default (4 years)", "long": "Long (8 years)" };
+        var rentention_cycle = { "forever": "Keep Forever", "normal": "Default (4 years)", "long": "Long (8 years)" },
+            options = { "page": 1, "limit": 15, "filter": "", "order": "title,asc", "max": 0, "ret": "all"};
 
-        function getObj(id, arr, key) { key = key || 'id'; var o = null; $.each(arr, function (i, el) { if (el[key] == id) { o=el; return; } }); return o; };
+        function showSeries(order, current, limit, filter, ret) {
+            var $order = order || options.order,
+                $current = current || options.page,
+                $limit = limit || options.limit,
+                $filter = filter || options.filter;
+                $ret = ret || options.ret;
 
-        function showSeries() {
-            $('#main-table')
-                .html(tmpl('tmpl-table-series', {}))
-                .on('click','th.sort', function(event) {
-                    event.preventDefault();
-                });
-
+            console.log(options);
             $.ajax({
-                //headers: {"x-entity-hash": btn.data('hash'), "x-entity-courses": '1'},
-                url: "/optout/api/v0/series/",
+                url: "/optout/api/v0/series/?page="+$current
+                                    +($order!=""?"&order="+$order:"")
+                                    +($limit!=""?"&limit="+$limit:"")
+                                    +($ret!=""?"&ret="+$ret:"")
+                                    +($filter!=""?"&filter="+encodeURI($filter):""),
                 method: 'GET',
                 dataType: 'json'
             }).done(function(data) {
-                console.log(data);
+                options.max = Math.ceil(data.total / data.limit);
+                if(isNaN(options.max)) { options.max = 0; }
                 $('#main-table').html(tmpl('tmpl-table-series', data))
             }).fail(function(xhr) {
                 console.log(xhr);
@@ -64,6 +62,49 @@
         }
 
         $(function() {
+            $('#main-table')
+                .html(tmpl('tmpl-table-series', {}))
+                .on('click','th.sort', function(event) {
+                    event.preventDefault();
+                    var $el = $(this);
+
+                    if ($el.is('.asc,.desc')) {
+                        $el.toggleClass('asc desc');
+                    } else {
+                        $el.addClass('asc').siblings().removeClass('asc desc');
+                    }
+                    options.order = $el.data('rel') +','+
+                                $el.attr('class').split(' ').filter(function(item) { return item == 'asc' || item == 'desc'; }).join();
+                    showSeries();
+                }).on('click', 'nav > .pagination a', function(event){
+                    event.preventDefault();
+                    var n = parseInt(options.page,10),
+                        $el = $(this);
+                    switch($(this).attr('rel')) {
+                        case 'prev':
+                        case 'next':
+                                n += parseInt($el.data('add'),10);
+                                n = (n <= 0 ? 1: (n >= options.max ? options.max : n));
+                            break;
+                        default: n = $(this).attr('rel'); break;
+                    }
+                    options.page = n;
+                    showSeries();
+                }).on('click','#filter-retention a', function(event) {
+                    event.preventDefault();
+                    options.ret = $(this).attr('rel');
+                    showSeries();
+                }).on('submit', '#search_form', function(event) {
+                    event.preventDefault();
+                    options.filter = $('#series_filter').val();
+                    showSeries();
+                }).on('click', '#search_form .btn-dark', function(event) {
+                    event.preventDefault();
+                    $('#series_filter').val('');
+                    options.filter = '';
+                    showSeries();
+                });
+
             showSeries();
         });
     </script>

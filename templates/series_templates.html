@@ -1,44 +1,74 @@
 <script type="text/x-tmpl" id="tmpl-table-series">
-    <table  class="main-tbl">
+    {% var current = Math.ceil(o.offset / o.limit); if (isNaN(current)) { current = 1; }
+           total_pages = Math.ceil(o.total / o.limit); if (isNaN(total_pages)) { total_pages = 1; } %}
+    <form id="search_form">
+        <div class="row form-row justify-content-end">
+            <div class="col-6" id="filter-retention">
+                <label>Filter:</label>
+                <a href="#" rel="all" class="badge badge-pill {%  if (o.ret =="all") { %}badge-primary{% } else { %}badge-light{% } %}">All <span class="badge badge-light">{%=o.all%}</span></a>
+                <a href="#" rel="normal" class="badge badge-pill {%  if (o.ret =="normal") { %}badge-primary{% } else { %}badge-light{% } %}">Default (4 years) <span class="badge badge-light">{%=o.normal%}</span></a>
+                <a href="#" rel="long" class="badge badge-pill {%  if (o.ret =="long") { %}badge-primary{% } else { %}badge-light{% } %}">Long (8 years) <span class="badge badge-light">{%=o.long%}</span></a>
+                <a href="#" rel="forever" class="badge badge-pill {%  if (o.ret =="forever") { %}badge-primary{% } else { %}badge-light{% } %}">Keep Forever <span class="badge badge-light">{%=o.forever%}</span></a>
+            </div>
+            <div class="col-4">
+                <div class="col-auto">
+                    <div class="input-group mb-2">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-control" id="series_filter" placeholder="Search..." value="{%=o.filter%}">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-dark"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <table class="main-tbl" data-current="{%=(current+1)%}" data-total="{%=o.total%}" data-offset="{%=o.offset%}" data-count="{%=o.count%}" data-limit="{%=o.limit%}">
         <thead>
             <tr>
-                <th style="width: 220px;" class="sort asc">
+                <th style="width: 260px;" class="sort {%=sort_dir(o.order,'title')%}" data-rel="title">
                     <span>
                         Series
                         <i></i>
                     </span>
                 </th>
-                <th style="width: 220px;" class="sort">
+                <th style="width: 220px;" class="sort {%=sort_dir(o.order,'organizer')%}" data-rel="organizer">
                     <span>
                         Organizer(s)
                         <i></i>
                     </span>
                 </th>
-                <th style="width: 100px;" class="sort">
+                <th style="width: 100px;" class="sort {%=sort_dir(o.order,'retention')%}" data-rel="retention">
                     <span>
                         Retention
                         <i></i>
                     </span>
                 </th>
-                <th style="width: 160px;" class="sort">
+                <th style="width: 140px;" class="sort {%=sort_dir(o.order,'first_recording')%}" data-rel="first_recording">
                     <span>
                         First Recording
                         <i></i>
                     </span>
                 </th>
-                <th style="width: 160px;" class="sort">
+                <th style="width: 140px;" class="sort {%=sort_dir(o.order,'last_recording')%}" data-rel="last_recording">
                     <span>
                         Last Recording
                         <i></i>
                     </span>
                 </th>
-                <th style="min-width: 90px;" class="sort">
+                <th style="width: 96px;" class="sort {%=sort_dir(o.order,'events')%}" data-rel="events">
                     <span>
                         # Events
                         <i></i>
                     </span>
                 </th>
-                <th style="min-width: 90px;">
+                <th style="width: 96px;" class="sort {%=sort_dir(o.order,'events')%}" data-rel="events">
+                        <span>
+                            # Mails
+                            <i></i>
+                        </span>
+                    </th>
+                <th style="width: 96px;">
                     <span>
                         Actions
                         <i></i>
@@ -56,22 +86,38 @@
             %}
         </tbody>
     </table>
-    <!--
-        total: 2176,
-        offset: 0,
-        count: 10,
-        limit: 10,
-    -->
-    <p>{%=o.total%} - {%=o.offset%} - {%=o.count%} - {%=o.limit%}</p>
-    <div class="pagination">
-        <a class="prev disabled" ng-class="{disabled: !table.isNavigatePrevious()}" ng-click="table.goToPage(table.pagination.offset - 1)"></a>
-        <a ng-repeat-start="page in table.getDirectAccessiblePages()" ng-class="{wide: table.maxLabel.length > 2}" ng-if="page.active" class="active ng-binding ng-scope" style="">1</a>
-        <a class="next disabled" ng-class="{disabled: !table.isNavigateNext()}" ng-click="table.goToPage(table.pagination.offset + 1)" style=""></a>
+    <div class="row">
+        <div class="col-md-8">
+            <!--p>{%=total_pages%} - {%=current%} ({%=o.offset%}) - {%=o.count%} - {%=o.limit%}</p-->
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                    <li class="page-item">
+                        <a class="page-link {% if (current == 1){ print("disabled"); } %}" {% if (current == 1){ %}aria-disabled="true"{% } %} href="#" id="page_prev" rel="prev" data-add="-1"><i class="fas fa-chevron-left"></i></a></li>
+                    {% $.each( pages(o.total, o.offset, o.limit), function( i, v ) { %}
+                        <li class="page-item{%=(isNaN(v)?' disabled': (v==(current+1)?' active':''))%}"><a class="page-link" href="#" rel='{%=(isNaN(v)?'spacer':v)%}'>{%=v%}</a></li>
+                    {% }); %}
+                    <li class="page-item">
+                        <a class="page-link {% if (current == total_pages){ print("disabled"); } %}" {% if (current == 1){ %}aria-disabled="true"{% } %} href="#" id="page_next" rel="next" data-add="1"><i class="fas fa-chevron-right"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+        <!--div class="col-md-4 text-right">
+            <select>
+                {% $.each([10, 20, 50, 100], function( i, v ) { %}
+                <option value="{%=v%}">{%=v%}</option>
+                {% }); %}
+            </select>
+        </div-->
     </div>
 </script>
 
 <script type="text/x-tmpl" id="tmpl-row">
-    {% $.each(o, function( i, series ) { %}
+    {% if (o.length == 0) { %}
+    <tr>
+        <td colspan="8">No series found matching search criteria.</td>
+    </tr>
+    {% } else {
+        $.each(o, function( i, series ) { %}
     <tr>
         <td>{%=series.title%}</td>
         <td>
@@ -79,12 +125,27 @@
             <div>{%=series.username%}</div>
         </td>
         <td>{%=series.retention%}</td>
-        <td>{%=moment(series.first_recording).calendar(null, { sameElse: 'DD/MM/YY' })%}</td>
-        <td>{%=moment(series.last_recording).calendar(null, { sameElse: 'DD/MM/YY' })%}</td>
+        <td>
+            {% if (series.first_recording == '1970-01-01 00:00:00') { %}-{% } else { %}
+            {%=moment(series.first_recording).format('YYYY-MM-DD HH:mm')%}
+            {% } %}
+        </td>
+        <td>
+            {% if (series.last_recording == '1970-01-01 00:00:00') { %}-{% } else { %}
+            {%=moment(series.last_recording).format('YYYY-MM-DD HH:mm')%}
+            {% } %}
+        </td>
         <td class="text-right">{%=series.count%}</td>
-        <td><a style="font-size: large;padding: 5px;" href="https://srvslscet001.uct.ac.za/optout/view-series/{%=series.hash%}"><i class="fas fa-align-left"></i></a></td>
+        <td class="text-right"></td>
+        <td>
+            <div class="row no-gutters">
+                <div class="col"><a style="font-size: large;padding: 5px;" href="https://srvslscet001.uct.ac.za/optout/view-series/{%=series.hash%}"><i class="fas fa-align-left"></i></a></div>
+                <div class="col"><a style="font-size: large;padding: 5px;" target="_blank" href="https://jira.cilt.uct.ac.za/issues/?jql=text%20~%20%22{%=series.series%}%22"><img src="/optout/public/build/images/logo-jira.png" style="width: 22px;height: 22px;"/></a></div>
+                <div class="col"><a style="font-size: large;padding: 5px;" target="_blank" href="https://media.uct.ac.za/admin-ng/index.html#/events/series?modal=series-details&tab=metadata&resourceId={%=series.series%}"><img src="/optout/public/build/images/logo-opencast.png" style="width: 22px;height: 22px;"/></a></div>
+            </div>
+        </td>
     </tr>
-    {% } ); %}
+    {% } ); } %}
 </script>
 
 <script type="text/x-tmpl" id="tmpl-row-loading">
@@ -96,92 +157,3 @@
     </tr>
 </script>
 
-<script type="text/x-tmpl" id="tmpl-timetable-loading">
-    <div class="col-sm-12">
-        <div class="text-info loading">
-            <i class="fas fa-cog fa-spin fa-2x"></i>
-            <span>Loading timetable information...</span>
-        </div>
-    </div>
-</script>
-
-<script type="text/x-tmpl" id="tmpl-courses-error">
-    <div class="text-danger">
-        <span>Error loading courses</span>
-    </div>
-</script>
-
-<script type="text/x-tmpl" id="tmpl-timetable-error">
-    <div class="col-sm-12">
-        <div class="text-danger">
-            <span>Error loading courses</span>
-        </div>
-    </div>
-</script>
-
-<script type="text/x-tmpl" id="tmpl-dept-altMail">
-    <div class="multi" id="{%=o.dept%}_alt_{%=o.index%}">
-        <a href="#" class="danger" rel="{%=o.dept%}" data-index="{%=o.index%}">
-            <i class="fa fa-minus" aria-hidden="true"></i>
-        </a>
-        <input type="text" class="form-control"
-                id="inp_{%=o.dept%}_alt_{%=o.index%}" data-type="dept" data-field="altMail" data-dept="{%=o.dept%}" data-hash="{%=o.hash%}"
-                data-index="{%=o.index%}"
-                placeholder="E-mail" data-old="" value=""/>
-        <span class="loader">
-            <span></span>
-            <span></span>
-            <span></span>
-        </span>
-    </div>
-</script>
-
-<script type="text/x-tmpl" id="tmpl-course-timetable">
-    <div class="col-sm-12">
-        <div class="table-responsive">
-            <table id="course_table" class="table">
-                <thead>
-                    <tr class="notop">
-                        <th rowspan="2">Venue</th>
-                        <th rowspan="2">Dates</th>
-                        <th rowspan="2">Times</th>
-                        <th class="header">Days</th>
-                    </tr>
-                    <tr>
-                        <th class="days">
-                            <div>Mon</div>
-                            <div>Tue</div>
-                            <div>Wed</div>
-                            <div>Thu</div>
-                            <div>Fri</div>
-                            <div>Sat</div>
-                            <div>Sun</div>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% $.each(o.LEC, function(i, lec) { %}
-                        <tr>
-                            <td>{%=lec.sn_venue%}</td>
-                            <td>
-                                {%=lec.start_date%} <small>to</small> {%=lec.end_date%}
-                            </td>
-                            <td>
-                                {%=lec.start_time%} <small>-</small> {%=lec.end_time%}
-                            </td>
-                            <td class="days">
-                                <div class="{% if (lec.days.mon) { %}use{% } %}"></div>
-                                <div class="{% if (lec.days.tue) { %}use{% } %}"></div>
-                                <div class="{% if (lec.days.wed) { %}use{% } %}"></div>
-                                <div class="{% if (lec.days.thu) { %}use{% } %}"></div>
-                                <div class="{% if (lec.days.fri) { %}use{% } %}"></div>
-                                <div class="{% if (lec.days.sat) { %}use{% } %}"></div>
-                                <div class="{% if (lec.days.sun) { %}use{% } %}"></div>
-                            </td>
-                        </tr>
-                    {% }); %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</script>

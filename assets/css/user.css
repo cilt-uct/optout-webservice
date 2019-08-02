@@ -82,13 +82,19 @@ header img.navbar-brand{
 }
 
 .post-body input[type=text],
-.post-body input[type=password] {
+.post-body input[type=password],
+.post-body textarea {
   font-size: 1em;
   width: 45%;
   margin-right: 20px;
   border-radius: 3px;
   padding: 0.34em 0.5em;
   border: 1px solid #dedede;
+}
+
+.post-body textarea {
+  width: 100%;
+  margin-right: 0px;
 }
 
 .post-body input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
@@ -110,9 +116,27 @@ header img.navbar-brand{
   padding: 0.4em 0.5em;
 }
 
-.post-body .workflow-details .input-group>.input-group-append>.btn {
-  padding: 0.3em 0.8em
+.post-body .workflow-details form input[type=text] {
+  padding-left: 30px;
 }
+
+.post-body .workflow-details .input-group>.input-group-append>.btn {
+  padding: 0.3em 0.8em;
+}
+
+.post-body .workflow-details form .input-group>.input-group-append>.btn {
+  padding: 0.2em 0.8em;
+}
+
+.post-body .workflow-details form .fa-search {
+  color: #aaa;
+  font-size: 15px;
+  position: relative;
+  left: 22px;
+  z-index: 10;
+  top: 10px;
+}
+
 
 .post-body .departments input[type=text] {
   width: 90%;
@@ -188,23 +212,30 @@ header img.navbar-brand{
   font-size: 12px;
 }
 
-.post-body .departments .course-details .emails label {
+.post-body .departments .course-details .emails label,
+.post-body .series .emails label {
   text-align: left;
   margin-top: 4px;
   font-size: 12px;
 }
 
-.post-body .departments .course-details .emails span {
+
+.post-body .departments .course-details .emails span,
+.post-body .series .emails label span {
   padding-left: 8px;
 }
 
 .post-body .departments .course-details .emails a.label,
-.post-body .departments .course-details .emails a.label:hover ,
-.post-body .departments .course-details .emails a.label:active {
+.post-body .departments .course-details .emails a.label:hover,
+.post-body .departments .course-details .emails a.label:active,
+.post-body .series .emails a.label,
+.post-body .series .emails a.label:hover,
+.post-body .series .emails a.label:active {
   text-decoration: none;
 }
 
-.post-body .departments .course-details .emails .label {
+.post-body .departments .course-details .emails .label,
+.post-body .series .emails .label {
   display: inline;
   padding: .3em .6em .3em;
   font-size: 75%;
@@ -255,7 +286,8 @@ header img.navbar-brand{
   position: relative;
 }
 
-.post-body .departments .dept-details .form-group .multi a {
+.post-body .departments .dept-details .form-group .multi a,
+.post-body .series a.block {
   float: right;
   display: block;
   position: relative;
@@ -265,16 +297,19 @@ header img.navbar-brand{
   border: 1px solid #ddd;
   border-radius: 4px;
 }
-.post-body .departments .dept-details .form-group .multi a i {
+.post-body .departments .dept-details .form-group .multi a i,
+.post-body .series a.block i {
   position: relative;
   top: 2px;
 }
 
-.post-body .departments .dept-details .form-group .multi a.success {
+.post-body .departments .dept-details .form-group .multi a.success,
+.post-body .series a.block.success {
   color: #28a745;
 }
 
-.post-body .departments .dept-details .form-group .multi a.danger {
+.post-body .departments .dept-details .form-group .multi a.danger,
+.post-body .series a.block.danger {
   color: #c82333;
 }
 
@@ -548,7 +583,7 @@ header img.navbar-brand{
   top: 9px;
 }
 
-.post-body .series > div > .row > div:last-child {
+.post-body .series > div > .row > div {
   padding: 0;
 }
 
@@ -1029,4 +1064,150 @@ aside li > a:active {
 .input-group-mid {
   margin-right: -1px;
   margin-left: -1px;
+}
+
+.post-body .pagination {
+  margin-top: 1rem;
+}
+
+.post-body .pagination a {
+  margin-right: 8px;
+}
+
+.post-body .pagination a[rel="spacer"] {
+  border-color: #fff;
+}
+
+.post-body .series label.control-label {
+  position: relative; top: 5px;
+}
+
+.post-body .series .input {
+  display: block;
+  width: 100%;
+  height: calc(1.5em + .75rem + 2px);
+  padding: 0.34em 0.5em;
+  font-size: 1em;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border-radius: 3px;
+  border: 1px solid #dedede;
+}
+
+.post-body #series-events a {
+  color: #222;
+  text-align: center;
+  padding: 0.26em;
+  display: inline-block;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 94%;
+  width: 60px;
+  height: 40px;
+  border: 1px solid #ccc;
+}
+
+.post-body #series-events a:hover,
+.post-body #series-events a:active {
+  border-color: #848484;
+}
+
+.post-body #series-events a > i {
+  font-size: 2rem;
+  opacity: 0.0;
+}
+
+.post-body #series-events a:hover > i,
+.post-body #series-events a:active > i {
+  opacity: 1.0;
+}
+
+.post-body #filter-retention {
+  padding-top: 5px;
+}
+
+.post-body #filter-retention label {
+  padding-right: 8px;
+}
+
+.post-body #filter-retention a {
+  margin-right: 8px;
+}
+
+.post-body #filter-retention a span {
+  margin-left: 5px;
+}
+
+.post-body .btn-group-toggle label.btn-secondary {
+  background-color: #afb5ba;
+}
+
+/*////////////////////////*/
+
+.post-body .multi-container span.multi-item {
+  float: left;
+  border: 1px solid #ccc;
+  margin: 2px 5px 2px 0px;
+  background: #f5f5f5;
+  padding: 3px 5px 3px 10px;
+  border-radius: .25em;
+}
+
+.post-body .multi-container span.multi-item.wrong {
+  border-color: #580e0e;
+  color: #580e0e;
+  background-color: #f5bdbd;
+}
+
+.post-body .multi-container span.multi-item:first-child {
+  margin-left: 0px;
+}
+
+.post-body .multi-container span.multi-item-cancel {
+  /*border: 1px solid #aaa;*/
+  width: 30px;
+  display: block;
+  float: right;
+  text-align: center;
+  margin-left: 10px;
+  /* border-radius: 49%; */
+  border-radius: .25em;
+  height: 20px;
+  line-height: 20px;
+  /* margin-top: 1px; */
+  cursor: pointer;
+  font-size: 80%;
+}
+
+.post-body .multi-container span.multi-item-cancel:hover,
+.post-body .multi-container span.multi-item-cancel:active {
+  background-color: #e5e5e5;
+}
+
+.post-body .multi-container .wrong span.multi-item-cancel:hover,
+.post-body .multi-container .wrong span.multi-item-cancel:active {
+  background-color: #f1a7a7;
+}
+
+.post-body .multi-container .email-id-row {
+  border: 1px solid #ccc;
+}
+
+.post-body .multi-container span.to-input {
+  display: block;
+  float: left;
+  padding-right: 11px;
+}
+
+.post-body .multi-container .email-id-row {
+  padding-top: 6px;
+  padding-bottom: 7px;
+}
+
+.post-body input.multi-input[type=text] {
+  margin-right: 0px;
+  width: 60%;
 }

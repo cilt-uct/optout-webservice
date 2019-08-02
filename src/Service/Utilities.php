@@ -307,33 +307,69 @@ class Utilities
         return $result;
     }
 
-    private function getSeriesCount($where = "") {
-        $q = $this->dbh->query("select count(*) as cnt from `timetable`.`view_oc_series` `series` $where");
-        $f = $q->fetch();
-        $result = $f['cnt'];
+    private function getSeriesCount($where = "", $arg = "") {
+        $result = 0;
+        $q = $this->dbh->prepare("select count(*) as cnt from `timetable`.`view_oc_series` `series` $where");
+        if ($q->execute($arg)) {
+            $f = $q->fetch();
+            $result = $f['cnt'];
+        }
         return $result;
     }
 
-    public function getAllSeries($offset = 0, $limit = 15, $sort_dir = 'ASC', $sort_field = 'title') {
+    private function getSeriesRetentionCount($cycle = "normal", $where = "", $a = "") {
+        $result = 0;
+        $w = ($where == "" ? "where retention=:ret" : $where ." and retention=:ret");
+        $a[':ret'] = $cycle;
+        $q = $this->dbh->prepare("select count(*) as cnt from `timetable`.`view_oc_series` `series` $w");
+        if ($q->execute($a)) {
+            $f = $q->fetch();
+            $result = $f['cnt'];
+        }
+        return $result;
+    }
 
-        $result = [ 'success' => true, 'result' => null, "offset" => $offset, "limit" => $limit ];
+    public function getAllSeries($offset = 0, $limit = 15, $sort_dir = 'asc', $sort_field = 'title', $filter = "", $ret = "all") {
+
+        $result = [ 'success' => true, 'result' => null, "offset" => $offset, "limit" => $limit, "filter" =>  $filter, "order" => $sort_field .",". $sort_dir ];
         try {
+            $where = '';
+            $arg = [];
             $query = "select `series`.id, `series`.series, `series`.title,
                 `series`.contributor, `series`.creator, `series`.username,
                 `series`.created_date, `series`.first_recording, `series`.last_recording,
                 `series`.`count`, `series`.`archive_count`, `series`.`retention`
-                from `timetable`.`view_oc_series` `series`
-                order by $sort_field $sort_dir
-                LIMIT $limit OFFSET $offset";
+                from `timetable`.`view_oc_series` `series`";
+            if ($filter != "") {
+                $where = " where `series`.title like :text or `series`.contributor like :text or `series`.username like :text";
+                $arg[":text"] = '%'. $filter .'%';
+            }
+
+            $result['ret'] = $ret;
+            $result['all'] = $this->getSeriesCount($where, $arg);
+            $result['normal'] = $this->getSeriesRetentionCount("normal", $where, $arg);
+            $result['long'] = $this->getSeriesRetentionCount("long",$where, $arg);
+            $result['forever'] = $this->getSeriesRetentionCount("forever",$where, $arg);
+
+            if ($ret != "all") {
+                $where = ($where == "" ? "where retention=:ret" : $where ." and retention=:ret");
+                $arg[":ret"] = $ret;
+            }
+
+            switch ($sort_field) {
+                case 'retention': $sort_field = 'retention'; break;
+                case 'organizer': $sort_field = 'contributor'; break;
+                case 'events': $sort_field = 'count'; break;
+            }
+
+            $query .= $where . " order by $sort_field $sort_dir LIMIT $limit OFFSET $offset";
 
             $stmt = $this->dbh->prepare($query);
 
-            if ($stmt->execute()) {
+            if ($stmt->execute($arg)) {
                 if ($stmt->rowCount() === 0) {
                     $result = [ 'success' => false, 'err' => 'Query is empty'];
                 }
-                $result['total'] = $this->getSeriesCount();
-                $result['count'] = $this->getSeriesCount();
 
                 $ar = [];
                 while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
@@ -343,6 +379,8 @@ class Utilities
                     $r['hash'] = $oc_series->getHash();
                     array_push($ar, $r);
                 }
+                $result['total'] = $this->getSeriesCount($where, $arg);
+                $result['count'] = $stmt->rowCount();
                 $result['result'] = $ar;
             } else {
                 $result = [ 'success' => false, 'err' => $stmt->errorInfo()];
