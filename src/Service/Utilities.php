@@ -126,38 +126,6 @@ class Utilities
         return substr($hashable->getFullHash(), 0, 6);
     }
 
-    public function getUserEmail($eid) {
-        try {
-            $emailQry = "select EMAIL from vula_archive.SAKAI_USER_ARCHIVE where EID = :eid limit 1";
-            $stmt = $this->dbh->prepare($emailQry);
-            $stmt->execute([':eid' => $eid]);
-            if ($stmt->rowCount() === 0) {
-                throw new \Exception("no such user");
-            }
-
-            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            return $result[0]['EMAIL'];
-        } catch (\PDOException $e) {
-            throw new Exception($e->getMessage());
-        }
-    }
-
-    public function getCompleteUser($search) {
-        try {
-            $searchQry = "select EID, EMAIL from vula_archive.SAKAI_USER_ARCHIVE where (EID = :search or EMAIL = :search or USER_ID = :search) and TYPE != 'test' limit 1";
-            $stmt = $this->dbh->prepare($searchQry);
-            $stmt->execute([':search' => $search]);
-            if ($stmt->rowCount() === 0) {
-                throw new \Exception("no such user");
-            }
-
-            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            return $result[0];
-        } catch (\PDOException $e) {
-            throw new Exception($e->getMessage());
-        }
-    }
-
     public function getMail($hash) {
         $workflow = new Workflow();
         $worfklow_details = $workflow->getWorkflow();
@@ -309,7 +277,8 @@ class Utilities
 
     private function getSeriesCount($where = "", $arg = "") {
         $result = 0;
-        $q = $this->dbh->prepare("select count(*) as cnt from `timetable`.`view_oc_series` `series` $where");
+        $q = $this->dbh->prepare("select count(*) as cnt from `timetable`.`view_oc_series` `series`
+            left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series $where");
         if ($q->execute($arg)) {
             $f = $q->fetch();
             $result = $f['cnt'];
@@ -319,9 +288,10 @@ class Utilities
 
     private function getSeriesRetentionCount($cycle = "normal", $where = "", $a = "") {
         $result = 0;
-        $w = ($where == "" ? "where retention=:ret" : $where ." and retention=:ret");
+        $w = $where = ($where == "" ? " where ": $where ." and ") ." `series`.`retention`=:ret";
         $a[':ret'] = $cycle;
-        $q = $this->dbh->prepare("select count(*) as cnt from `timetable`.`view_oc_series` `series` $w");
+        $q = $this->dbh->prepare("select count(*) as cnt from `timetable`.`view_oc_series` `series`
+            left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series $w");
         if ($q->execute($a)) {
             $f = $q->fetch();
             $result = $f['cnt'];
@@ -329,30 +299,44 @@ class Utilities
         return $result;
     }
 
-    public function getAllSeries($offset = 0, $limit = 15, $sort_dir = 'asc', $sort_field = 'title', $filter = "", $ret = "all") {
+    public function getAllSeries($offset = 0, $limit = 15, $sort_dir = 'asc', $sort_field = 'title', $filter = "", $ret = "all", $batch = 0) {
 
-        $result = [ 'success' => true, 'result' => null, "offset" => $offset, "limit" => $limit, "filter" =>  $filter, "order" => $sort_field .",". $sort_dir ];
+        $result = [ 'success' => true,
+                    'result' => null,
+                    "offset" => $offset,
+                    "limit" => $limit,
+                    "filter" =>  $filter,
+                    "order" => $sort_field .",". $sort_dir,
+                    "ret" => $ret,
+                    "batch" => $batch,
+                    "all" => 0, "normal" => 0, "long" => 0, "forever" => 0,
+                    "total" => 0, "count" => 0
+                ];
         try {
             $where = '';
             $arg = [];
             $query = "select `series`.id, `series`.series, `series`.title,
-                `series`.contributor, `series`.creator, `series`.username,
-                `series`.created_date, `series`.first_recording, `series`.last_recording,
-                `series`.`count`, `series`.`archive_count`, `series`.`retention`
-                from `timetable`.`view_oc_series` `series`";
+                        `series`.contributor, `series`.creator, `series`.username,
+                        `series`.created_date, `series`.first_recording, `series`.last_recording,
+                        `series`.`count`, `series`.`archive_count`, `series`.`retention`, `hash`.batch
+                        from `timetable`.`view_oc_series` `series`
+                        left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series";
             if ($filter != "") {
                 $where = " where `series`.title like :text or `series`.contributor like :text or `series`.username like :text";
                 $arg[":text"] = '%'. $filter .'%';
             }
+            if ($batch != 0) {
+                $where = ($where == "" ? " where ": $where ." and ") ." `hash`.batch=:batch";
+                $arg[":batch"] = $batch;
+            }
 
-            $result['ret'] = $ret;
             $result['all'] = $this->getSeriesCount($where, $arg);
             $result['normal'] = $this->getSeriesRetentionCount("normal", $where, $arg);
             $result['long'] = $this->getSeriesRetentionCount("long",$where, $arg);
             $result['forever'] = $this->getSeriesRetentionCount("forever",$where, $arg);
 
             if ($ret != "all") {
-                $where = ($where == "" ? "where retention=:ret" : $where ." and retention=:ret");
+                $where = ($where == "" ? " where ": $where ." and ") ." `series`.`retention`=:ret";
                 $arg[":ret"] = $ret;
             }
 
@@ -364,11 +348,15 @@ class Utilities
 
             $query .= $where . " order by $sort_field $sort_dir LIMIT $limit OFFSET $offset";
 
-            $stmt = $this->dbh->prepare($query);
+            $result['query'] = str_replace("\n","",$query);
+            $result['where'] = $where;
+            $result['arg'] = $arg;
 
+            $stmt = $this->dbh->prepare($query);
             if ($stmt->execute($arg)) {
                 if ($stmt->rowCount() === 0) {
-                    $result = [ 'success' => false, 'err' => 'Query is empty'];
+                    $result['success'] = false;
+                    $result['err'] = 'Query is empty';
                 }
 
                 $ar = [];
@@ -383,12 +371,12 @@ class Utilities
                 $result['count'] = $stmt->rowCount();
                 $result['result'] = $ar;
             } else {
-                $result = [ 'success' => false, 'err' => $stmt->errorInfo()];
+                $result['success'] = false;
+                $result['err'] = $stmt->errorInfo();
             }
-
-
         } catch (\PDOException $e) {
-            $result = [ 'success' => false, 'err' => $e->getMessage()];
+            $result['success'] = false;
+            $result['err'] = $e->getMessage();
         }
 
         return $result;
@@ -397,10 +385,12 @@ class Utilities
     public function getSeries($hash) {
         $result = [ 'success' => 1, 'result' => null ];
         try {
-            $query = "select series_id from opencast_series_hash series
-                        where short_code = :hash order by created_at desc limit 1"; // and workflow_id = :workflow_id
+            $query = "select `hash`.series_id, `hash`.active, `series`.title, `series`.contributor, `series`.creator, `series`.username, `series`.retention
+                        from `timetable`.`opencast_series_hash` `hash`
+                        left join `timetable`.`view_oc_series` `series` on `hash`.series_id = `series`.series
+                        where `hash`.short_code = :hash order by created_at desc limit 1";
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute([':hash' => $hash]); // ':workflow_id' => $worfklow_details['oid']
+            $stmt->execute([':hash' => $hash]);
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,

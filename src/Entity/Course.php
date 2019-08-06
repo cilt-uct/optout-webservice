@@ -63,7 +63,7 @@ class Course extends AbstractOrganisationalEntity implements HashableInterface
                 if(A.course_code REGEXP '". Course::SEM1 ."', 's1', if(`sn`.course_code REGEXP '". Course::SEM2 ."', 's2', 's0')) as sem,
                 ifnull(C.convenor_name, A.convenor_name) as convenor_name,
                 ifnull(C.convenor_eid, A.convenor_eid) as convenor_eid, D.is_optout, D.updated_at, D.updated_by,
-                ifnull(C.convenor_email, (select E.email from vula_archive.SAKAI_USER_ARCHIVE E where C.convenor_eid = E.EID or (C.convenor_eid is null and A.convenor_eid = E.EID))) as email
+                ifnull(C.convenor_email, (select E.email from timetable.view_sakai_users E where C.convenor_eid = E.eid or (C.convenor_eid is null and A.convenor_eid = E.eid))) as email
                     from timetable.ps_courses A
                     left join timetable.course_updates C on A.course_code = C.course_code and C.year = :year and C.workflow_id = :workflow_id
                     left join timetable.course_optout D on A.course_code = D.course_code and D.year = :year and D.workflow_id = :workflow_id

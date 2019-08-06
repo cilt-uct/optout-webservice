@@ -68,23 +68,33 @@ class OpencastSeries
 
     protected function createHashCode() {
         $id = $this->insertSeriesInDb($this->series_id);
-        $shortCode = $this->convertIntToShortCode($id);
-        $this->insertShortCodeInDb($id, $shortCode);
-        return $shortCode;
+        if ($id > 0) {
+            $shortCode = 'S'.$this->convertIntToShortCode($id);
+            $this->insertShortCodeInDb($id, $shortCode);
+            return $shortCode;
+        }
+        return NULL;
     }
 
     protected function insertSeriesInDb($series_id) {
         $query = "INSERT INTO " . self::$table .
             " (series_id) " .
-            " VALUES (:series_id)";
+            " VALUES (:series_id) on duplicate key update series_id= :series_id";
         $stmnt = $this->dbh->prepare($query);
-        $stmnt->execute([ "series_id" => $series_id ]);
-
-        if ($stmnt->rowCount() === 0) {
+        if ($stmnt->execute([ ":series_id" => $series_id ]) === false) {
             throw new \Exception("insert ($query : $series_id) failed");
         }
 
-        return $this->dbh->lastInsertId();
+        $query = "select id from ". self::$table ." where series_id= :series_id limit 1";
+        $stmt = $this->dbh->prepare($query);
+        $stmt->execute([ ":series_id" => $series_id ]);
+
+        $oid = 0;
+        if ($stmt->rowCount() > 0) {
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $oid = $result[0]['id'];
+        }
+        return $oid;
     }
 
     /**
@@ -139,7 +149,6 @@ class OpencastSeries
         return $a;
     }
 
-
     protected function insertShortCodeInDb($id, $code) {
         if ($id == null || $code == null) {
             throw new \Exception("Input parameter(s) invalid.");
@@ -148,14 +157,13 @@ class OpencastSeries
             " SET short_code = :short_code WHERE id = :id";
         $stmnt = $this->dbh->prepare($query);
         $params = array(
-            "short_code" => 'S'.$code,
+            "short_code" => $code,
             "id" => $id
         );
         $stmnt->execute($params);
 
         if ($stmnt->rowCount() < 1) {
-            throw new \Exception(
-                "Row was not updated with short code.");
+            throw new \Exception("Row [". $id ."](". $code .") was not updated with short code.");
         }
 
         return true;

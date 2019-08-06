@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Course;
 use App\Entity\Department;
+use App\Entity\OpencastRetentionBatch;
 use App\Entity\OrganisationalEntityFactory;
 use App\Entity\User;
 use App\Entity\Workflow;
@@ -68,18 +69,14 @@ class ApiController extends Controller
    */
   public function searchVulaEndpoint($searchStr, Request $request) {
     try {
-      $result = [];
-    //  if ($isUctEmail) {
-          $result['vula'] = $this->searchVula(null, null, $searchStr);
-          $result['ldap'] = $this->searchLdap($result['vula']['username']);
-      // }
-      // else if ($isNumeric) {
-      //    $result['ldap'] = $this->searchLdap($searchStr);
-      //    $result['vula'] = $this->searchVula($result['ldap'][0]['cn'], null, null);
-      // }
+      $ldap = [];
+      $vula = $this->searchVula(null, null, $searchStr);
+      if (isset($vula['username'])) {
+        $ldap = $this->searchLdap($vula['username']);
+      }
 
       return new Response(
-        json_encode($result),
+        json_encode(['vula' => $vula, 'ldap' => $ldap]),
         200,
         [
           'Content-Type' => 'application/json'
@@ -87,7 +84,7 @@ class ApiController extends Controller
       );
     } catch (\Exception $e) {
       $response = [
-        "text" => "Server error",
+        "text" => "Server error: ". $e->getMessage(),
         "statusCode" => 500,
         "contentType" => [
           'Content-Type' => 'text/plain'
@@ -514,14 +511,14 @@ class ApiController extends Controller
   }
 
   /**
-   * @Route("/monitor")
+   * @Route("/monitor_batch")
    */
-  public function monitor(Request $request)
+  public function monitor_batch(Request $request)
   {
       set_time_limit(3000);
       switch ($request->getMethod()) {
           case 'GET':
-              return $this->runWorkflowMonitor($request);
+              return $this->runBatchMonitor($request);
               break;
           default:
               return new Response('Only GET supported right now', 405);
@@ -529,10 +526,31 @@ class ApiController extends Controller
       set_time_limit(30);
   }
 
-  private function runWorkflowMonitor(Request $request) {
-      $result = (new Workflow)->run();
+  private function runBatchMonitor(Request $request) {
+    $result = (new OpencastRetentionBatch(1))->run();
 
-      return new Response(json_encode($result), 201);
+    return new Response(json_encode($result), 201);
+  }
+
+  /**
+   * @Route("/monitor")
+   */
+  public function monitor(Request $request)
+  {
+    set_time_limit(3000);
+    switch ($request->getMethod()) {
+        case 'GET':
+            return $this->runWorkflowMonitor($request);
+            break;
+        default:
+            return new Response('Only GET supported right now', 405);
+    }
+    set_time_limit(30);
+  }
+
+  private function runWorkflowMonitor(Request $request) {
+    $result = (new Workflow)->run();
+    return new Response(json_encode($result), 201);
   }
 
   /**
@@ -550,13 +568,14 @@ class ApiController extends Controller
           $page = $request->query->get('page') != null ? $request->query->get('page') : 1;
           $limit = $request->query->get('limit') != null ? $request->query->get('limit') : 15;
           $ret = $request->query->get('ret') != null ? $request->query->get('ret') : "all";
+          $batch = $request->query->get('batch') != null ? $request->query->get('batch') : 0;
           $offset = ($page - 1) * $limit;
 
           if (count($order) != 2) {
             $order = ['title','asc'];
           }
 
-          $response = $utils->getAllSeries($offset, $limit, $order[1], $order[0], $filter, $ret);
+          $response = $utils->getAllSeries($offset, $limit, $order[1], $order[0], $filter, $ret, $batch);
           return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
         } catch (\Exception $e) {
           return new Response($e->getMessage(), 500);

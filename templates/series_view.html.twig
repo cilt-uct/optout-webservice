@@ -24,31 +24,30 @@
     <div class="container post">
         <div class="row post-body">
             <div class="col-md-12 post-title">
-                <h3><span style="color: #5caad2;">Series</span>&nbsp;&nbsp;&nbsp;&nbsp;{{dublincore.title}}</h3>
+                <h3><span style="color: #5caad2;">Series</span>&nbsp;&nbsp;&nbsp;&nbsp;{{dublincore.title|default(title)}}</h3>
                 <br/>
-
                 <div class="row series">
                     <div class="col-md-8">
                         <div class="form-group row">
                             <label class="col-md-2 control-label text-right" for="txt_creator">Creator:</label>
                             <div class="col-md-2 txt">
-                                <div class="input">{{ext.creator_id}}</div>
+                                <div class="input">{{ext.creator_id|default(username)}}</div>
                             </div>
                             <div class="col-md-8 txt" style="padding:0px 0.2em;">
-                                <div class="input">{{dublincore.creator|join(', ')}}</div>
+                                <div class="input">{{dublincore.creator|default(creator)|join(', ')}}</div>
                             </div>
                         </div>
 
                         <div class="form-group row">
                             <label class="col-md-2 control-label text-right" for="txt_contributor">Contributor:</label>
                             <div class="col-md-10 txt">
-                                <div class="input">{{dublincore.contributor|join(', ')}}</div>
+                                <div class="input">{{dublincore.contributor|default(contributor)|join(', ')}}</div>
                             </div>
                         </div>
                         <div class="form-group row">
                             <label class="col-md-2 control-label text-right" for="txt_desc">Notification:</label>
                             <div class="col-md-10 txt">
-                                <input type="text" class="input" id="txt_notification" value="{{ext.notification_list}}"/>
+                                <input type="text" class="input" id="txt_notification" value="{{ext.notification_list|default('')}}"/>
                             </div>
                         </div>
                         {% if (authenticated.z) %}
@@ -56,7 +55,7 @@
                             <div class="form-group row">
                                 <label class="col-md-2 control-label text-right" for="txt_desc">Series Notes:</label>
                                 <div class="col-md-10 txt">
-                                    <textarea id="txt_notes">{% for note in ext.series_notes|split(';') %}{{note}}&#13;&#10;{% endfor %}</textarea>
+                                    <textarea id="txt_notes">{% for note in ext.series_notes|default('')|split(';') %}{{note}}&#13;&#10;{% endfor %}</textarea>
                                 </div>
                             </div>
                             {% endif %}
@@ -77,17 +76,19 @@
                                 </div>
                             </div>
                             <div class="col-md-4 txt">
-                                {{ext.series_expiry_date}}
+                                {{ext.series_expiry_date|default('')}}
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-center">
-                            <a href="https://vula.uct.ac.za/portal/site/{{ext.site_id}}" target="_blank"
+                            {% if ext.site_id|default('')|length > 0 %}
+                            <a href="https://vula.uct.ac.za/portal/site/{{ext.site_id|default('')}}" target="_blank"
                                 class="btn btn-light btn-lg active" role="button" aria-pressed="true" style="background-color: #fff"
-                                {% if ext.site_id|length < 4 %}disabled{% endif %}>
+                                {% if ext.site_id|default('')|length < 4 %}disabled{% endif %}>
                                 <img src="{{ asset('public/build/images/vula.gif') }}" alt="Vula"/>
                             </a>
+                            {% endif %}
                         </div>
                         <div class="text-right">
                         {% if (authenticated.z) %}
@@ -107,62 +108,87 @@
                     </div>
                 </div>
 
+                <pre>
+                {{ user|json_encode }}
+                </pre>
+
                 {% if (events.total > 0) %}
-                    <table id="series-events" class="main-tbl" style="margin-left:20px;">
-                        <thead>
-                            <tr>
-                                <th style="width: 220px;" class="sort" data-rel="title">
-                                    <span>
-                                        Title
-                                        <i></i>
-                                    </span>
-                                </th>
-                                <th style="width: 220px;" class="sort" data-rel="created">
-                                    <span>
-                                        Created
-                                        <i></i>
-                                    </span>
-                                </th>
-                                <th style="width: 120px;" class="sort" data-rel="venue">
-                                    <span>
-                                        Venue
-                                        <i></i>
-                                    </span>
-                                </th>
-                                <th style="width: 280px;" class="text-right">
-                                    <!--div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
-                                        <label class="btn btn-secondary">
-                                            <input type="radio" name="options" id="option1" autocomplete="off"><i class="fas fa-grip-vertical"></i></i>
-                                        </label>
-                                        <label class="btn btn-secondary active">
-                                            <input type="radio" name="options" id="option2" autocomplete="off" checked> <i class="fas fa-table"></i>
-                                        </label>
-                                    </div-->
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                    {% for event in events.result %}
-                        <tr data-id="{{event.id}}">
-                            <td data-sort="{{event.dcTitle}}">{{event.dcTitle}}</td>
-                            <td data-sort="{{event.dcCreated}}">{{event.dcCreated|date("F jS \\a\\t g:ia")}}</td>
-                            <td data-sort="{{event.dcSpatial|default('')}}">{{event.dcSpatial|default('')}}</td>
-                            <td data-ref="download">
-                                <div class="row no-gutters">
-                                {% for track in event.media.downloads %}
-                                    <div class="col">
-                                        <a href="{{track.url}}" target="_blank"
-                                            style="background-image:url('{% if 'pic-in-pic' in track.flavor %}{{ asset('public/build/images/pic_in_pic.png') }}{% elseif 'composite' in track.flavor %}{{ asset('public/build/images/side_by_side.png') }}{% else %}{{track.img}}{% endif %}')">
-                                            <i class="fas fa-arrow-alt-circle-down"></i>
-                                        </a>
+                    {% if (events.result|length > 0) %}
+                        <table id="series-events" class="main-tbl" style="margin-left:20px;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 220px;" class="sort" data-rel="title">
+                                        <span>
+                                            Title
+                                            <i></i>
+                                        </span>
+                                    </th>
+                                    <th style="width: 220px;" class="sort" data-rel="created">
+                                        <span>
+                                            Created
+                                            <i></i>
+                                        </span>
+                                    </th>
+                                    <th style="width: 120px;" class="sort" data-rel="venue">
+                                        <span>
+                                            Venue
+                                            <i></i>
+                                        </span>
+                                    </th>
+                                    <th style="width: 280px;" class="text-right">
+                                        <!--div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
+                                            <label class="btn btn-secondary">
+                                                <input type="radio" name="options" id="option1" autocomplete="off"><i class="fas fa-grip-vertical"></i></i>
+                                            </label>
+                                            <label class="btn btn-secondary active">
+                                                <input type="radio" name="options" id="option2" autocomplete="off" checked> <i class="fas fa-table"></i>
+                                            </label>
+                                        </div-->
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        {% for event in events.result %}
+                            <tr data-id="{{event.id}}">
+                                <td data-sort="{{event.dcTitle}}">{{event.dcTitle}}</td>
+                                <td data-sort="{{event.dcCreated}}">{{event.dcCreated|date("F jS \\a\\t g:ia")}}</td>
+                                <td data-sort="{{event.dcSpatial|default('')}}">{{event.dcSpatial|default('')}}</td>
+                                <td data-ref="download">
+                                    <div class="row no-gutters">
+                                    {% for track in event.media.downloads %}
+                                        <div class="col">
+                                            <a href="{{track.url}}" target="_blank"
+                                                style="background-image:url('{% if 'pic-in-pic' in track.flavor %}{{ asset('public/build/images/pic_in_pic.png') }}{% elseif 'composite' in track.flavor %}{{ asset('public/build/images/side_by_side.png') }}{% else %}{{track.img}}{% endif %}')">
+                                                <i class="fas fa-arrow-alt-circle-down"></i>
+                                            </a>
+                                        </div>
+                                    {% endfor %}
                                     </div>
-                                {% endfor %}
+                                </td>
+                            </div>
+                        {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fas fa-3x fa-exclamation-circle info"></i>
+                                    <span>There are no published recordings for this series.</span>
                                 </div>
-                            </td>
+                            </div>
                         </div>
-                    {% endfor %}
-                        </tbody>
-                    </table>
+                    {% endif %}
+
+                {% else %}
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="alert alert-info" role="alert" style="padding: 1.25rem">
+                                <i class="fas fa-3x fa-exclamation-circle info"></i>
+                                <span>There are no published recordings for this series.</span>
+                            </div>
+                        </div>
+                    </div>
                 {% endif %}
             </div>
         </div>

@@ -3,6 +3,13 @@
            total_pages = Math.ceil(o.total / o.limit); if (isNaN(total_pages)) { total_pages = 1; } %}
     <form id="search_form">
         <div class="row form-row justify-content-end">
+            <div class="col-2" id="filter-retention">
+                <select id="oc-batch">
+                    <option value="0" {% if (o.batch == 0) { %}selected{% } %}>{% if (o.batch == 0) { %}Select ...{% } else { %}All{% } %}</option>
+                    <option value="1" {% if (o.batch == 1) { %}selected{% } %}>Batch 1 (2015-01-01)</option>
+                    <option value="-1">Create New ...</option>
+                </select>
+            </div>
             <div class="col-6" id="filter-retention">
                 <label>Filter:</label>
                 <a href="#" rel="all" class="badge badge-pill {%  if (o.ret =="all") { %}badge-primary{% } else { %}badge-light{% } %}">All <span class="badge badge-light">{%=o.all%}</span></a>

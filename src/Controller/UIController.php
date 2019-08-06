@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use App\Entity\Course;
 use App\Entity\Department;
 use App\Entity\Workflow;
+use App\Entity\User;
 use App\Service\LDAPService;
 use App\Service\OCRestService;
 use App\Service\SakaiWebService;
@@ -567,6 +568,20 @@ class UIController extends Controller
                     break;
             }
         }
+
+        // Now to see if the users are still active or not
+        if ($data['username'] != "") {
+            $data['user'] = (new User($data['username']))->getDetails();
+        }
+
+        if (isset($data['ext'])) {
+            if (isset($data['ext']['creator_id'])) {
+                if ($data['ext']['creator_id'] != "") {
+                    $data['user'] = (new User($data['ext']['creator_id']))->getDetails();
+                }
+            }
+        }
+
         $ar = $ocService->getEventsForSeries($data['series_id']);
         if (isset($ar['result'])) {
 
@@ -587,13 +602,16 @@ class UIController extends Controller
                         // $previews = $p['attachments']['attachment'];
                         $previews = array_values(array_filter(
                             array_map(function($track){
-                                $pass = ($track["mimetype"] == "image/jpeg") && strpos($track['type'], "search+preview");
-                                if (isset($track["tags"]) && (gettype($track["tags"]) == "array")) {
-                                    if (count($track["tags"]) > 0) {
-                                        if (gettype($track["tags"]["tag"]) == 'string') {
-                                            $pass = $pass && ($track["tags"]["tag"] == "engage-download");
-                                        } else {
-                                            $pass = $pass && in_array("engage-download", $track["tags"]["tag"]);
+                                $pass = false;
+                                if ((isset($track["mimetype"])) && (isset($track['type']))) {
+                                    $pass = ($track["mimetype"] == "image/jpeg") && strpos($track['type'], "search+preview");
+                                    if (isset($track["tags"]) && (gettype($track["tags"]) == "array")) {
+                                        if (count($track["tags"]) > 0) {
+                                            if (gettype($track["tags"]["tag"]) == 'string') {
+                                                $pass = $pass && ($track["tags"]["tag"] == "engage-download");
+                                            } else {
+                                                $pass = $pass && in_array("engage-download", $track["tags"]["tag"]);
+                                            }
                                         }
                                     }
                                 }
@@ -676,7 +694,7 @@ class UIController extends Controller
             $data['events'] = $ar;
         }
 
-        // return new Response(json_encode($data), 201);
+        return new Response(json_encode($data), 201);
         return $this->render('series_view.html.twig', $data);
     }
 
