@@ -9,6 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use App\Entity\Course;
 use App\Entity\Department;
+use App\Entity\OpencastRetentionBatch;
 use App\Entity\Workflow;
 use App\Entity\User;
 use App\Service\LDAPService;
@@ -289,6 +290,70 @@ class UIController extends Controller
     }
 
     /**
+     * @Route("/mail_series/{hash}")
+     */
+    public function getSeriesMail($hash, Request $request)
+    {
+        $utils = new Utilities();
+
+        // testing
+        if ($hash == 'zzz000') {
+            $hash = 'b6ef9b';
+        }
+
+        $data = $utils->getSeries($hash);
+        // return new Response(json_encode($data), 201);
+
+        if ($data['success']) {
+            $data = $data['result'][0];
+            $data['hash'] = $hash;
+
+            $batch = (new OpencastRetentionBatch($data['batch']))->getBatch();
+
+            $ocService = new OCRestService();
+            $metadata = $ocService->getSeriesMetadata($data['series_id']);
+            foreach($metadata as $struct) {
+                $tmp = [];
+                foreach($struct['fields'] as $field) {
+                    $tmp[ str_replace("-","_",$field['id'])] = $field['value'];
+                }
+                switch ($struct['flavor']) {
+                    case 'dublincore/series':
+                        $data['dublincore'] = $tmp;
+                        break;
+                    case 'ext/series':
+                        $data['ext'] = $tmp;
+                        break;
+                }
+            }
+            /*
+            series_id: "667a679f-af42-40a9-b5e7-c2d5c78b3882",
+            active: "1",
+            title: "ACC1006S,2012",
+            contributor: "Gizelle Willows",
+            creator: "Gizelle Willows",
+            username: "01427721",
+            retention: "normal",
+            batch: "1",
+            last_recording: "2012-09-26 14:00:00"
+            */
+            return $this->render('series_mail.html.twig',
+                    array(  'title' => $data['title'],
+                            'series_id' => $data['series_id'],
+                            'contributor' => $data['contributor'],
+                            'creator' => $data['creator'],
+                            'retention' => $data['retention'],
+                            'no_recordings' => $data['no_recordings'],
+                            'expiry_date' => $data['ext']['series_expiry_date'],
+                            'site_id' => $data['ext']['site_id'],
+                            'global_expiry_date' => $batch['date_scheduled'],
+                            'view_link' => 'https://srvslscet001.uct.ac.za/optout/view-series/'. $hash));
+        } else {
+            return new Response("ERROR_MAIL_HASH", 500);
+        }
+    }
+
+    /**
      * @Route("/subject/{hash}")
      */
     public function getMailSubject($hash, Request $request)
@@ -321,6 +386,30 @@ class UIController extends Controller
 
                 return new Response($str, 201);
             }
+        } else {
+            return new Response("ERROR_MAIL_HASH", 500);
+        }
+    }
+
+    /**
+     * @Route("/subject_series/{hash}")
+     */
+    public function getSeriesMailSubject($hash, Request $request)
+    {
+        $utils = new Utilities();
+
+        // testing
+        if ($hash == 'zzz000') {
+            $hash = 'b6ef9b';
+        }
+
+        $data = $utils->getSeries($hash);
+
+        if ($data['success']) {
+            $data = $data['result'][0];
+            $str = $data['title'] .": Recording Expiry Notice";
+
+            return new Response($str, 201);
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
         }
@@ -425,7 +514,6 @@ class UIController extends Controller
 
         $now = new \DateTime();
         $utils = new Utilities();
-        $workflow = new Workflow();
 
         switch ($request->getMethod()) {
             case 'POST':
@@ -463,23 +551,9 @@ class UIController extends Controller
             break;
         }
 
-        $data = [ 'dept' => 'CILT', 'authenticated' => $authenticated, 'workflow' => $workflow->getWorkflow() ];
-        //return new Response(json_encode($data), 201);
-        //return new Response(json_encode($authenticated['z']), 201);
+        $data = [ 'dept' => 'CILT', 'authenticated' => $authenticated];
 
         if ($authenticated['z']['success']) {
-
-            $data['departments'] = $utils->getAllCourses();
-
-            $ar = [];
-            if ($data['departments']['success'] == '1') {
-                foreach ($data['departments']['result'] as $a) {
-                    array_push($ar, substr($a['dept'], 0, 1));
-                }
-            }
-            $data['list'] = array_unique($ar);
-
-            //$data['courses'] =
             return $this->render('series.html.twig', $data);
         } else {
             return $this->render('series_login.html.twig', $authenticated['z']);
@@ -493,11 +567,15 @@ class UIController extends Controller
      */
     public function viewSeriesFromHash($hash, Request $request)
     {
-        $authenticated = ['a' => false, 'z' => '0'];
+        $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
 
         $now = new \DateTime();
         $utils = new Utilities();
         $data = $utils->getSeries($hash);
+
+        if (!$data['success']) {
+            return $this->render('error_series.html.twig', $data);
+        }
 
         switch ($request->getMethod()) {
             case 'POST':
@@ -544,13 +622,16 @@ class UIController extends Controller
             break;
         }
 
-        if (!$data['success']) {
-            return $this->render('error.html.twig', $data);
+        // Require logged in user
+        if (!$authenticated['a']) {
+            return $this->render('series_view_login.html.twig', ['hash' => $hash, 'success' => $authenticated['z']['success'], 'err' => $authenticated['z']['err']]);
         }
+
         $data = $data['result'][0];
 
         $data['hash'] = $hash;
         $data['authenticated'] = $authenticated;
+        $data['emails'] = $utils->getSeriesEmails($hash);
 
         $ocService = new OCRestService();
         $metadata = $ocService->getSeriesMetadata($data['series_id']);
@@ -580,6 +661,8 @@ class UIController extends Controller
                     $data['user'] = (new User($data['ext']['creator_id']))->getDetails();
                 }
             }
+        } else {
+            $data['ext'] = [];
         }
 
         $ar = $ocService->getEventsForSeries($data['series_id']);
@@ -618,7 +701,7 @@ class UIController extends Controller
 
                                 if ($pass) {
                                     return (object) array('flavor' => explode("/", $track['type'])[0],
-                                        'url' => $track['url'],
+                                        'url' => str_replace('http:', 'https:', $track['url']),
                                         'ref' => $track['ref']
                                     );
                                 }
@@ -628,51 +711,90 @@ class UIController extends Controller
 
                         // get downloads
                         $downloads = $p['media']['track'];
-                        $downloads = array_filter(
-                                array_map(function($track) use (&$previews) {
-                                    // "engage-download"
-                                    if (($track["mimetype"] == "video/mp4") && (in_array("atom", $track["tags"]["tag"]))) {
-                                        $flavor = explode("/", $track['type'])[0];
 
-                                        $img = array_filter($previews,
-                                            function ($e) use (&$flavor) {
-                                                return $e->flavor == $flavor;
-                                            }
-                                        );
+                        if (isset($downloads['id'])) {
+                            // single media track
+                            $track = $downloads;
+                            $is_atom = gettype($track["tags"]["tag"]) == "array" ? in_array("atom", $track["tags"]["tag"]) : $track["tags"]["tag"] == "atom";
 
-                                        return (object) array(
-                                            'flavor' => $flavor,
-                                            'quality' => implode(array_filter($track["tags"]["tag"], function($str) {
+                            // "engage-download"
+                            if (isset($track["mimetype"]) && $is_atom) {
+                                if (($track["mimetype"] == "video/mp4") || ($track["mimetype"] == "video/avi")) {
+                                    $flavor = explode("/", $track['type'])[0];
+
+                                    $img = array_filter($previews,
+                                        function ($e) use (&$flavor) {
+                                            return $e->flavor == $flavor;
+                                        }
+                                    );
+
+                                    $downloads = array(array(
+                                        'flavor' => $flavor,
+                                        'quality' => implode(array_filter($track["tags"]["tag"], function($str) {
                                                 return(strpos($str, 'quality'));
-                                                })),
-                                            'img' => (count($img) > 0 ? array_values($img)[0]->url :''),
-                                            'url' => $track['url'],
-                                            'video' => $track['video']['resolution']
-                                        );
+                                            })),
+                                        'img' => (count($img) > 0 ? array_values($img)[0]->url :''),
+                                        'url' => str_replace('http:', 'https:', $track['url']),
+                                        'video' => $track['video']['resolution']
+                                    ));
+                                }
+                            }
+
+                        } else {
+                            $downloads = array_filter(
+                                array_map(function($track) use (&$previews) {
+
+                                    $is_atom = gettype($track["tags"]["tag"]) == "array" ? in_array("atom", $track["tags"]["tag"]) : $track["tags"]["tag"] == "atom";
+
+                                    // "engage-download"
+                                    if (isset($track["mimetype"]) && $is_atom) {
+                                        if (($track["mimetype"] == "video/mp4") || ($track["mimetype"] == "video/avi")) {
+                                            $flavor = explode("/", $track['type'])[0];
+
+                                            $img = array_filter($previews,
+                                                function ($e) use (&$flavor) {
+                                                    return $e->flavor == $flavor;
+                                                }
+                                            );
+
+                                            return (object) array(
+                                                'flavor' => $flavor,
+                                                'quality' => implode(array_filter($track["tags"]["tag"], function($str) {
+                                                        return(strpos($str, 'quality'));
+                                                    })),
+                                                'img' => (count($img) > 0 ? array_values($img)[0]->url :''),
+                                                'url' => str_replace('http:', 'https:', $track['url']),
+                                                'video' => $track['video']['resolution']
+                                            );
+                                        }
                                     }
                                 }, $p['media']['track']), function($item) {
                                     return (gettype($item) != "NULL");
                                 });
+                        }
 
                         $q_ar = array_column($downloads, 'quality');
 
-                        if (array_search('high-quality', $q_ar) >= 0) {
-                            // we have high quality
-                            $downloads = array_filter($downloads, function($item) {
-                                return ($item->quality == "high-quality") || ($item->quality == "");
-                            });
-                        } elseif (array_search('medium-quality', $q_ar) >= 0) {
-                            // we have medium quality
-                            $downloads = array_filter($downloads, function($item) {
-                                return ($item->quality == "medium-quality") || ($item->quality == "");
-                            });
-                        } elseif (array_search('low-quality', $q_ar) >= 0) {
-                            // we have low quality
-                            $downloads = array_filter($downloads, function($item) {
-                                return ($item->quality == "low-quality") || ($item->quality == "");
-                            });
+                        if (count($q_ar) > 0) {
+                            if (array_search('high-quality', $q_ar) !== FALSE) {
+                                // we have high quality
+                                $downloads = array_filter($downloads, function($item) {
+                                    return ($item->quality == "high-quality") || ($item->quality == "");
+                                });
+                            } elseif (array_search('medium-quality', $q_ar) !== FALSE) {
+                                // we have medium quality
+                                $downloads = array_filter($downloads, function($item) {
+                                    return ($item->quality == "medium-quality") || ($item->quality == "");
+                                });
+                            } elseif (array_search('low-quality', $q_ar) !== FALSE) {
+                                // we have low quality
+                                $downloads = array_filter($downloads, function($item) {
+                                    return ($item->quality == "low-quality") || ($item->quality == "");
+                                });
+                            }
                         }
 
+                        usort($downloads, function($a, $b) { return $a->flavor < $b->flavor; });
                         $event['media']  = (object) array('previews' => $previews, 'downloads' => array_values($downloads));
                     }
 
@@ -688,13 +810,16 @@ class UIController extends Controller
                 }
             };
 
+            $event_array = array_values(array_map($func, $ar['result']));
+            usort($event_array, function($a, $b) { return $a['dcCreated'] > $b['dcCreated']; });
+
             $data['events'] = (object) array('offset' => $ar['offset'], 'limit' => $ar['limit'], 'total' => $ar['total'], //'query' => $ar['query'],
-                                            'result' => array_map($func, $ar['result']));
+                                            'result' => $event_array);
         } else {
             $data['events'] = $ar;
         }
 
-        return new Response(json_encode($data), 201);
+        // return new Response(json_encode($data), 201);
         return $this->render('series_view.html.twig', $data);
     }
 

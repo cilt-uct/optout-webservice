@@ -169,6 +169,30 @@ class OpencastSeries
         return true;
     }
 
+    public function updateRetention($val, $updatedBy) {
+        try {
+            $query = "UPDATE opencast_series_hash SET updated_by = :user, retention = :retention where series_id = :series";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':user' => $updatedBy, ':retention' => $val, ':series' => $this->series_id]);
+        } catch (\PDOException $e) {
+            //throw new \Exception($e->getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    public function updateNotification($val, $updatedBy) {
+        try {
+            $query = "UPDATE opencast_series_hash SET updated_by = :user where series_id = :series";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':user' => $updatedBy, ':series' => $this->series_id]);
+        } catch (\PDOException $e) {
+            //throw new \Exception($e->getMessage());
+            return false;
+        }
+        return true;
+    }
+
     private function connectLocally() {
         $dotenv = new DotEnv();
         $dotenv->load('.env');

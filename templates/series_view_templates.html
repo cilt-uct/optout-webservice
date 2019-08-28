@@ -1,0 +1,14 @@
+<script type="text/x-tmpl" id="tmpl-date">
+    {%  if (o.success) { %}
+        <span class="date">
+        {% if (o.date != 'forever') { var past = moment().diff(moment(o.date)) > 0; %}
+            <u {% if (past) { %}class="past" data-toggle="tooltip" data-placement="bottom" title="This series will be cleaned in the next session."{% } %}>Expires:</u>
+            {%=moment(o.date).format('dddd, D MMMM YYYY')%}
+        {% } else { %}
+            <u>Expires:</u> Never
+        {% } %}
+        </span>
+    {% } else { %}
+        <span class="date danger">Could not save retention information</span>
+    {% } %}
+</script>

@@ -34,14 +34,15 @@
     <script src="{{ asset('public/build/js/utils.js') }}"></script>
     <script>
         var rentention_cycle = { "forever": "Keep Forever", "normal": "Default (4 years)", "long": "Long (8 years)" },
-            options = { "page": 1, "limit": 15, "filter": "", "order": "title,asc", "max": 0, "ret": "all", "batch": 0};
+            options = { "page": 1, "limit": 15, "filter": "", "order": "title,asc", "max": 0, "ret": "all", "act":"none", "batch": 0};
 
-        function showSeries(order, current, limit, filter, ret, batch) {
+        function showSeries(order, current, limit, filter, ret, batch, act) {
             var $order = order || options.order,
                 $current = current || options.page,
                 $limit = limit || options.limit,
                 $filter = filter || options.filter;
                 $ret = ret || options.ret;
+                $act = act || options.act;
                 $batch = batch || options.batch;
 
             console.log(options);
@@ -50,6 +51,7 @@
                                     +($order!=""?"&order="+$order:"")
                                     +($limit!=""?"&limit="+$limit:"")
                                     +($ret!=""?"&ret="+$ret:"")
+                                    +($act!=""?"&act="+$act:"")
                                     +($batch!=""?"&batch="+$batch:"")
                                     +($filter!=""?"&filter="+encodeURI($filter):""),
                 method: 'GET',
@@ -92,13 +94,19 @@
                     }
                     options.page = n;
                     showSeries();
-                }).on('click','#filter-retention a', function(event) {
+                }).on('click','#filter-retention #set1 a', function(event) {
                     event.preventDefault();
                     options.ret = $(this).attr('rel');
+                    options.act = 'none';
+                    showSeries();
+                }).on('click','#filter-retention #set2 a', function(event) {
+                    event.preventDefault();
+                    options.act = $(this).attr('rel');
                     showSeries();
                 }).on('submit', '#search_form', function(event) {
                     event.preventDefault();
                     options.filter = $('#series_filter').val();
+                    options.page = 1;
                     showSeries();
                 }).on('click', '#search_form .btn-dark', function(event) {
                     event.preventDefault();

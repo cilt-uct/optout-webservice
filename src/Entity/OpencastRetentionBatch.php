@@ -22,6 +22,10 @@ class OpencastRetentionBatch
     /**
      * @Assert\DateTime()
      */
+    private $date_start;
+    /**
+     * @Assert\DateTime()
+     */
     private $date_scheduled;
 
     public function __construct($oid) {
@@ -39,8 +43,9 @@ class OpencastRetentionBatch
 
                 $this->oid = $result[0]['id'];
                 $this->status = $result[0]['status'];
-                $this->date_last = $result[0]['date_last'];
-                $this->date_scheduled = $result[0]['date_scheduled'];
+                $this->date_last = new \DateTime($result[0]['date_last']);
+                $this->date_start = new \DateTime($result[0]['date_start']);
+                $this->date_scheduled = new \DateTime($result[0]['date_scheduled']);
                 $this->active = ($result[0]['active'] ? true : false);
             } else {
                 $this->status = $stmt->rowCount();
@@ -58,7 +63,7 @@ class OpencastRetentionBatch
             'oid' => $this->oid,
             'status' => $this->status,
             'date_last' => $this->date_last,
-            'date_schedule' => $this->date_schedule,
+            'date_scheduled' => $this->date_scheduled,
             'active' => $this->active
         ];
     }
@@ -69,6 +74,8 @@ class OpencastRetentionBatch
     public function run() {
 
         $now = new \DateTime();
+        $now->setTimezone(new \DateTimeZone('Africa/Johannesburg'));
+
         $result = [ 'success' => 1 ];
         $result['result'] = 'running: '. $this->status;
 
@@ -87,20 +94,28 @@ class OpencastRetentionBatch
                     } else {
                         $result = [ 'success' => 0, 'err' => 'Error starting batch'];
                     }
-
                 } catch (\PDOException $e) {
                     $result = [ 'success' => 0, 'result' => $e->getMessage()];
                 }
                 break;
             case 'waiting':
                 // (wait for start date)
-                // if ($now->diff($this->date_start)->format('%R') == '-') {
-                //     // > status : run
-                //     $this->setState('run');
-                //     $result['result'] = $result['result'] ." - switch to run";
-                // } else {
-                //     $result['result'] = $result['result'] ." - waiting for ". $this->date_start->format("Y-m-d H:i:s");
-                // }
+
+                if ($now->diff($this->date_start)->format('%R') == '-') {
+
+                    $created = $this->createMails();
+                    $result['result'] = $result['result'] ." ". json_encode($created);
+                    if (($created['update'] == $created['mail']) && ($created['count'] == $created['mail'])) {
+
+                        // > status : running
+                        $this->setState('running');
+                        $result['result'] = $result['result'] ." - switch to running";
+                    } else {
+                        $result = [ 'success' => 0, 'err' => 'Error creating mails : '. json_encode($created)];
+                    }
+                } else {
+                    $result['result'] = $result['result'] ." - starts: ". $now->format("Y-m-d H:i:s");
+                }
                 break;
             case 'running':
                 // (wait for ... date)
@@ -161,10 +176,12 @@ class OpencastRetentionBatch
             $this->connectLocally();
         }
 
+        $utils = new Utilities();
+
         $all_done = FALSE;
         try {
             $qry = "select series from `timetable`.`view_oc_series` `series`
-                        where `series`.last_recording <= :date and  `series`.retention='normal'";
+                        where `series`.last_recording <= :date and `series`.retention='normal'";
 
             $stmt = $this->dbh->prepare($qry);
             $stmt->execute([':date' => $this->date_last]);
@@ -174,13 +191,93 @@ class OpencastRetentionBatch
             $series_in_batch = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             foreach ($series_in_batch as $series) {
 
+                $series_find = $utils->getSeriesById($series['series']);
+
+                if (!$series_find['success']) {
+                    throw new \Exception("finding series error");
+                }
+                $series_data = $series_find['result'][0];
+
+                $ocService = new OCRestService();
+                $metadata = $ocService->getSeriesMetadata($series['series']);
+                foreach($metadata as $struct) {
+                    $tmp = [];
+                    foreach($struct['fields'] as $field) {
+                        $tmp[ str_replace("-","_",$field['id'])] = $field['value'];
+                    }
+                    switch ($struct['flavor']) {
+                        case 'dublincore/series':
+                            $series_data['dublincore'] = $tmp;
+                            break;
+                        case 'ext/series':
+                            $series_data['ext'] = $tmp;
+                            break;
+                    }
+                }
+
+                $active = 0;
+                $no_recordings = 0;
+                if (isset($series_data['no_recordings'])) {
+                    $active = ($series_data['no_recordings'] == 0 ? 0 : 1);
+                    $no_recordings = $series_data['no_recordings'];
+                }
+
+                if ($series_data['username'] != "") {
+                    $series_data['user'] = (new User($series_data['username']))->getDetails();
+                }
+
+                if (isset($series_data['ext'])) {
+                    if (isset($series_data['ext']['creator_id'])) {
+                        if ($series_data['ext']['creator_id'] != "") {
+                            $series_data['user'] = (new User($series_data['ext']['creator_id']))->getDetails();
+                        }
+                    }
+                }
+
+                $status = 'error';
+                $user_status = 'Not Set';
+                if (isset($series_data['user']['status'])) {
+                    $user_status = $series_data['user']['status'];
+                    switch($series_data['user']['status']) {
+                        case 'admin':
+                        case 'guest':
+                        case 'staff':
+                        case 'student':
+                        case 'associate':
+                        case 'special':
+                        case 'thirdparty':
+                        case 'user':
+                            $status = 'ready';
+                            break;
+                        case 'Inactive':
+                        case 'inactiveStaff':
+                        case 'inactiveStudent':
+                        case 'inactiveThirdparty':
+                        case 'offer':
+                        case 'pace':
+                        case 'test':
+                        case 'webctImport':
+                            $status = 'error';
+                        break;
+                        default:
+                            $status = 'error';
+                        break;
+                    }
+                }
+
                 $updateQry = "INSERT INTO `opencast_series_hash`
-                (`series_id`, `batch`) VALUES (:series,:batch)
-                on duplicate key update series_id= :series, batch = :batch";
+                (`series_id`, `batch`, `action`, `active`, `user_status`, `no_recordings`) VALUES (:series, :batch, :status, :active, :user_status, :no_recordings)
+                on duplicate key update series_id= :series, batch = :batch, action = :status, active = :active, user_status = :user_status, no_recordings = :no_recordings";
 
                 try {
                     $updateStmt = $this->dbh->prepare($updateQry);
-                    $bind = [':series' => $series['series'], ':batch' => $this->oid];
+                    $bind = [':series' => $series['series'],
+                             ':batch' => $this->oid,
+                             ':active' => $active,
+                             ':status' => $no_recordings == 0 ? 'empty' : $status,
+                             ':user_status' => $user_status,
+                             ':no_recordings' => $no_recordings
+                            ];
                     if ($updateStmt->execute($bind) === false){
                         throw new \Exception('conflict ['. $updateQry .']'. json_encode($bind));
                     }
@@ -207,126 +304,69 @@ class OpencastRetentionBatch
         return $all_done;
     }
 
-    private function createDepartmentMails(){
+    private function createMails(){
 
+        $done = [ 'count' => 0, 'update' => 0, 'mail' => 0];
+        $utils = new Utilities();
         try {
-            // get list of departments
-            $query = "SELECT * FROM uct_dept where `use_dept` = 1";
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute();
-
-            $ar = [];
-            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-
-                $dept = new Department($row['dept'], null, $this->year, true);
-
-                array_push($ar, '('. $this->oid .',"'. $row['dept'] .'",'. $this->year .',"'. $row['email'] .'","'.
-                        $row['alt_email'] .'","'. $dept->getHash() .'","'.
-                        ( strlen($row['firstname']."".$row['lastname']) < 2 ? "Colleague" : $row['firstname'] ." ". $row['lastname']) .'")');
-            }
-
-            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `term`, `mail_to`, `mail_cc`, `hash`, `name`) VALUES ". implode(',', $ar);
-
-            $mailStmt = $this->dbh->prepare($insertQry);
-            if (!$mailStmt->execute($ar)) {
-                return $this->dbh->errorInfo();
-            }
-        } catch (\PDOException $e) {
-            return $e->getMessage();
-        }
-
-        return 1;
-    }
-
-    private function createCourseMails(){
-        try {
-            // get list of courses - only eligible courses
-            // $query = "SELECT distinct(`course`.course_code) as course_code, `course`.dept as dept
-            //     FROM timetable.course_optout `course`
-            //     left join timetable.ps_courses `ps` on `ps`.course_code =  `course`.course_code and `ps`.term = `course`.year
-            //     left join timetable.sn_timetable_versioned `sn` on `sn`.course_code = `course`.course_code and `sn`.term = `course`.year
-            //     left join timetable.dept_optout `deptout` on `course`.`dept` = `deptout`.`dept`
-            //     left join timetable.uct_dept `dept` on `course`.`dept` = `dept`.`dept`
-            //     left join timetable.opencast_venues on `sn`.archibus_id = opencast_venues.archibus_id
-            //     where `dept`.use_dept = 1 and `deptout`.is_optOut = 0 and `ps`.active = 1
-            //         and `ps`.acad_career = 'UGRD' and opencast_venues.campus_code in (". Course::ELIGIBLE .")";
-            $query = "SELECT DISTINCT
-                            `versioned`.`course_code` AS `course_code`,
-                            `ps`.`dept`
-                        FROM
-                            `timetable`.`sn_timetable_versioned` `versioned`
-                            JOIN `timetable`.`opencast_venues` `venues` ON `versioned`.`archibus_id` = `venues`.`archibus_id`
-                            JOIN `timetable`.`ps_courses` `ps` ON
-                                (`versioned`.`course_code` = `ps`.`course_code` AND `versioned`.`term` = `ps`.`term`)
-                            LEFT JOIN `timetable`.`dept_optout` `deptout` ON
-                                (`deptout`.`dept` = `ps`.`dept` AND `deptout`.`year` = `versioned`.`term`)
-                            LEFT JOIN `timetable`.`uct_dept` `dept` ON `ps`.`dept` = `dept`.`dept`
-                        WHERE
-                            ((`versioned`.`term` = '2019')
-                                AND (`dept`.use_dept = 1) and (`deptout`.is_optOut = 0)
-                                AND (`versioned`.`instruction_type` IN ('Lecture' , 'Module'))
-                                AND `versioned`.`tt_version` IN (SELECT
-                                    MAX(`timetable`.`timetable_versions`.`version`)
-                                FROM
-                                    `timetable`.`timetable_versions`)
-                                AND (`ps`.`course_code` REGEXP :codes)
-                                AND (`venues`.`campus_code` IN ('UPPER' , 'MIDDLE'))
-                                AND (`ps`.`acad_career` = 'UGRD'))
-                        ORDER BY `versioned`.`course_code`";
+            // get list of series in the first batch
+            $query = "select `hash`.series_id, `hash`.active, `series`.title, `series`.contributor, `series`.creator, `hash`.short_code as 'hash',
+                    `series`.username, `series`.retention, `hash`.batch, `series`.last_recording, `series`.count as 'no_recordings'
+                    from `timetable`.`opencast_series_hash` `hash`
+                        left join `timetable`.`view_oc_series` `series` on `hash`.series_id = `series`.series
+                    where `hash`.`batch` = :batch and `hash`.`action` = 'ready'
+                        and `hash`.short_code not in (select `hash` from opencast_retention_email `mail` where `mail`.`type` = 'notification')";
 
             $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':batch' => 1]);
 
-            if ($this->semester == 's1') {
-                $stmt->execute([':codes' => Course::SEM1]);
-            } else {
-                $stmt->execute([':codes' => Course::SEM2]);
-            }
+            while ($series = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
-            $ar = [];
-            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-
-                $course = new Course($row['course_code'], null, $this->year, true);
-                $details = $course->getDetails();
-                $has_oc_series = $course->checkIsTimetabledInOC();
-
-                if ($has_oc_series == false) {
-                    $to = [ 'mail' => $details['convenor']['email'],
-                            'name' => $details['convenor']['name']];
-
-                    if ($to['mail'] == null) {
-                        $dept = new Department($row['dept'], null, $this->year, true, true);
-                        $dept_details = $dept->getDetails();
-
-                        $to = [ 'mail' => ($details['convenor']['email'] == null ? $dept_details['mail'] : $details['convenor']['email']),
-                                'name' => ($details['convenor']['email'] == null ? $dept_details['hod'] : $details['convenor']['name'])];
-
-                        if (strlen($to['name']) < 2) {
-                            $to['name'] = "Colleague";
-                        }
+                $ocService = new OCRestService();
+                $metadata = $ocService->getSeriesMetadata($series['series_id']);
+                foreach($metadata as $struct) {
+                    $tmp = [];
+                    foreach($struct['fields'] as $field) {
+                        $tmp[ str_replace("-","_",$field['id'])] = $field['value'];
                     }
+                    switch ($struct['flavor']) {
+                        case 'dublincore/series':
+                            $series['dublincore'] = $tmp;
+                            break;
+                        case 'ext/series':
+                            $series['ext'] = $tmp;
+                            break;
+                    }
+                }
 
-                    array_push($ar, '('. $this->oid .',"'. $row['dept'] .'","'. $row['course_code'] .'","'.
-                        $to['mail'] .'","'.
-                        $course->getHash() .'","'.
-                        $to['name'] .'",'.
-                        $this->year .')');
-               }
+                // Now to see if the users are still active or not
+                if ($series['username'] != "") {
+                    $series['user'] = (new User($series['username']))->getDetails();
+                }
+
+                if ($series['ext']['series_expiry_date'] == "") {
+                    $year_adjust = $series['ext']['retention_cycle'] == 'forever' ? 50 : (($series['ext']['retention_cycle'] == 'normal' ? 4 : 8));
+
+                    $dt = new \DateTime($series['last_recording']);
+                    $dt->modify('+'. $year_adjust  .' years');
+                    $data['date'] = $series['ext']['retention_cycle'] == 'forever' ? 'forever' : $dt->format("Y-m-d");
+
+                    $ocService->updateRetention($series['series_id'], $series['ext']['retention_cycle'], $dt->format("Y-m-d") ."T00:00:00.000Z");
+                }
+
+                $done['update'] += (new OpencastSeries($series['series_id']))->updateRetention($series['ext']['retention_cycle'], 'system') ? 1 : 0;
+                $done['mail'] += $utils->addSeriesEmails($series['series_id'], $series['hash'], $series['batch'],
+                                                            $series['user']['first_name'] .' '. $series['user']['last_name'],
+                                                            $series['user']['email'],  implode(';', $series['ext']['notification_list'])) ? 1 : 0;
             }
+            $done['count'] = $stmt->rowCount();
+            $stmt = null;
 
-            // test
-            array_push($ar, '('. $this->oid .',"ZZZ","ZZZ1000S","stephen.marquard@uct.ac.za","zzz000","Stephen Marquard",'. $this->year .')');
-            $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`, `term`) VALUES ". implode(',', $ar);
-            //return $insertQry;
-
-            $mailStmt = $this->dbh->prepare($insertQry);
-            if (!$mailStmt->execute($ar)) {
-                return $this->dbh->errorInfo();
-            }
         } catch (\PDOException $e) {
             return $e->getMessage();
         }
 
-        return 1;
+        return $done;
     }
 
     private function setState($status) {

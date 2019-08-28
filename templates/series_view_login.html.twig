@@ -1,0 +1,37 @@
+{% include 'header.html' %}
+    <div class="container post">
+        <div class="row post-body justify-content-md-center">
+            <div class="col-md-5 post-title">
+                <form id="loginForm" method="post" action="/optout/view-series/{{hash}}">
+                    <input type="hidden" id="type" name="type" value="login"/>
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                            {% if err != 'none' %}
+                                <div class="alert alert-danger" role="alert">{{err}}</div>
+                            {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <input type="text" class="form-control" name="eid" id="eid" value="" placeholder="User ID" style="width:100%">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <input type="password" class="form-control" name="pw" id="pw" placeholder="Password" style="width:100%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% include 'footer.html' %}
+    <!-- https://www.pexels.com/photo/auditorium-benches-chairs-class-207691/ -->
+</body>
+</html>

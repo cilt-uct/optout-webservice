@@ -286,10 +286,10 @@ class Utilities
         return $result;
     }
 
-    private function getSeriesRetentionCount($cycle = "normal", $where = "", $a = "") {
+    private function getSeriesCustomCount($val = "normal", $where = "", $a = "", $st = " `series`.`retention`=:v") {
         $result = 0;
-        $w = $where = ($where == "" ? " where ": $where ." and ") ." `series`.`retention`=:ret";
-        $a[':ret'] = $cycle;
+        $w = $where = ($where == "" ? " where ": $where ." and ") . $st;
+        $a[':v'] = $val;
         $q = $this->dbh->prepare("select count(*) as cnt from `timetable`.`view_oc_series` `series`
             left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series $w");
         if ($q->execute($a)) {
@@ -299,7 +299,7 @@ class Utilities
         return $result;
     }
 
-    public function getAllSeries($offset = 0, $limit = 15, $sort_dir = 'asc', $sort_field = 'title', $filter = "", $ret = "all", $batch = 0) {
+    public function getAllSeries($offset = 0, $limit = 15, $sort_dir = 'asc', $sort_field = 'title', $filter = "", $ret = "all", $batch = 0, $act = "none") {
 
         $result = [ 'success' => true,
                     'result' => null,
@@ -316,13 +316,17 @@ class Utilities
             $where = '';
             $arg = [];
             $query = "select `series`.id, `series`.series, `series`.title,
-                        `series`.contributor, `series`.creator, `series`.username,
+                        `series`.contributor, `series`.creator, `series`.username, `hash`.user_status,
                         `series`.created_date, `series`.first_recording, `series`.last_recording,
-                        `series`.`count`, `series`.`archive_count`, `series`.`retention`, `hash`.batch
+                        `series`.`count`, `series`.`archive_count`,
+                        `series`.`retention`, `hash`.`retention` as hash_retention,
+                        `series`.`modification_date`, `hash`.`updated_at` as hash_modification_date,
+                        `hash`.batch, `hash`.active, `hash`.action,
+                        (select count(*) from `timetable`.`opencast_retention_email` `email` where `email`.hash = `hash`.short_code) as 'mail_count'
                         from `timetable`.`view_oc_series` `series`
                         left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series";
             if ($filter != "") {
-                $where = " where `series`.title like :text or `series`.contributor like :text or `series`.username like :text";
+                $where = " where (`series`.title like :text or `series`.contributor like :text or `series`.username like :text)";
                 $arg[":text"] = '%'. $filter .'%';
             }
             if ($batch != 0) {
@@ -331,13 +335,25 @@ class Utilities
             }
 
             $result['all'] = $this->getSeriesCount($where, $arg);
-            $result['normal'] = $this->getSeriesRetentionCount("normal", $where, $arg);
-            $result['long'] = $this->getSeriesRetentionCount("long",$where, $arg);
-            $result['forever'] = $this->getSeriesRetentionCount("forever",$where, $arg);
+            $result['normal'] = $this->getSeriesCustomCount("normal", $where, $arg);
+            $result['long'] = $this->getSeriesCustomCount("long", $where, $arg);
+            $result['forever'] = $this->getSeriesCustomCount("forever", $where, $arg);
 
             if ($ret != "all") {
                 $where = ($where == "" ? " where ": $where ." and ") ." `series`.`retention`=:ret";
                 $arg[":ret"] = $ret;
+            }
+
+            $result['action'] = $act;
+            $result['state_ready'] = $this->getSeriesCustomCount("ready", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+            $result['state_review'] = $this->getSeriesCustomCount("review", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+            $result['state_done']  = $this->getSeriesCustomCount("done", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+            $result['state_error'] = $this->getSeriesCustomCount("error", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+            $result['state_empty'] = $this->getSeriesCustomCount("empty", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+
+            if ($act != "none") {
+                $where = ($where == "" ? " where ": $where ." and ") ." `hash`.action=:act and `hash`.batch >= 1";
+                $arg[":act"] = $act;
             }
 
             switch ($sort_field) {
@@ -385,7 +401,8 @@ class Utilities
     public function getSeries($hash) {
         $result = [ 'success' => 1, 'result' => null ];
         try {
-            $query = "select `hash`.series_id, `hash`.active, `series`.title, `series`.contributor, `series`.creator, `series`.username, `series`.retention
+            $query = "select `hash`.series_id, `hash`.active, `series`.title, `series`.contributor, `series`.creator,
+                        `series`.username, `series`.retention, `hash`.batch, `series`.last_recording, `series`.count as 'no_recordings'
                         from `timetable`.`opencast_series_hash` `hash`
                         left join `timetable`.`view_oc_series` `series` on `hash`.series_id = `series`.series
                         where `hash`.short_code = :hash order by created_at desc limit 1";
@@ -394,7 +411,7 @@ class Utilities
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
             }
 
             $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -403,6 +420,73 @@ class Utilities
         }
 
         return $result;
+    }
+
+    public function getSeriesById($series_id) {
+        $result = [ 'success' => 1, 'result' => null ];
+        try {
+            $query = "select `hash`.series_id, `hash`.active, `series`.title, `series`.contributor, `series`.creator,
+                        `series`.username, `series`.retention, `hash`.batch, `series`.last_recording, `series`.count as 'no_recordings'
+                        from `timetable`.`view_oc_series` `series`
+                        left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series
+                        where `series`.series = :series_id order by created_at desc limit 1";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':series_id' => $series_id]);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$series_id.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$series_id.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        return $result;
+    }
+
+    public function getSeriesEmails($hash) {
+        $result = [ 'success' => 1, 'result' => null ];
+        try {
+            $qry = "SELECT `state`, `updated_at` as `sent`,`type`,`case`,`hash` FROM timetable.opencast_retention_email
+                    where hash = :hash";
+            $stmt = $this->dbh->prepare($qry);
+            $stmt->execute([':hash' => $hash]);
+
+            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $result;
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        return $result;
+    }
+
+    public function addSeriesEmails($series_id, $hash, $batch_id, $name, $mail_to, $mail_cc){
+
+        $insertQry = "insert into opencast_retention_email (batch_id, series_id, hash, name, mail_to, mail_cc)
+                        VALUES (:batch_id, :series_id, :hash, :name, :mail_to, :mail_cc)";
+
+        try {
+            $insertStmt = $this->dbh->prepare($insertQry);
+            $bind = [
+                ':batch_id' => $batch_id,
+                ':series_id' => $series_id,
+                ':hash' => $hash,
+                ':name' => $name,
+                ':mail_to' => $mail_to,
+                ':mail_cc' => $mail_cc
+            ];
+            $insertStmt->execute($bind);
+            if ($insertStmt->rowCount() === 0) {
+                return FALSE;
+            }
+        } catch (\PDOException $e) {
+            return 'ERR:'. $e->getMessage();
+        }
+
+        return TRUE;
     }
 
     private function connectLocally() {

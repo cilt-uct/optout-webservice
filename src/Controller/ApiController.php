@@ -12,6 +12,7 @@ use App\Entity\Department;
 use App\Entity\OpencastRetentionBatch;
 use App\Entity\OrganisationalEntityFactory;
 use App\Entity\User;
+use App\Entity\OpencastSeries;
 use App\Entity\Workflow;
 use App\Service\LDAPService;
 use App\Service\OCRestService;
@@ -557,17 +558,18 @@ class ApiController extends Controller
    * @Route("/api/v0/series/")
    */
   public function getSeries(Request $request) {
+    $utils = new Utilities();
 
     // GET /api/v0/series/?order=series,asc&limit=20
     switch ($request->getMethod()) {
       case 'GET':
-        $utils = new Utilities();
         try {
           $order = explode(',', $request->query->get('order') != null ? $request->query->get('order') : "title,asc");
           $filter = urldecode($request->query->get('filter') != null ? $request->query->get('filter') : "");
           $page = $request->query->get('page') != null ? $request->query->get('page') : 1;
           $limit = $request->query->get('limit') != null ? $request->query->get('limit') : 15;
           $ret = $request->query->get('ret') != null ? $request->query->get('ret') : "all";
+          $act = $request->query->get('act') != null ? $request->query->get('act') : "none";
           $batch = $request->query->get('batch') != null ? $request->query->get('batch') : 0;
           $offset = ($page - 1) * $limit;
 
@@ -575,20 +577,112 @@ class ApiController extends Controller
             $order = ['title','asc'];
           }
 
-          $response = $utils->getAllSeries($offset, $limit, $order[1], $order[0], $filter, $ret, $batch);
+          $response = $utils->getAllSeries($offset, $limit, $order[1], $order[0], $filter, $ret, $batch, $act);
           return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
         } catch (\Exception $e) {
           return new Response($e->getMessage(), 500);
         }
-    // https://media.uct.ac.za/admin-ng/series/series.json?sortorganizer=&sort=&filter=&offset=0&optedOut=false&limit=100
-    //   case 'GET':
-    //     $ocService = new OCRestService();
-    //     try {
-    //       $response = $ocService->getAll();
-    //       return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
-    //     } catch (\Exception $e) {
-    //       return new Response($e->getMessage(), 500);
-    //     }
+      case 'PATCH':
+        $session = $request->hasSession() ? $request->getSession() : new Session();
+        if (!$session->get('username')) {
+          return new Response("Please login to make changes", 401, ['Content-Type' => 'text/plain']);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (isset($data['action'])) {
+          $series = $utils->getSeries($data['hash']);
+
+          switch($data['action']) {
+              case "new_notfication":
+                if (isset($series['success'])) {
+                  if ($series['success'] == "1") {
+
+                    $series = $series['result'][0];
+
+                    $ocService = new OCRestService();
+                    $metadata = $ocService->getSeriesMetadata($series['series_id']);
+                    foreach($metadata as $struct) {
+                        $tmp = [];
+                        foreach($struct['fields'] as $field) {
+                            $tmp[ str_replace("-","_",$field['id'])] = $field['value'];
+                        }
+                        switch ($struct['flavor']) {
+                            case 'dublincore/series':
+                                $series['dublincore'] = $tmp;
+                                break;
+                            case 'ext/series':
+                                $series['ext'] = $tmp;
+                                break;
+                        }
+                    }
+
+                    // Now to see if the users are still active or not
+                    if ($series['username'] != "") {
+                        $series['user'] = (new User($series['username']))->getDetails();
+                    }
+
+                    if ($series['ext']['series_expiry_date'] == "") {
+                      $year_adjust = $series['ext']['retention_cycle'] == 'forever' ? 50 : (($series['ext']['retention_cycle'] == 'normal' ? 4 : 8));
+
+                      $dt = new \DateTime($series['last_recording']);
+                      $dt->modify('+'. $year_adjust  .' years');
+                      $data['date'] = $series['ext']['retention_cycle'] == 'forever' ? 'forever' : $dt->format("Y-m-d");
+
+                      $ocService->updateRetention($series['series_id'], $series['ext']['retention_cycle'], $dt->format("Y-m-d") ."T00:00:00.000Z");
+                    }
+
+                    (new OpencastSeries($series['series_id']))->updateRetention($series['ext']['retention_cycle'], $session->get('username'));
+                    $data['success'] = $utils->addSeriesEmails($series['series_id'], $data['hash'], $series['batch'],
+                                                                $series['user']['first_name'] .' '. $series['user']['last_name'],
+                                                                $series['user']['email'],  implode(';', $series['ext']['notification_list']));
+                  }
+                }
+                $data['series'] = $series;
+                break;
+              case "retention":
+                $success = false;
+                if (isset($series['success'])) {
+                  if ($series['success'] == "1") {
+                    $series = $series['result'][0];
+
+                    $year_adjust = $data['val'] == 'forever' ? 50 : (($data['val'] == 'normal' ? 4 : 8));
+
+                    $dt = new \DateTime($series['last_recording']);
+                    $dt->modify('+'. $year_adjust  .' years');
+                    $data['date'] = $data['val'] == 'forever' ? 'forever' : $dt->format("Y-m-d");
+
+                    $ocService = new OCRestService();
+                    $data['result'] = $ocService->updateRetention($series['series_id'], $data['val'], $dt->format("Y-m-d") ."T00:00:00.000Z");
+                    $success = $data['result']['success'];
+
+                    if ($success) {
+                      $success = (new OpencastSeries($series['series_id']))->updateRetention($data['val'], $session->get('username'));
+                    }
+                  }
+                }
+                $data['success'] = $success;
+                break;
+              case "notification-list":
+                $success = false;
+                if (isset($series['success'])) {
+                  if ($series['success'] == "1") {
+                    $series = $series['result'][0];
+
+                    $ocService = new OCRestService();
+                    $data['result'] = $ocService->updateNotificationList($series['series_id'], $data['val']);
+                    $success = $data['result']['success'];
+
+                    if ($success) {
+                      $success = (new OpencastSeries($series['series_id']))->updateNotification($data['val'], $session->get('username'));
+                    }
+                  }
+                }
+                $data['success'] = $success;
+                break;
+              default: break;
+          }
+        }
+        return new Response(json_encode($data), 200, ['Content-Type' => 'application/json']);
     default:
         return new Response('Method not implemented', 405, ['Content-Type' => 'text/plain']);
     }
