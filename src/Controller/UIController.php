@@ -625,6 +625,14 @@ class UIController extends Controller
         // Require logged in user
         if (!$authenticated['a']) {
             return $this->render('series_view_login.html.twig', ['hash' => $hash, 'success' => $authenticated['z']['success'], 'err' => $authenticated['z']['err']]);
+        } else {
+            if (!isset($authenticated['z'])) {
+                $authenticated['z'] = ['type' => 'normal'];
+            } else {
+                if (!isset($authenticated['z']['type'])) {
+                    $authenticated['z']['type'] = 'normal';
+                }
+            }
         }
 
         $data = $data['result'][0];
