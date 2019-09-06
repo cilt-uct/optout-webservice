@@ -278,7 +278,9 @@ class Utilities
     private function getSeriesCount($where = "", $arg = "") {
         $result = 0;
         $q = $this->dbh->prepare("select count(*) as cnt from `timetable`.`view_oc_series` `series`
-            left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series $where");
+            left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series
+            left join `timetable`.`view_sakai_users` `user` on `user`.`eid` = `series`.username and `user`.status != 'test'
+            $where");
         if ($q->execute($arg)) {
             $f = $q->fetch();
             $result = $f['cnt'];
@@ -291,7 +293,9 @@ class Utilities
         $w = $where = ($where == "" ? " where ": $where ." and ") . $st;
         $a[':v'] = $val;
         $q = $this->dbh->prepare("select count(*) as cnt from `timetable`.`view_oc_series` `series`
-            left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series $w");
+            left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series
+            left join `timetable`.`view_sakai_users` `user` on `user`.`eid` = `series`.username and `user`.status != 'test'
+            $where");
         if ($q->execute($a)) {
             $f = $q->fetch();
             $result = $f['cnt'];
@@ -316,7 +320,9 @@ class Utilities
             $where = '';
             $arg = [];
             $query = "select `series`.id, `series`.series, `series`.title,
-                        `series`.contributor, `series`.creator, `series`.username, `hash`.user_status,
+                        `series`.contributor, `series`.creator,
+                        `series`.username, `user`.first_name, `user`.last_name,
+                        `hash`.user_status,
                         `series`.created_date, `series`.first_recording, `series`.last_recording,
                         `series`.`count`, `series`.`archive_count`,
                         `series`.`retention`, `hash`.`retention` as hash_retention,
@@ -324,9 +330,10 @@ class Utilities
                         `hash`.batch, `hash`.active, `hash`.action,
                         (select count(*) from `timetable`.`opencast_retention_email` `email` where `email`.hash = `hash`.short_code) as 'mail_count'
                         from `timetable`.`view_oc_series` `series`
-                        left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series";
+                        left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series
+                        left join `timetable`.`view_sakai_users` `user` on `user`.`eid` = `series`.username and `user`.status != 'test'";
             if ($filter != "") {
-                $where = " where (`series`.title like :text or `series`.contributor like :text or `series`.username like :text)";
+                $where = " where (`series`.title like :text or `series`.username like :text or concat_ws(' ',`user`.first_name,`user`.last_name) like :text)";
                 $arg[":text"] = '%'. $filter .'%';
             }
             if ($batch != 0) {
@@ -401,7 +408,7 @@ class Utilities
     public function getSeries($hash) {
         $result = [ 'success' => 1, 'result' => null ];
         try {
-            $query = "select `hash`.series_id, `hash`.active, `series`.title, `series`.contributor, `series`.creator,
+            $query = "select `hash`.series_id, `hash`.active, `series`.title, `series`.contributor, `series`.creator, `hash`.`action`,
                         `series`.username, `series`.retention, `hash`.batch, `series`.last_recording, `series`.count as 'no_recordings'
                         from `timetable`.`opencast_series_hash` `hash`
                         left join `timetable`.`view_oc_series` `series` on `hash`.series_id = `series`.series

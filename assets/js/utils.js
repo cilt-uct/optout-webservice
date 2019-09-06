@@ -51,7 +51,7 @@ function sort_dir(st, col){
 function setError(st) {
 
     $(st).removeClass('text-success text-info').addClass('text-danger').children('i').removeClass('fa-ellipsis-h fa-check').addClass('fa-times');
-    $(st).delay(3000).queue(function(){
+    $(st).delay(10000).queue(function(){
         $(this).removeClass('text-success text-info text-danger').children('i').removeClass('fa-ellipsis-h fa-check fa-times');
     });
 }
@@ -59,7 +59,7 @@ function setError(st) {
 function setSaved(st) {
 
     $(st).removeClass('text-success text-info').addClass('text-success').children('i').removeClass('fa-ellipsis-h fa-times').addClass('fa-check');
-    $(st).delay(3000).queue(function(){
+    $(st).delay(10000).queue(function(){
         $(this).removeClass('text-success text-info text-danger').children('i').removeClass('fa-ellipsis-h fa-check fa-times');
     });
 }

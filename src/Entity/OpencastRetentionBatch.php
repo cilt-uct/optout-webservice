@@ -310,7 +310,7 @@ class OpencastRetentionBatch
         $utils = new Utilities();
         try {
             // get list of series in the first batch
-            $query = "select `hash`.series_id, `hash`.active, `series`.title, `series`.contributor, `series`.creator, `hash`.short_code as 'hash',
+            $query = "select `hash`.series_id, `hash`.active, `series`.title, `hash`.short_code as 'hash',
                     `series`.username, `series`.retention, `hash`.batch, `series`.last_recording, `series`.count as 'no_recordings'
                     from `timetable`.`opencast_series_hash` `hash`
                         left join `timetable`.`view_oc_series` `series` on `hash`.series_id = `series`.series

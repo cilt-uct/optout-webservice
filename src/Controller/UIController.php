@@ -24,8 +24,7 @@ class UIController extends Controller
      *
      * @Route("/view/{hash}")
      */
-    public function viewFromHash($hash, Request $request)
-    {
+    public function viewFromHash($hash, Request $request) {
         $authenticated = ['a' => false, 'z' => '0'];
 
         // testing
@@ -121,8 +120,7 @@ class UIController extends Controller
     /**
      * @Route("/out/{hash}")
      */
-    public function viewOptOut($hash, Request $request)
-    {
+    public function viewOptOut($hash, Request $request) {
         $now = new \DateTime();
         $utils = new Utilities();
         $data = $utils->getMail($hash);
@@ -220,8 +218,7 @@ class UIController extends Controller
     /**
      * @Route("/mail/{hash}")
      */
-    public function getMail($hash, Request $request)
-    {
+    public function getMail($hash, Request $request) {
         $utils = new Utilities();
 
         // testing
@@ -292,8 +289,7 @@ class UIController extends Controller
     /**
      * @Route("/mail_series/{hash}")
      */
-    public function getSeriesMail($hash, Request $request)
-    {
+    public function getSeriesMail($hash, Request $request) {
         $utils = new Utilities();
 
         // testing
@@ -326,23 +322,29 @@ class UIController extends Controller
                         break;
                 }
             }
-            /*
-            series_id: "667a679f-af42-40a9-b5e7-c2d5c78b3882",
-            active: "1",
-            title: "ACC1006S,2012",
-            contributor: "Gizelle Willows",
-            creator: "Gizelle Willows",
-            username: "01427721",
-            retention: "normal",
-            batch: "1",
-            last_recording: "2012-09-26 14:00:00"
-            */
-            return $this->render('series_mail.html.twig',
+
+            // Now to see if the users are still active or not
+            $username = $data['creator'];
+            $user_status = '';
+            if ($data['username'] != "") {
+                $data['user'] = (new User($data['username']))->getDetails();
+                $username = $data['user']['first_name'] .' '. $data['user']['last_name'];
+                $user_status = $data['user']['status'];
+            }
+
+            $template  = 'series_mail.html.ready.twig';
+            switch ($data['action']) {
+                case 'error': $template  = 'series_mail.html.error.twig'; break;
+            }
+
+            return $this->render($template,
                     array(  'title' => $data['title'],
                             'series_id' => $data['series_id'],
                             'contributor' => $data['contributor'],
-                            'creator' => $data['creator'],
+                            'username' => $data['username'],
+                            'creator' => $username,
                             'retention' => $data['retention'],
+                            'user_status' => $user_status,
                             'no_recordings' => $data['no_recordings'],
                             'expiry_date' => $data['ext']['series_expiry_date'],
                             'site_id' => $data['ext']['site_id'],
@@ -356,8 +358,7 @@ class UIController extends Controller
     /**
      * @Route("/subject/{hash}")
      */
-    public function getMailSubject($hash, Request $request)
-    {
+    public function getMailSubject($hash, Request $request) {
         $utils = new Utilities();
 
         // testing
@@ -394,8 +395,7 @@ class UIController extends Controller
     /**
      * @Route("/subject_series/{hash}")
      */
-    public function getSeriesMailSubject($hash, Request $request)
-    {
+    public function getSeriesMailSubject($hash, Request $request) {
         $utils = new Utilities();
 
         // testing
@@ -420,8 +420,7 @@ class UIController extends Controller
      *
      * @Route("/", name="Main")
      */
-    public function defaultMain(Request $request)
-    {
+    public function defaultMain(Request $request) {
 	    $pathInfo = $request->getPathInfo();
         $requestUri = $request->getRequestUri();
 
@@ -436,8 +435,7 @@ class UIController extends Controller
      *
      * @Route("/admin", name="admin_show")
      */
-    public function getAdmin(Request $request)
-    {
+    public function getAdmin(Request $request) {
         $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
 
         $now = new \DateTime();
@@ -449,7 +447,6 @@ class UIController extends Controller
                 $ldap = new LDAPService();
                 $user = $request->request->get('eid');
                 $password = $request->request->get('pw');
-
                 try {
                     if ($ldap->authenticate($user, $password)) {
                         $details = $ldap->match($user);
@@ -478,6 +475,9 @@ class UIController extends Controller
                     $authenticated['z'] = $utils->getAuthorizedUsers($session->get('username'));
                 }
             break;
+        }
+        if (!isset($authenticated)) {
+            $authenticated = '[]';
         }
 
         $data = [ 'dept' => 'CILT', 'authenticated' => $authenticated, 'workflow' => $workflow->getWorkflow() ];
@@ -508,8 +508,7 @@ class UIController extends Controller
      *
      * @Route("/series", name="series_admin_show")
      */
-    public function showSeries(Request $request)
-    {
+    public function showSeries(Request $request) {
         $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
 
         $now = new \DateTime();
@@ -565,8 +564,7 @@ class UIController extends Controller
      *
      * @Route("/view-series/{hash}")
      */
-    public function viewSeriesFromHash($hash, Request $request)
-    {
+    public function viewSeriesFromHash($hash, Request $request) {
         $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
 
         $now = new \DateTime();
@@ -819,7 +817,9 @@ class UIController extends Controller
             };
 
             $event_array = array_values(array_map($func, $ar['result']));
-            usort($event_array, function($a, $b) { return $a['dcCreated'] > $b['dcCreated']; });
+            try {
+                usort($event_array, function($a, $b) { return $a['dcCreated'] > $b['dcCreated']; });
+            } catch (\Exception $e) { }
 
             $data['events'] = (object) array('offset' => $ar['offset'], 'limit' => $ar['limit'], 'total' => $ar['total'], //'query' => $ar['query'],
                                             'result' => $event_array);

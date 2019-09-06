@@ -139,7 +139,7 @@
     <tr>
         <td>{%=series.title%}</td>
         <td>
-            <div>{%=series.contributor%}</div>
+            <div>{%=series.first_name%} {%=series.last_name%}</div>
             <div>{%=series.username%}
             {% if (series.user_status != 'not set') {
                 var st = series.user_status.toLowerCase().replace('inactive','inactive ').replace('thirdparty','third party');

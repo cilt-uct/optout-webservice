@@ -352,7 +352,7 @@ class ApiController extends Controller
               ]
             );
         } catch (\Exception $e) {
-          return new Response($e->getMessage, 500);
+          return new Response($e, 500);
         }
         break;
 
