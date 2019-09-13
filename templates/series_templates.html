@@ -150,8 +150,8 @@
                     else { %}<span class="badge badge-info">{% } %}{%=st.upFirst()%}</span>{% } %}</div>
         </td>
         <td>
-            <div>{%=series.retention%} {%=series.modification_date%}</div>
-            <div>{%=series.hash_retention%} {%=series.hash_modification_date%}</div>
+            <div>{%=series.retention%}</div>
+            <!--div>{%=series.modification_date%} {%=series.hash_retention%} {%=series.hash_modification_date%}</div-->
         </td>
         <td>
             {% if (series.first_recording == '1970-01-01 00:00:00') { %}-{% } else { %}
@@ -174,7 +174,7 @@
             {% } else { %}&nbsp;{% } %}
         </td>
         <td>
-            <div class="row no-gutters">
+            <div class="row no-gutters" style="display: grid; grid-template-columns: 1fr 1fr 1fr;"">
                 <div class="col"><a style="font-size: large;padding: 5px;" href="https://srvslscet001.uct.ac.za/optout/view-series/{%=series.hash%}"><i class="fas fa-align-left"></i></a></div>
                 <div class="col"><a style="font-size: large;padding: 5px;" target="_blank" href="https://jira.cilt.uct.ac.za/issues/?jql=text%20~%20%22{%=series.series%}%22"><img src="/optout/public/build/images/logo-jira.png" style="width: 22px;height: 22px;"/></a></div>
                 <div class="col"><a style="font-size: large;padding: 5px;" target="_blank" href="https://media.uct.ac.za/admin-ng/index.html#/events/series?modal=series-details&tab=metadata&resourceId={%=series.series%}"><img src="/optout/public/build/images/logo-opencast.png" style="width: 22px;height: 22px;"/></a></div>

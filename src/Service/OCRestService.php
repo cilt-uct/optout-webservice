@@ -149,16 +149,36 @@ class OCRestService
         return false;
     }
 
-    public function updateRetention($series_id, $new_retention, $expiry_date) {
+    public function updateRetention($series_id, $new_retention, $expiry_date, $username) {
         try {
+            $now = new \DateTime();
             $url = $this->ocHost . "/api/series/$series_id";
             $body = '[{ "flavor": "ext/series", "title": "UCT Series Extended Metadata", "fields": [ { "id": "retention-cycle", "type": "text", "value": "'. $new_retention .'" }';
+
+            $notes = '';
+            $prev_ret = '';
+            $tmp = json_decode($this->getRequest($this->ocHost . "/api/series/".$series_id."/metadata?type=ext%2Fseries"), true);
+            if (is_array($tmp)) {
+                $ext = [];
+                foreach($tmp as $field) {
+                    $ext[ str_replace("-","_",$field['id'])] = $field['value'];
+                }
+
+                $notes = $ext['series_notes'][0];
+                $prev_ret = $ext['retention_cycle'];
+            }
 
             if ($expiry_date != 'forever') {
                 $body .= ', { "id": "series-expiry-date", "type": "date","value": "'. $expiry_date .'" }';
             } else {
                 $body .= ', { "id": "series-expiry-date", "type": "date","value": "" }';
             }
+
+            if ($notes != '') {
+                $body .= ', { "id": "series-notes", "type": "mixed_text",'
+                    .'"value": ["'. $notes.'|Retention changed from '. $prev_ret .' to '. $new_retention .' by '.$username.' on '. $now->format("Y-m-d H:i") .'"] }';
+            }
+
             $body .= '] }]';
             $result = $this->putRequest($url, array('metadata' => $body));
 

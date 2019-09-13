@@ -332,9 +332,42 @@ class UIController extends Controller
                 $user_status = $data['user']['status'];
             }
 
-            $template  = 'series_mail.html.ready.twig';
-            switch ($data['action']) {
-                case 'error': $template  = 'series_mail.html.error.twig'; break;
+            $now = new \DateTime();
+            $past_scheduled = ($now->diff($batch['date_scheduled'])->format('%R') == '-');
+
+            $template = 'series_mail.html.ready.twig';
+            if ($past_scheduled) {
+                $template = 'series_mail.html.confirm.twig';
+
+                switch($user_status) {
+                    case 'admin':
+                    case 'guest':
+                    case 'staff':
+                    case 'student':
+                    case 'associate':
+                    case 'special':
+                    case 'thirdparty':
+                    case 'user':
+                        break;
+                    case 'Inactive':
+                    case 'inactiveStaff':
+                    case 'inactiveStudent':
+                    case 'inactiveThirdparty':
+                    case 'offer':
+                    case 'pace':
+                    case 'test':
+                    case 'webctImport':
+                        $username = Null;
+                    break;
+                    default:
+                        $username = Null;
+                    break;
+                }
+            } else {
+
+                switch ($data['action']) {
+                    case 'error': $template  = 'series_mail.html.error.twig'; break;
+                }
             }
 
             return $this->render($template,
@@ -349,11 +382,54 @@ class UIController extends Controller
                             'expiry_date' => $data['ext']['series_expiry_date'],
                             'site_id' => $data['ext']['site_id'],
                             'global_expiry_date' => $batch['date_scheduled'],
+                            'readonly' => $past_scheduled,
                             'view_link' => 'https://srvslscet001.uct.ac.za/optout/view-series/'. $hash));
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
         }
     }
+
+    /**
+     * @Route("/series_tocc/{hash}")
+     */
+    public function getSeriesMailToCC($hash, Request $request) {
+        $utils = new Utilities();
+        $data = $utils->getSeries($hash);
+
+        if ($data['success']) {
+            $data = $data['result'][0];
+
+            if ($data['username'] != "") {
+                $data['user'] = (new User($data['username']))->getDetails();
+
+                $ocService = new OCRestService();
+                $metadata = $ocService->getSeriesMetadata($data['series_id']);
+                foreach($metadata as $struct) {
+                    $tmp = [];
+                    foreach($struct['fields'] as $field) {
+                        $tmp[ str_replace("-","_",$field['id'])] = $field['value'];
+                    }
+                    switch ($struct['flavor']) {
+                        case 'dublincore/series':
+                            $data['dublincore'] = $tmp;
+                            break;
+                        case 'ext/series':
+                            $data['ext'] = $tmp;
+                            break;
+                    }
+                }
+
+                return new Response( json_encode(
+                        array('to' => $data['user']['email'],
+                            'cc' => implode(';', $data['ext']['notification_list']),
+                            'name' => $data['user']['first_name'] .' '. $data['user']['last_name'],
+                            'status' => $data['user']['status'])
+                        ), 201);
+            }
+        }
+        return new Response("ERROR_MAIL_HASH", 500);
+    }
+
 
     /**
      * @Route("/subject/{hash}")
@@ -406,9 +482,16 @@ class UIController extends Controller
         $data = $utils->getSeries($hash);
 
         if ($data['success']) {
+
             $data = $data['result'][0];
+            $batch = (new OpencastRetentionBatch($data['batch']))->getBatch();
             $str = $data['title'] .": Recording Expiry Notice";
 
+            $now = new \DateTime();
+            $past_scheduled = ($now->diff($batch['date_scheduled'])->format('%R') == '-');
+            if ($past_scheduled) {
+                $str .= " [Deleted]";
+            }
             return new Response($str, 201);
         } else {
             return new Response("ERROR_MAIL_HASH", 500);

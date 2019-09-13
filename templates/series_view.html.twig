@@ -138,7 +138,7 @@
                                             </label>
                                         {% elseif mail.type == "confirm" %}
                                             <label>
-                                                <a href="#" class="label label-success">Scheduled recordings</a>
+                                                <a href="#" class="label label-success">Clean</a>
                                                 {% if mail.state == "0" %}<span>To send</span>{% endif %}
                                                 {% if mail.state == "1" %}<span>Sent on {{mail.sent|date("Y-m-d H:i:s")}}</span>{% endif %}
                                                 {% if mail.state == "-1" %}<span>Error sending mail</span>{% endif %}

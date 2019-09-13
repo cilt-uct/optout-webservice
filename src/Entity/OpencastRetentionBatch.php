@@ -103,7 +103,7 @@ class OpencastRetentionBatch
 
                 if ($now->diff($this->date_start)->format('%R') == '-') {
 
-                    $created = $this->createMails();
+                    $created = $this->createNotificationMails();
                     $result['result'] = $result['result'] ." ". json_encode($created);
                     if (($created['update'] == $created['mail']) && ($created['count'] == $created['mail'])) {
 
@@ -304,7 +304,7 @@ class OpencastRetentionBatch
         return $all_done;
     }
 
-    private function createMails(){
+    private function createNotificationMails(){
 
         $done = [ 'count' => 0, 'update' => 0, 'mail' => 0];
         $utils = new Utilities();
@@ -351,7 +351,7 @@ class OpencastRetentionBatch
                     $dt->modify('+'. $year_adjust  .' years');
                     $data['date'] = $series['ext']['retention_cycle'] == 'forever' ? 'forever' : $dt->format("Y-m-d");
 
-                    $ocService->updateRetention($series['series_id'], $series['ext']['retention_cycle'], $dt->format("Y-m-d") ."T00:00:00.000Z");
+                    $ocService->updateRetention($series['series_id'], $series['ext']['retention_cycle'], $dt->format("Y-m-d") ."T00:00:00.000Z", 'system');
                 }
 
                 $done['update'] += (new OpencastSeries($series['series_id']))->updateRetention($series['ext']['retention_cycle'], 'system') ? 1 : 0;

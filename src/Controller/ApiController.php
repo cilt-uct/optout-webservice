@@ -628,7 +628,7 @@ class ApiController extends Controller
                       $dt->modify('+'. $year_adjust  .' years');
                       $data['date'] = $series['ext']['retention_cycle'] == 'forever' ? 'forever' : $dt->format("Y-m-d");
 
-                      $ocService->updateRetention($series['series_id'], $series['ext']['retention_cycle'], $dt->format("Y-m-d") ."T00:00:00.000Z");
+                      $ocService->updateRetention($series['series_id'], $series['ext']['retention_cycle'], $dt->format("Y-m-d") ."T00:00:00.000Z", $session->get('username'));
                     }
 
                     (new OpencastSeries($series['series_id']))->updateRetention($series['ext']['retention_cycle'], $session->get('username'));
@@ -652,7 +652,7 @@ class ApiController extends Controller
                     $data['date'] = $data['val'] == 'forever' ? 'forever' : $dt->format("Y-m-d");
 
                     $ocService = new OCRestService();
-                    $data['result'] = $ocService->updateRetention($series['series_id'], $data['val'], $dt->format("Y-m-d") ."T00:00:00.000Z");
+                    $data['result'] = $ocService->updateRetention($series['series_id'], $data['val'], $dt->format("Y-m-d") ."T00:00:00.000Z", $session->get('username'));
                     $success = $data['result']['success'];
 
                     if ($success) {

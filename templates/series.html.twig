@@ -98,15 +98,20 @@
                     event.preventDefault();
                     options.ret = $(this).attr('rel');
                     options.act = 'none';
+                    options.page = 1;
+                    options.offset = 0;
                     showSeries();
                 }).on('click','#filter-retention #set2 a', function(event) {
                     event.preventDefault();
                     options.act = $(this).attr('rel');
+                    options.page = 1;
+                    options.offset = 0;
                     showSeries();
                 }).on('submit', '#search_form', function(event) {
                     event.preventDefault();
                     options.filter = $('#series_filter').val();
                     options.page = 1;
+                    options.offset = 0;
                     showSeries();
                 }).on('click', '#search_form .btn-dark', function(event) {
                     event.preventDefault();
@@ -117,6 +122,8 @@
                     var _v = $(this).val();
                     if (_v >= 0) {
                         options.batch = $(this).val();
+                        options.page = 1;
+                        options.offset = 0;
                         showSeries();
                     } else {
                         console.log(_v);
