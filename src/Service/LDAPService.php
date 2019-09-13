@@ -42,7 +42,18 @@ class LDAPService
                 $searchResults[] = $result;
               }
             }
-            return $searchResults;
+
+            $result = [];
+            if (count($searchResults) > 0) {
+                foreach($searchResults as $user) {
+                    if (isset($user['mobile'])) {
+                        unset($user['mobile']);
+                    }
+                    array_push($result, $user);
+                }
+            }
+
+            return $result;
         }
         else {
             throw new \Exception("cannot connect to ldap server");
