@@ -496,6 +496,23 @@ class Utilities
         return TRUE;
     }
 
+    public function getLastNotificationRetentionEmail($hash) {
+        $result = '';
+        try {
+            $qry = "SELECT updated_at FROM timetable.opencast_retention_email where `hash` = :hash and `type`='notification' limit 1";
+            $stmt = $this->dbh->prepare($qry);
+            $stmt->execute([':hash' => $hash]);
+
+            $r = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $r[0]['updated_at'];
+        } catch (\PDOException $e) {
+            $result = '';
+        }
+
+        return $result;
+    }
+
+
     private function connectLocally() {
         $dotenv = new DotEnv();
         $dotenv->load('.env');

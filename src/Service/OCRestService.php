@@ -149,6 +149,7 @@ class OCRestService
         return false;
     }
 
+    // OCRestService->updateRetention('0cda8b2e-50ef-4da4-82dc-fc53e0f74d54', 'long', '2027-09-16T00:00:00.000Z', '01450343')
     public function updateRetention($series_id, $new_retention, $expiry_date, $username) {
         try {
             $now = new \DateTime();
@@ -164,8 +165,10 @@ class OCRestService
                     $ext[ str_replace("-","_",$field['id'])] = $field['value'];
                 }
 
-                $notes = $ext['series_notes'][0];
-                $prev_ret = $ext['retention_cycle'];
+                if (count($ext['series_notes']) > 0) {
+                    $notes = $ext['series_notes'][0];
+                }
+                $prev_ret = $ext['retention_cycle'] == '' ? 'NA' : $ext['retention_cycle'];
             }
 
             if ($expiry_date != 'forever') {
@@ -174,10 +177,8 @@ class OCRestService
                 $body .= ', { "id": "series-expiry-date", "type": "date","value": "" }';
             }
 
-            if ($notes != '') {
-                $body .= ', { "id": "series-notes", "type": "mixed_text",'
-                    .'"value": ["'. $notes.'|Retention changed from '. $prev_ret .' to '. $new_retention .' by '.$username.' on '. $now->format("Y-m-d H:i") .'"] }';
-            }
+            $body .= ', { "id": "series-notes", "type": "mixed_text",'
+                    .'"value": ["'. ($notes != '' ? $notes.'|' : '') .'Retention changed from '. $prev_ret .' to '. $new_retention .' by '.$username.' on '. $now->format("Y-m-d H:i") .'"] }';
 
             $body .= '] }]';
             $result = $this->putRequest($url, array('metadata' => $body));

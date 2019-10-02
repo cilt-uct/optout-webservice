@@ -370,6 +370,8 @@ class UIController extends Controller
                 }
             }
 
+            $last_email_date = $utils->getLastNotificationRetentionEmail($hash);
+
             return $this->render($template,
                     array(  'title' => $data['title'],
                             'series_id' => $data['series_id'],
@@ -382,6 +384,7 @@ class UIController extends Controller
                             'expiry_date' => $data['ext']['series_expiry_date'],
                             'site_id' => $data['ext']['site_id'],
                             'global_expiry_date' => $batch['date_scheduled'],
+                            'last_email_date' => $last_email_date,
                             'readonly' => $past_scheduled,
                             'view_link' => 'https://srvslscet001.uct.ac.za/optout/view-series/'. $hash));
         } else {
@@ -419,10 +422,37 @@ class UIController extends Controller
                     }
                 }
 
+                $name = $data['user']['first_name'] .' '. $data['user']['last_name'];
+                $to = $data['user']['email'];
+                $cc = implode(';', $data['ext']['notification_list']);
+                switch($data['user']['status']) {
+                    case 'admin':
+                    case 'guest':
+                    case 'staff':
+                    case 'student':
+                    case 'associate':
+                    case 'special':
+                    case 'thirdparty':
+                    case 'user':
+                        break;
+                    case 'Inactive':
+                    case 'inactiveStaff':
+                    case 'inactiveStudent':
+                    case 'inactiveThirdparty':
+                    case 'offer':
+                    case 'pace':
+                    case 'test':
+                    case 'webctImport':
+                        $to = $cc;
+                        $cc = '';
+                        $name = '';
+                    break;
+                }
+
                 return new Response( json_encode(
-                        array('to' => $data['user']['email'],
-                            'cc' => implode(';', $data['ext']['notification_list']),
-                            'name' => $data['user']['first_name'] .' '. $data['user']['last_name'],
+                        array('to' => $to,
+                            'cc' => $cc,
+                            'name' => $name,
                             'status' => $data['user']['status'])
                         ), 201);
             }
@@ -742,6 +772,8 @@ class UIController extends Controller
         // Now to see if the users are still active or not
         if ($data['username'] != "") {
             $data['user'] = (new User($data['username']))->getDetails();
+        } else {
+            $data['user'] = '';
         }
 
         if (isset($data['ext'])) {

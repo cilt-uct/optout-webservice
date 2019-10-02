@@ -31,34 +31,36 @@
                         <div class="form-group row">
                             <label class="col-md-2 control-label text-right" for="txt_creator">Creator:</label>
                             <div class="col-md-2 txt">
-                                <div class="input">{{ext.creator_id|default(username)|upper}}</div>
+                                <div class="input" style="overflow:hidden">{{ext.creator_id|default(username)|upper}}</div>
                             </div>
-                            {%  if user.first_name|trim %}
-                                <div class="col-md-6 txt" style="padding:0px 0.2em;">
-                                    <div class="input">
-                                        {{user.first_name}} {{user.last_name}}
+                            {%  if user is not empty %}
+                                {%  if user.first_name is not empty %}
+                                    <div class="col-md-6 txt" style="padding:0px 0.2em;">
+                                        <div class="input">
+                                            {{user.first_name}} {{user.last_name}}
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-2 txt" style="padding: 0.1em 0.6em; font-size: 18px;">
-                                    {% set status = user.status|lower|replace({'inactive': 'inactive ', 'thirdparty': 'third party'}) %}
-                                    {% if 'inactive' in status %}
-                                        <span class="badge badge-secondary">{{status|capitalize}}</span>
-                                    {% elseif 'staff' in status %}
-                                        <span class="badge badge-primary">{{status|capitalize}}</span>
-                                    {% elseif 'guest' in status %}
-                                        <span class="badge badge-light">{{status|capitalize}}</span>
-                                    {% elseif 'third party' in status %}
-                                        <span class="badge badge-dark">{{status|capitalize}}</span>
-                                    {% else %}
-                                        <span class="badge badge-info">{{status|capitalize}}</span>
-                                    {% endif %}
-                                </div>
-                             {% else %}
-                                <div class="col-md-8 txt" style="padding:0px 0.2em;">
-                                    <div class="input">
-                                        {{dublincore.creator|default(creator)|join(', ')}}
+                                    <div class="col-md-2 txt" style="padding: 0.1em 0.6em; font-size: 18px;">
+                                        {% set status = user.status|lower|replace({'inactive': 'inactive ', 'thirdparty': 'third party'}) %}
+                                        {% if 'inactive' in status %}
+                                            <span class="badge badge-secondary">{{status|capitalize}}</span>
+                                        {% elseif 'staff' in status %}
+                                            <span class="badge badge-primary">{{status|capitalize}}</span>
+                                        {% elseif 'guest' in status %}
+                                            <span class="badge badge-light">{{status|capitalize}}</span>
+                                        {% elseif 'third party' in status %}
+                                            <span class="badge badge-dark">{{status|capitalize}}</span>
+                                        {% else %}
+                                            <span class="badge badge-info">{{status|capitalize}}</span>
+                                        {% endif %}
                                     </div>
-                                </div>
+                                {% else %}
+                                    <div class="col-md-8 txt" style="padding:0px 0.2em;">
+                                        <div class="input">
+                                            {{dublincore.creator|default(creator)|join(', ')}}
+                                        </div>
+                                    </div>
+                                {% endif %}
                             {% endif %}
                         </div>
 
@@ -134,23 +136,25 @@
                                                 <a href="#" class="label label-default">Notification</a>
                                                 {% if mail.state == "0" %}<span>To send ...</span>{% endif %}
                                                 {% if mail.state == "1" %}<span>Sent on {{mail.sent|date("Y-m-d H:i:s")}}</span>{% endif %}
-                                                {% if mail.state == "-1" %}<span>Error sending mail</span>{% endif %}
+                                                {% if mail.state == "2" %}<span>Error sending mail</span>{% endif %}
                                             </label>
                                         {% elseif mail.type == "confirm" %}
                                             <label>
                                                 <a href="#" class="label label-success">Clean</a>
                                                 {% if mail.state == "0" %}<span>To send</span>{% endif %}
                                                 {% if mail.state == "1" %}<span>Sent on {{mail.sent|date("Y-m-d H:i:s")}}</span>{% endif %}
-                                                {% if mail.state == "-1" %}<span>Error sending mail</span>{% endif %}
+                                                {% if mail.state == "2" %}<span>Error sending mail</span>{% endif %}
                                             </label>
                                         {% endif %}
                                     {% endfor %}
                                 {% endif %}
                                 </div>
-                                {% if (emails.result|length == 0) %}
-                                    <button type="button" class="btn btn btn-outline-info btn-sm" id="btn_send_notification" style="margin: 15px 0px;">
-                                        <i class="far fa-envelope-open"></i> Send Notification
-                                    </button>
+                                {% if batch > 0 %}
+                                    {% if (emails.result|length == 0) %}
+                                        <button type="button" class="btn btn btn-outline-info btn-sm" id="btn_send_notification" style="margin: 15px 0px;">
+                                            <i class="far fa-envelope-open"></i> Send Notification
+                                        </button>
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
                         {% endif %}
