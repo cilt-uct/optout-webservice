@@ -146,7 +146,8 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             'hodLastname' => 'lastname',
             'hodMail' => 'email',
             'altMail' => 'alt_email',
-            'active' => 'use_dept'
+            'active' => 'use_dept',
+            'hodEID' => 'hod_eid'
         ];
         try {
             $this->dbh->beginTransaction();
