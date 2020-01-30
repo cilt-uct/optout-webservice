@@ -28,13 +28,17 @@ class OpencastRetentionBatch
      */
     private $date_scheduled;
 
-    public function __construct($oid) {
+    public function __construct($oid = -1) {
         if (!$this->dbh) {
             $this->connectLocally();
         }
 
         try {
-            $query = "select * from opencast_retention_batch where id = :oid";
+
+            $query = "select * from opencast_retention_batch where active = 1 limit 1";
+            if ($oid > 0) {
+                $query = "select * from opencast_retention_batch where id = :oid";
+            }
             $stmt = $this->dbh->prepare($query);
             $stmt->execute([":oid" => $oid]);
 
@@ -118,47 +122,10 @@ class OpencastRetentionBatch
                 }
                 break;
             case 'running':
-                // (wait for ... date)
-                // if ($now->diff($this->date_dept)->format('%R') == '-') {
-
-                //     // Create email entries for each departments head, so mail can be sent to each
-                //     $action = $this->createDepartmentMails();
-                //     if ($action === 1) {
-
-                //         // > state: dept
-                //         $this->setState('dept');
-                //         $result['result'] = $result['result'] ." - switch to dept";
-                //     } else {
-                //         $result = [ 'success' => 0, 'err' => $action];
-                //     }
-                // } else {
-                //     $result['result'] = $result['result'] ." - waiting for ". $this->date_dept->format("Y-m-d H:i:s");
-                // }
+                // (wait for scheduled date - run cleanupo script to remove events from series)
                 break;
             case 'completed':
                 // All done
-                // set this one inactive
-                /*
-                try {
-                    $query = "UPDATE uct_workflow SET active = 0 WHERE active = 1";
-                    $stmt = $this->dbh->prepare($query);
-                    $stmt->execute();
-                    $this->active = false;
-
-                    // TODO: create new workflow
-                    /*
-                    $query = "INSERT INTO uct_workflow (`year`,`date_start`,`date_dept`,`date_course`,`date_schedule`)
-                    VALUES (2019,<{date_start: }>,<{date_dept: }>,<{date_course: }>,<{date_schedule: }>)";
-                    $stmt = $this->dbh->prepare($query);
-                    $stmt->execute();
-                    $this->active = false;
-                    *
-
-                    $result['result'] = $result['result'] ." - New Workflow";
-                } catch (\PDOException $e) {
-                    $result = [ 'success' => 0, 'err' => $e->getMessage()];
-                }
-                */
                 break;
             default:
                 $result = [ 'success' => 0, 'err' => 'Error running batch'];
@@ -180,11 +147,21 @@ class OpencastRetentionBatch
 
         $all_done = FALSE;
         try {
-            $qry = "select series from `timetable`.`view_oc_series` `series`
-                        where `series`.last_recording <= :date and `series`.retention='normal'";
+            $qry = "select series,`series`.last_recording, `series`.retention, `hash`.batch, `hash`.action,
+                        if(`series`.retention='normal', if(TIMESTAMPDIFF(YEAR,`series`.last_recording, :start_date ) >= 4, 1,0), 0) +
+                        if(`series`.retention='long', if(TIMESTAMPDIFF(YEAR,`series`.last_recording, :start_date ) >= 8, 1,0), 0) as to_use,
+                        TIMESTAMPDIFF(YEAR,`series`.last_recording, :start_date) as diff_years
+                        from `timetable`.`view_oc_series` `series`
+                        left join `timetable`.`opencast_series_hash` `hash` on `hash`.series_id = `series`.series
+                        where (`series`.retention='normal' or `series`.retention='long')
+                            and (`hash`.action='review' or `hash`.action='todo' or `hash`.action is null)
+                            and DATEDIFF(`series`.last_recording, :last_date) <= 0
+                        having to_use = 1
+                        order by `series`.last_recording asc";
 
             $stmt = $this->dbh->prepare($qry);
-            $stmt->execute([':date' => $this->date_last]);
+            $stmt->execute([':last_date' => $this->date_last->format("Y-m-d H:i:s"),
+                            ':start_date' => $this->date_start->format("Y-01-01 00:00:00")]);
             if ($stmt->rowCount() === 0) {
                 throw new \Exception("no series in this batch");
             }
@@ -318,7 +295,7 @@ class OpencastRetentionBatch
                         and `hash`.short_code not in (select `hash` from opencast_retention_email `mail` where `mail`.`type` = 'notification')";
 
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute([':batch' => 1]);
+            $stmt->execute([':batch' => $this->oid]);
 
             while ($series = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 

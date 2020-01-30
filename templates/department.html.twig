@@ -18,8 +18,8 @@
 
                             <div style="margin: 15px 0px;"  id="semester-select">
                                 <span style="display: inline-block;padding-right:6px;">Select semester:</span>
-                                <a href="#" rel="s1" class="badge badge-info" style="font-size:14px;margin: 0px 8px;">Semester 1 &nbsp;<span class="badge badge-light">{{counts.s1}}</span></a>
-                                <a href="#" rel="s2" class="badge badge-light" style="font-size:14px;margin: 0px 8px;">Semester 2 &nbsp;<span class="badge badge-dark">{{counts.s2}}</span></a>
+                                {% if counts.s1 >= 0%}<a href="#" rel="s1" class="badge badge-info" style="font-size:14px;margin: 0px 8px;">Semester 1 &nbsp;<span class="badge badge-light">{{counts.s1}}</span></a>{% endif %}
+                                {% if counts.s2 >= 0%}<a href="#" rel="s2" class="badge badge-light" style="font-size:14px;margin: 0px 8px;">Semester 2 &nbsp;<span class="badge badge-dark">{{counts.s2}}</span></a>{% endif %}
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -47,8 +47,8 @@
 
                             <div style="margin: 15px 0px;"  id="semester-select">
                                 <span style="display: inline-block;padding-right:6px;">Select semester:</span>
-                                <a href="#" rel="s1" class="badge badge-info" style="font-size:14px;margin: 0px 8px;">Semester 1 &nbsp;<span class="badge badge-light">{{counts.s1}}</span></a>
-                                <a href="#" rel="s2" class="badge badge-light" style="font-size:14px;margin: 0px 8px;">Semester 2 &nbsp;<span class="badge badge-dark">{{counts.s2}}</span></a>
+                                {% if counts.s1 >= 0 %}<a href="#" rel="s1" class="badge badge-info" style="font-size:14px;margin: 0px 8px;">Semester 1 &nbsp;<span class="badge badge-light">{{counts.s1}}</span></a>{% endif %}
+                                {% if counts.s2 >= 0%}<a href="#" rel="s2" class="badge badge-light" style="font-size:14px;margin: 0px 8px;">Semester 2 &nbsp;<span class="badge badge-dark">{{counts.s2}}</span></a>{% endif %}
                             </div>
                         </div>
                     {% endif %}

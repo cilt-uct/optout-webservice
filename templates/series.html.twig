@@ -34,7 +34,8 @@
     <script src="{{ asset('public/build/js/utils.js') }}"></script>
     <script>
         var rentention_cycle = { "forever": "Keep Forever", "normal": "Default (4 years)", "long": "Long (8 years)" },
-            options = { "page": 1, "limit": 15, "filter": "", "order": "title,asc", "max": 0, "ret": "all", "act":"none", "batch": 0};
+            options = { "page": 1, "limit": 15, "filter": "", "order": "title,asc", "max": 0, "ret": "all", "act":"none", "batch": 0},
+            batches = {{(batches|json_encode|raw)}};
 
         function showSeries(order, current, limit, filter, ret, batch, act) {
             var $order = order || options.order,

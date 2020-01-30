@@ -29,7 +29,7 @@ class UIController extends Controller
 
         // testing
         if ($hash == 'zzz000') {
-            $hash = 'b6ef9b';
+            $hash = '7885ba';
         }
 
         $now = new \DateTime();
@@ -81,9 +81,9 @@ class UIController extends Controller
         if ($data['course'] === null ) {
             $dept = new Department($data['dept'], $hash, $data['year'], false, false, true);
             $data['details'] = $dept->getDetails();
-            $data['readonly'] = 1; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
-            $data['readonly_s1'] = 1; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
-            $data['readonly_s2'] = 0; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
+            $data['readonly'] = 0; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
+            $data['readonly_s1'] = 0; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
+            $data['readonly_s2'] = 1; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
 
             if (count($data['details']['courses']) == 0) {
             //     return $this->viewOptOut($hash, $request);
@@ -91,8 +91,10 @@ class UIController extends Controller
                 $semester_vals = array_column($data['details']['courses'], 'semester'); // take all 'semester' values
                 $data['counts'] = array_count_values($semester_vals);
             }
+            if (!isset($data['counts']['s1'])) { $data['counts']['s1'] = -1; }
+            if (!isset($data['counts']['s2'])) { $data['counts']['s2'] = -1; }
 
-            // return new Response(json_encode($data), 201);
+            //return new Response(json_encode($data), 201);
             return $this->render('department.html.twig', $data);
         } else {
             $vula = new SakaiWebService();
@@ -223,7 +225,7 @@ class UIController extends Controller
 
         // testing
         if ($hash == 'zzz000') {
-            $hash = 'b6ef9b';
+            $hash = '7885ba';
         }
 
         $data = $utils->getMail($hash);
@@ -294,7 +296,7 @@ class UIController extends Controller
 
         // testing
         if ($hash == 'zzz000') {
-            $hash = 'b6ef9b';
+            $hash = '7885ba';
         }
 
         $data = $utils->getSeries($hash);
@@ -469,7 +471,7 @@ class UIController extends Controller
 
         // testing
         if ($hash == 'zzz000') {
-            $hash = 'b6ef9b';
+            $hash = '7885ba';
         }
 
         $data = $utils->getMail($hash);
@@ -506,7 +508,7 @@ class UIController extends Controller
 
         // testing
         if ($hash == 'zzz000') {
-            $hash = 'b6ef9b';
+            $hash = '7885ba';
         }
 
         $data = $utils->getSeries($hash);
@@ -663,9 +665,14 @@ class UIController extends Controller
             break;
         }
 
-        $data = [ 'dept' => 'CILT', 'authenticated' => $authenticated];
+        $data = [
+            'dept' => 'CILT',
+            'authenticated' => $authenticated,
+            'batches' => $utils->getAllBatches()
+        ];
 
         if ($authenticated['z']['success']) {
+            //return new Response(json_encode($data), 201);
             return $this->render('series.html.twig', $data);
         } else {
             return $this->render('series_login.html.twig', $authenticated['z']);

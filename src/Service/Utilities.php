@@ -29,6 +29,7 @@ class Utilities
             $workflow = (new Workflow)->getWorkflow();
 
             $qry = "select distinct `sn`.course_code, `ps`.term, `ps`.dept,
+                    if(`sn`.course_code REGEXP '". Course::SEM1 ."', 's1', if(`sn`.course_code REGEXP '". Course::SEM2 ."', 's2', 's0')) as 'semester',
                     (select id from timetable.uct_workflow `w` where `w`.year = :year and `w`.semester = if(`sn`.course_code REGEXP '". Course::SEM1 ."', 's1', if(`sn`.course_code REGEXP '". Course::SEM2 ."', 's2', 's0'))) as workflow_id
                     FROM timetable.sn_timetable_versioned `sn`
                         inner join opencast_venues  `venue`  on `sn`.archibus_id =  `venue`.archibus_id
@@ -40,6 +41,7 @@ class Utilities
                         and `venue`.campus_code in (". Course::ELIGIBLE .")
                         and `sn`.instruction_type='Lecture'
                         and `sn`.course_code not in (select course_code from course_optout where year = :year)
+
                         order by `sn`.course_code";
 
             $stmt = $this->dbh->prepare($qry);
@@ -62,7 +64,7 @@ class Utilities
                             ':course' => $row['course_code'],
                             ':year' => $row['term'],
                             ':dept' => $row['dept'],
-                            ':semester' => $workflow->semester,
+                            ':semester' => $row['semester'],
                             ':workflow_id' => $row['workflow_id']
                         ]);
                         $updateResults['coursesUpdated'] += $optoutStmt->rowCount();
@@ -136,9 +138,9 @@ class Utilities
                         `workflow`.`year`, `workflow`.`status`, `workflow`.`date_start`, `workflow`.`date_dept`, `workflow`.`date_course`, `workflow`.`date_schedule`
                         from uct_workflow_email mail
                         left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`
-                        where hash = :hash order by created_at desc limit 1"; // and workflow_id = :workflow_id
+                        where `workflow`.`year` = :year and hash = :hash order by created_at desc limit 1"; // and workflow_id = :workflow_id
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute([':hash' => $hash]); // ':workflow_id' => $worfklow_details['oid']
+            $stmt->execute([':hash' => $hash, ':year' => $worfklow_details['year']]); // ':workflow_id' => $worfklow_details['oid']
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,
@@ -198,7 +200,7 @@ class Utilities
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 1 and `type` = 'confirm' and course REGEXP '". Course::SEM2 ."') as s2_mail_sent_confirm,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 2 and course REGEXP '". Course::SEM2 ."') as s2_mail_err
                 from timetable.uct_dept A left join timetable.dept_optout B on A.dept = B.dept
-                where B.year = :year";
+                where B.year = :year and A.exists = 1";
 
             $stmt = $this->dbh->prepare($query);
 
@@ -270,6 +272,26 @@ class Utilities
             }
         } catch (\PDOException $e) {
             $result['err'] = $e->getMessage();
+        }
+
+        return $result;
+    }
+
+    public function getAllBatches() {
+        $result = [ 'success' => 1, 'result' => null ];
+        try {
+            $query = "SELECT `id`, `status`, `date_last`, `date_start`, `date_scheduled`,`active` FROM timetable.opencast_retention_batch;";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute();
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'No Batches found'];
+            }
+
+            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
         }
 
         return $result;

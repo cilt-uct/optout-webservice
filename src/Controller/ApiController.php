@@ -528,7 +528,7 @@ class ApiController extends Controller
   }
 
   private function runBatchMonitor(Request $request) {
-    $result = (new OpencastRetentionBatch(1))->run();
+    $result = (new OpencastRetentionBatch)->run();
 
     return new Response(json_encode($result), 201);
   }

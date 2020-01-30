@@ -6,8 +6,11 @@
             <div class="col-2">
                 <select id="oc-batch" class="select-css">
                     <option value="0" {% if (o.batch == 0) { %}selected{% } %}>{% if (o.batch == 0) { %}Select ...{% } else { %}All{% } %}</option>
-                    <option value="1" {% if (o.batch == 1) { %}selected{% } %}>Batch 1 (2015-01-01)</option>
-                    <option value="-1">Create New ...</option>
+                    {% if (batches.success === 1) { %}
+                    {% $.each(batches.result, function(i, el) { console.log(el); %}
+                    <option value="{%=el.id%}" {% if (o.batch == el.id) { %}selected{% } %}>{%#(el.active=='1'?'&#9744;':'&#9745;')%}&nbsp;&nbsp;Batch {%=el.id%} ({%=moment(el.date_last).format('YYYY-MM-DD')%})</option>
+                    {% }); }%}
+                    <!--option value="-1">Create New ...</option-->
                 </select>
             </div>
             <div class="col-4">

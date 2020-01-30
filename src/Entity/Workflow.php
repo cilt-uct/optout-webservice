@@ -206,7 +206,7 @@ class Workflow
         try {
             // Populate the dept_opt_out table
             $query = "INSERT INTO `timetable`.`dept_optout` (`dept`, `year`, `workflow_id`)
-                    SELECT `dept`, :year, :workflow_id FROM `timetable`.`uct_dept` where `active` = 1
+                    SELECT `dept`, :year, :workflow_id FROM `timetable`.`uct_dept` where `exists` = 1 and `active` = 1
                     ON DUPLICATE KEY UPDATE `dept`=VALUES(`dept`), `year`=VALUES(`year`), `workflow_id`=VALUES(`workflow_id`);";
 
             $stmt = $this->dbh->prepare($query);
@@ -228,7 +228,7 @@ class Workflow
 
         try {
             // get list of departments
-            $query = "SELECT * FROM uct_dept where `use_dept` = 1";
+            $query = "SELECT * FROM uct_dept where `exists` = 1 and `use_dept` = 1";
             $stmt = $this->dbh->prepare($query);
             $stmt->execute();
 
@@ -280,7 +280,7 @@ class Workflow
                             LEFT JOIN `timetable`.`uct_dept` `dept` ON `ps`.`dept` = `dept`.`dept`
                         WHERE
                             ((`versioned`.`term` = '2019')
-                                AND (`dept`.use_dept = 1) and (`deptout`.is_optOut = 0)
+                                AND (`dept`.use_dept = 1) and (`deptout`.is_optOut = 0) and (`deptout`.exists = 1)
                                 AND (`versioned`.`instruction_type` IN ('Lecture' , 'Module'))
                                 AND `versioned`.`tt_version` IN (SELECT
                                     MAX(`timetable`.`timetable_versions`.`version`)
