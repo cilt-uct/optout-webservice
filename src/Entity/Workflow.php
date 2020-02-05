@@ -242,6 +242,7 @@ class Workflow
                         ( strlen($row['firstname']."".$row['lastname']) < 2 ? "Colleague" : $row['firstname'] ." ". $row['lastname']) .'")');
             }
 
+            array_push($ar, '('. $this->oid .',"ZZZ",'. $this->year .',"stephen.marquard@uct.ac.za","sam.leepan@uct.ac.za;corne.oosthuizen@uct.ac.za","zzzd'.$this->year.'","Stephen Marquard")');
             $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `term`, `mail_to`, `mail_cc`, `hash`, `name`) VALUES ". implode(',', $ar);
 
             $mailStmt = $this->dbh->prepare($insertQry);
@@ -279,8 +280,8 @@ class Workflow
                                 (`deptout`.`dept` = `ps`.`dept` AND `deptout`.`year` = `versioned`.`term`)
                             LEFT JOIN `timetable`.`uct_dept` `dept` ON `ps`.`dept` = `dept`.`dept`
                         WHERE
-                            ((`versioned`.`term` = '2019')
-                                AND (`dept`.use_dept = 1) and (`deptout`.is_optOut = 0) and (`deptout`.exists = 1)
+                            ((`versioned`.`term` = :term)
+                                AND (`dept`.use_dept = 1) and (`deptout`.is_optOut = 0) and (`dept`.exists = 1)
                                 AND (`versioned`.`instruction_type` IN ('Lecture' , 'Module'))
                                 AND `versioned`.`tt_version` IN (SELECT
                                     MAX(`timetable`.`timetable_versions`.`version`)
@@ -294,9 +295,9 @@ class Workflow
             $stmt = $this->dbh->prepare($query);
 
             if ($this->semester == 's1') {
-                $stmt->execute([':codes' => Course::SEM1]);
+                $stmt->execute([':codes' => Course::SEM1, ':term' => $this->year]);
             } else {
-                $stmt->execute([':codes' => Course::SEM2]);
+                $stmt->execute([':codes' => Course::SEM2, ':term' => $this->year]);
             }
 
             $ar = [];
@@ -331,7 +332,7 @@ class Workflow
             }
 
             // test
-            array_push($ar, '('. $this->oid .',"ZZZ","ZZZ1000S","stephen.marquard@uct.ac.za","zzz000","Stephen Marquard",'. $this->year .')');
+            array_push($ar, '('. $this->oid .',"ZZZ","ZZZ1000S","stephen.marquard@uct.ac.za","zzzc'.$this->year.'","Stephen Marquard",'. $this->year .')');
             $insertQry = "INSERT INTO `uct_workflow_email` (`workflow_id`, `dept`, `course`, `mail_to`, `hash`, `name`, `term`) VALUES ". implode(',', $ar);
             //return $insertQry;
 

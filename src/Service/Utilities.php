@@ -132,9 +132,14 @@ class Utilities
         $workflow = new Workflow();
         $worfklow_details = $workflow->getWorkflow();
 
+        // Get real course/dept hash - select first in current batch
+        if ($this->startsWith($hash,'zzzc') || $this->startsWith($hash,'zzzd')) {
+            $hash = $this->getOptOutTestHash($worfklow_details['oid'], $this->startsWith($hash,'zzzc'));
+        }
+
         $result = [ 'success' => 1, 'result' => null ];
         try {
-            $query = "select mail.dept, mail.course, mail.state, mail.created_at, mail.name, mail.type, mail.case,
+            $query = "select mail.dept, mail.course, mail.state, mail.created_at, mail.name, mail.type, mail.case, :hash as hash,
                         `workflow`.`year`, `workflow`.`status`, `workflow`.`date_start`, `workflow`.`date_dept`, `workflow`.`date_course`, `workflow`.`date_schedule`
                         from uct_workflow_email mail
                         left join `uct_workflow` `workflow` on `mail`.`workflow_id` = `workflow`.`id`
@@ -155,8 +160,7 @@ class Utilities
         return $result;
     }
 
-    public function getAllCourses($year = '')
-    {
+    public function getAllCourses($year = '') {
 
         $workflow = new Workflow();
         $worfklow_details = $workflow->getWorkflow();
@@ -231,8 +235,7 @@ class Utilities
         return $result;
     }
 
-    private function getDepartmentMails($workflow_id, $dept)
-    {
+    private function getDepartmentMails($workflow_id, $dept) {
         $result = [ 'success' => 1, 'result' => null ];
         try {
             $query = "select * from uct_workflow_email where workflow_id = :workflow_id and dept = :dept and course is null";
@@ -428,10 +431,16 @@ class Utilities
     }
 
     public function getSeries($hash) {
+
+        // Get real series hash - select first in current batch
+        // if ($this->startsWith($hash,'zzzc') || $this->startsWith($hash,'zzzd')) {
+        //     $hash = $this->getRetentionTestHash($worfklow_details['oid'], $this->startsWith($hash,'zzzc'));
+        // }
+
         $result = [ 'success' => 1, 'result' => null ];
         try {
             $query = "select `hash`.series_id, `hash`.active, `series`.title, `series`.contributor, `series`.creator, `hash`.`action`,
-                        `series`.username, `series`.retention, `hash`.batch, `series`.last_recording, `series`.count as 'no_recordings'
+                        `series`.username, `series`.retention, `hash`.batch, `series`.last_recording, `series`.count as 'no_recordings', :hash as `hash`
                         from `timetable`.`opencast_series_hash` `hash`
                         left join `timetable`.`view_oc_series` `series` on `hash`.series_id = `series`.series
                         where `hash`.short_code = :hash order by created_at desc limit 1";
@@ -534,6 +543,55 @@ class Utilities
         return $result;
     }
 
+    public function getOptOutTestHash($workflow_id, $is_course = FALSE) {
+        try {
+            $query = "select `hash` from uct_workflow_email where course is null and workflow_id = :workflow_id and `hash` NOT LIKE 'zzz%' order by id limit 1";
+            if ($is_course) {
+                $query = "select `hash` from uct_workflow_email where course is not null and  workflow_id = :workflow_id and `hash` NOT LIKE 'zzz%' order by id limit 1";
+            }
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':workflow_id' => $workflow_id]);
+
+            if ($stmt->rowCount() > 0) {
+                $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+                return $result[0]['hash'];
+            } else {
+                return NULL;
+            }
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    // For Series details
+    public function getRetentionTestHash($batch_id) {
+        // try {
+        //     $query = "select `hash` from uct_workflow_email where course is null and workflow_id = :workflow_id and `hash` NOT LIKE 'zzz%' limit 1";
+        //     if ($is_course) {
+        //         $query = "select `hash` from uct_workflow_email where course is not null and  workflow_id = :workflow_id and `hash` NOT LIKE 'zzz%' limit 1";
+        //     }
+        //     $stmt = $this->dbh->prepare($query);
+        //     $stmt->execute([':workflow_id' => $workflow_id]);
+
+        //     if ($stmt->rowCount() > 0) {
+        //         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        //         return $result[0]['hash'];
+        //     } else {
+        //         return NULL;
+        //     }
+        // } catch (\PDOException $e) {
+        //     throw new \Exception($e->getMessage());
+        // }
+    }
+
+    // Function to check string starting with given substring
+    function startsWith ($string, $startString)
+    {
+        $len = strlen($startString);
+        return (substr($string, 0, $len) === $startString);
+    }
 
     private function connectLocally() {
         $dotenv = new DotEnv();
