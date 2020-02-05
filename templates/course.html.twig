@@ -37,9 +37,9 @@
                                     {% endif %}
                                 {% else %}
                                     <div class="alert alert-danger" role="alert">
-                                        <i class="far fa-3x fa-times-circle danger zero"></i>
-                                        <span>There seems to be no Vula site associated with this course code.
-                                        To use automatic scheduling {% if (timetable is not empty) %}(for the timetable shown below){% endif %} please create a Vula site for {{course}} before {{date_schedule|date("l, d F Y")}}.</span>
+                                        <i class="far fa-3x fa-times-circle danger zero" style="top: 10px; padding-bottom: 40px;"></i>
+                                        <span>There seems to be no Vula site associated with this course code.<br/>
+                                        To use automatic scheduling {% if (timetable is not empty) %}(for the timetable shown below){% endif %} please create a Vula site for {{course}}, make sure that it is published and/or the class list is linked correctly; before {{date_schedule|date("l, d F Y")}}.</span>
                                     </div>
                                 {% endif %}
                             </div>
@@ -120,6 +120,8 @@
                     </div>
                 {% endif %}
                 {% if (timetable is not empty) %}
+                    <!--p>{{timetable|json_encode|raw}}</p-->
+                    {% if (timetable.LEC is not empty) %}
                     <div class="table-responsive">
                         <h4>Timetable:</h4>
                         <table id="course_table" class="table">
@@ -166,7 +168,7 @@
                             </tbody>
                         </table>
                     </div>
-
+                    {% endif %}
                     <div class="alert alert-light" role="alert">
                         <u>NOTE:</u> You are welcome to schedule additional sessions after the automated setup.
                     </div>
