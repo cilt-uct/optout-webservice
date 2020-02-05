@@ -333,7 +333,12 @@ class UIController extends Controller
 
             $template = 'series_mail.html.ready.twig';
             if ($past_scheduled) {
-                $template = 'series_mail.html.confirm.twig';
+
+                // series_mail.html.confirm.twig
+                // series_mail.html.confirm-forever.twig
+                // series_mail.html.confirm-long.twig
+                // series_mail.html.confirm-normal.twig
+                $template = 'series_mail.html.confirm-'. $data['retention'] .'.twig';
 
                 switch($user_status) {
                     case 'admin':
