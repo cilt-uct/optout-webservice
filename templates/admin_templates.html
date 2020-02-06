@@ -3,10 +3,20 @@
         var s1 = o.data.courses.filter(function(s) { return s.semester == 's1'; }),
            s2 = o.data.courses.filter(function(s) { return s.semester == 's2'; }); %}
     <div class="tab-pane fade {% if (o.data.semester=='s1') { print('show active'); } %}" id="{%=o.dept%}_courses-s1" role="tabpanel" aria-labelledby="{%=o.dept%}_courses-s1_tab">
-        {% $.each(s1, function( i, course ) { if (course.eligble == '1') { include('tmpl-course-detail', course);  } }); %}
+        {% $.each(s1, function( i, course ) {
+            if (course.eligble == '1') {
+                course['dept_hash'] = o.hash;
+                include('tmpl-course-detail', course);
+            }
+        }); %}
     </div>
     <div class="tab-pane fade {% if (o.data.semester=='s2') { print('show active'); } %}" id="{%=o.dept%}_courses-s2" role="tabpanel" aria-labelledby="{%=o.dept%}_courses-s2_tab">
-        {% $.each(s2, function( i, course ) { if (course.eligble == '1') { course['dept_hash'] = o.hash; include('tmpl-course-detail', course);  } }); %}
+        {% $.each(s2, function( i, course ) {
+            if (course.eligble == '1') {
+                course['dept_hash'] = o.hash;
+                include('tmpl-course-detail', course);
+            }
+        }); %}
     </div>
 </script>
 

@@ -390,7 +390,8 @@ class ApiController extends Controller
   public function getEntityHash($entityType, $entityName, Request $request) {
     try {
       $entity = OrganisationalEntityFactory::getEntity($entityType, $entityName);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       switch($e->getMessage()) {
         case 'no such dept':
           return new Response('No such dept', 404, ['Content-Type' => 'text/plain']);
@@ -420,8 +421,7 @@ class ApiController extends Controller
    *
    * THIS DOESN'T WORK
    */
-  public function processMail($courseCode, $year, Request $request)
-  {
+  public function processMail($courseCode, $year, Request $request) {
 
     // retrieve timetable information
     $json = file_get_contents('https://srvslscet001.uct.ac.za/timetable/?course='. $courseCode .','. $year);
@@ -514,8 +514,7 @@ class ApiController extends Controller
   /**
    * @Route("/monitor_batch")
    */
-  public function monitor_batch(Request $request)
-  {
+  public function monitor_batch(Request $request) {
       set_time_limit(3000);
       switch ($request->getMethod()) {
           case 'GET':
