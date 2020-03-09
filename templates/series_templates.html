@@ -8,7 +8,7 @@
                     <option value="0" {% if (o.batch == 0) { %}selected{% } %}>{% if (o.batch == 0) { %}Select ...{% } else { %}All{% } %}</option>
                     {% if (batches.success === 1) { %}
                     {% $.each(batches.result, function(i, el) { console.log(el); %}
-                    <option value="{%=el.id%}" {% if (o.batch == el.id) { %}selected{% } %}>{%#(el.active=='1'?'&#9744;':'&#9745;')%}&nbsp;&nbsp;Batch {%=el.id%} ({%=moment(el.date_last).format('YYYY-MM-DD')%})</option>
+                    <option value="{%=el.id%}" {% if (o.batch == el.id) { %}selected{% } %}>{%#(el.status!='completed'?'&#9744;':'&#9745;')%}&nbsp;&nbsp;Batch {%=el.id%} ({%=moment(el.date_last).format('YYYY-MM-DD')%})</option>
                     {% }); }%}
                     <!--option value="-1">Create New ...</option-->
                 </select>

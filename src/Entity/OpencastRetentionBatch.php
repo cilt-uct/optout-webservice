@@ -122,7 +122,7 @@ class OpencastRetentionBatch
                 }
                 break;
             case 'running':
-                // (wait for scheduled date - run cleanupo script to remove events from series)
+                // (wait for scheduled date - run cleanup script to remove events from series)
                 break;
             case 'completed':
                 // All done

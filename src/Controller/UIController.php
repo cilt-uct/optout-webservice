@@ -374,7 +374,8 @@ class UIController extends Controller
             $last_email_date = $utils->getLastNotificationRetentionEmail($data['hash']);
 
             return $this->render($template,
-                    array(  'title' => $data['title'],
+                    array(  'template' => $template,
+                            'title' => $data['title'],
                             'series_id' => $data['series_id'],
                             'contributor' => $data['contributor'],
                             'username' => $data['username'],

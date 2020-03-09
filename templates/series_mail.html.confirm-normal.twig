@@ -238,9 +238,13 @@
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                         <tr>
                             <td style="padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #333333;">
-                                <p>Dear {{creator}},</p>
-                                <p>A new retention cycle policy has been implemented for lecture recording at UCT: lecture videos will be retained for 4 years by default, with options to retain recordings for 8 years or keep recordings indefinitely.</p>
-                                <p>The recordings for this recording series has now been deleted.</p>
+                                <!--{{template}}-->
+                                {% if not creator is empty %}
+                                <p>Dear {{creator | title}},</p>
+                                {% else %}
+                                <p>Hi,</p>
+                                {% endif %}
+                                <p>Following our email notification{% if last_email_date is not empty %} on <strong>{{last_email_date|date("l, d F Y")}}</strong>{% endif %}, we now advise that the recordings for <strong>{{title}}</strong> have been deleted, in accordance with the lecture recording retention cycle policy.</p>
 	                            <p>For any queries, please feel free to contact us.</p>
                                 <p>Thank you,</p>
                                 <p>
