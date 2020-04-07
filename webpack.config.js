@@ -42,7 +42,8 @@ Encore
     .addPlugin(new CopyWebpackPlugin([
         { from: './assets/images', to: 'images' },
         { from: './assets/js', to: 'js' },
-        { from: './assets/bootstrap/js/', to: 'js' }
+        { from: './assets/bootstrap/js/', to: 'js' },
+        { from: './assets/amchart4/', to: 'amchart4' }
     ]))
 ;
 

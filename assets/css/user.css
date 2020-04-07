@@ -1,9 +1,6 @@
 html, body {
   height: 100%;
 }
-body {
-  
-}
 
 body {
   display: flex;
@@ -14,6 +11,10 @@ body {
   color: #333;
   font-size: 14px;
   font-family: 'Work Sans', Calibri, sans-serif
+}
+
+.content {
+  flex: 1 0 auto;
 }
 
 header::after {
