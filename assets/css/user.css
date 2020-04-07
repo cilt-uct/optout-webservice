@@ -1,4 +1,9 @@
 body {
+  position: relative;
+  margin: 0;
+  padding-bottom: 6rem;
+  min-height: 100%;
+  
   color: #333;
   font-size: 14px;
   font-family: 'Work Sans', Calibri, sans-serif
@@ -758,12 +763,16 @@ header img.navbar-brand{
 }
 
 footer{
-  padding:20px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 1rem;
   text-align:center;
-  background-color: #f4f4f4;
+  background-color: hsl(0, 0%, 96%);
 
   color:#333;
-  font-size: 12px;
+  font-size: 10px;
   font-family: 'Work Sans', Calibri, sans-serif;
   line-height: 24px;
 }
