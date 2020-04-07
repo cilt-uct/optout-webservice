@@ -1,373 +1,376 @@
-{% include 'header.html' %}
-    <aside id="nav-side">
-        <ul>
-            <li><a href="#top" ref="top">Top</a></li>
-        {% for l in list %}
-            <li><a href="#{{l}}" ref="{{l}}">{{l}}</a></li>
-        {% endfor %}
-        </ul>
-    </aside>
-    <a name="top" class="anchor"></a>
-    <div class="container post">
-        <div class="row no-gutters" style="position: absolute; top: -38px; width: 100%;">
-            <div class="col-sm-8" style="padding-top: 10px;padding-left: 84px;">
-                <span style="color: #222;font-size: 0.8em;">Hi {{authenticated.z.result.0.name}},</span>
-            </div>
-            <div class="col-sm-4 align-self-end">
-                <ul class="nav nav-tabs">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#">Courses</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="https://srvslscet001.uct.ac.za/optout/series/">Series</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div class="row post-body">
-            <div class="col-md-12 post-title">
-                <h3><span style="color: #5caad2;">Lecture Recording</span> Admin</h3>
-                <br/>
-                <div class="workflow-details">
-                     <!--p>{{authenticated|json_encode()}}</p-->
-                     <!--p>{{workflow|json_encode()}}</p-->
-                     <!--
-                        TODO:
-                        - Save the department, Course, and Schedulet Date Times
-                        - Select a Different workflow (drop-down)
-                        - Add button to create new workflow - advance workflow
-                     -->
-
-                    <div class="form-row form-inline">
-                        <div class="col-md-3 mb-3">
-                            <strong>Year: </strong>
-                            <span>{{workflow.year}} - {{workflow.semester|upper}}</span>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <strong>Status: </strong>
-                            <span>{{workflow.status}}</span>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-md-3 mb-3">
-                            <label for="worflow_date_start">Started</label>
-
-                            <input type="text" class="form-control" id="worflow_date_start" value="{{workflow.date_start|date("Y-m-d H:i:s")}}" disabled readonly="true"/>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="worflow_date_dept">Department</label>
-
-                            <div class="row">
-                                <div class="col-sm-7">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control text-center" id="worflow_date_dept" value="{{workflow.date_dept|date("Y-m-d")}}" data-toggle="datepicker"
-                                                style="width: 70%"/>
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-secondary" id="worflow_date_dept_btn">
-                                                <i class="fa fa-calendar" aria-hidden="true"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--div class="col-sm-4" style="padding:0;">
-                                    <div class="input-group">
-                                        <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_dept|date("H")}}"/>
-                                        <div class="input-group-mid">
-                                            <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
-                                        </div>
-                                        <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_dept|date("i")}}"/>
-                                    </div>
-                                </div-->
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="worflow_date_course">Course</label>
-
-                            <div class="row">
-                                <div class="col-sm-7">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="worflow_date_course" value="{{workflow.date_course|date("Y-m-d")}}" data-toggle="datepicker"
-                                                style="width: 70%"/>
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-secondary" id="worflow_date_course_btn">
-                                                <i class="fa fa-calendar" aria-hidden="true"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--div class="col-sm-4" style="padding:0;">
-                                    <div class="input-group">
-                                        <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_course|date("H")}}"/>
-                                        <div class="input-group-mid">
-                                            <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
-                                        </div>
-                                        <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_course|date("i")}}"/>
-                                    </div>
-                                </div-->
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="worflow_date_schedule">Schedule</label>
-
-                            <div class="row">
-                                <div class="col-sm-7">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="worflow_date_schedule" value="{{workflow.date_schedule|date("Y-m-d")}}" data-toggle="datepicker"
-                                                style="width: 70%"/>
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-secondary" id="worflow_date_schedule_btn">
-                                                <i class="fa fa-calendar" aria-hidden="true"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--div class="col-sm-4" style="padding:0;">
-                                    <div class="input-group">
-                                        <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_schedule|date("H")}}"/>
-                                        <div class="input-group-mid">
-                                            <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
-                                        </div>
-                                        <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_schedule|date("i")}}"/>
-                                    </div>
-                                </div-->
-                            </div>
-                        </div>
-                    </div>
+{% include 'html_start.html' %}
+    <div class="content">
+        {% include 'header.html' %}
+        <aside id="nav-side">
+            <ul>
+                <li><a href="#top" ref="top">Top</a></li>
+            {% for l in list %}
+                <li><a href="#{{l}}" ref="{{l}}">{{l}}</a></li>
+            {% endfor %}
+            </ul>
+        </aside>
+        <a name="top" class="anchor"></a>
+        <div class="container post">
+            <div class="row no-gutters" style="position: absolute; top: -38px; width: 100%;">
+                <div class="col-sm-8" style="padding-top: 10px;padding-left: 84px;">
+                    <span style="color: #222;font-size: 0.8em;">Hi {{authenticated.z.result.0.name}},</span>
                 </div>
-                <br/>
-                <div class="departments" id="departments">
-                    {% if departments.success %}
-                        {% set newTitle = '0' %}
-                        {% for dept in departments.result %}
-                        <div>
-                            {% set curTitle = dept.dept|split('')|first %}
-                            {% if (curTitle != newTitle) %}
-                                {% set newTitle = curTitle %}
-                                <a name="{{newTitle}}" class="anchor"></a>
-                            {% endif %}
-                            <div class="row no-gutters dept-title">
-                                <div class="col-sm-6">
-                                    {% if (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
-                                    <h5>
-                                        <a href="https://srvslscet001.uct.ac.za/optout/view/{{dept.hash}}" target="_blank">
-                                            <i class="far fa-envelope"></i>
-                                            {{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small>
-                                        </a>
-                                    </h5>
-                                    {% else %}
-                                    <h5 style="margin:0.4em;">{{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small></h5>
-                                    {% endif %}
-                                </div>
-                                <div class="col-sm-2" style="padding-top:0.6em;">
-                                    <label>Active</label>
-                                    <div class="switch">
-                                        <input type="checkbox" id="chk_use_{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" {% if (dept.use_dept == '1') %}checked{% endif %} /><label id="toggle_use_{{dept.dept}}" for="chk_use_{{dept.dept}}">Toggle</label>
+                <div class="col-sm-4 align-self-end">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">Courses</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://srvslscet001.uct.ac.za/optout/series/">Series</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row post-body">
+                <div class="col-md-12 post-title">
+                    <h3><span style="color: #5caad2;">Lecture Recording</span> Admin</h3>
+                    <br/>
+                    <div class="workflow-details">
+                        <!--p>{{authenticated|json_encode()}}</p-->
+                        <!--p>{{workflow|json_encode()}}</p-->
+                        <!--
+                            TODO:
+                            - Save the department, Course, and Schedulet Date Times
+                            - Select a Different workflow (drop-down)
+                            - Add button to create new workflow - advance workflow
+                        -->
+
+                        <div class="form-row form-inline">
+                            <div class="col-md-3 mb-3">
+                                <strong>Year: </strong>
+                                <span>{{workflow.year}} - {{workflow.semester|upper}}</span>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <strong>Status: </strong>
+                                <span>{{workflow.status}}</span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-3 mb-3">
+                                <label for="worflow_date_start">Started</label>
+
+                                <input type="text" class="form-control" id="worflow_date_start" value="{{workflow.date_start|date("Y-m-d H:i:s")}}" disabled readonly="true"/>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="worflow_date_dept">Department</label>
+
+                                <div class="row">
+                                    <div class="col-sm-7">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control text-center" id="worflow_date_dept" value="{{workflow.date_dept|date("Y-m-d")}}" data-toggle="datepicker"
+                                                    style="width: 70%"/>
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-outline-secondary" id="worflow_date_dept_btn">
+                                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-sm-4" style="padding-top:0.6em;">
-                                    <label>Opted Out</label>
-                                    <label class="right" id="chk_opt_{{dept.dept}}_date">
-                                        {% if dept.updated_by|length > 1 %}{{dept.updated_by}}<br/>{{dept.updated_at|date("G:i l, jS F Y")}}{% endif %}
-                                    </label>
-                                    <div class="switch">
-                                        <input type="checkbox" id="chk_opt_{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" {% if dept.is_optout %}checked{% endif %}/><label id="toggle_opt_{{dept.dept}}" for="chk_opt_{{dept.dept}}">Toggle</label>
-                                    </div>
+                                    <!--div class="col-sm-4" style="padding:0;">
+                                        <div class="input-group">
+                                            <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_dept|date("H")}}"/>
+                                            <div class="input-group-mid">
+                                                <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
+                                            </div>
+                                            <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_dept|date("i")}}"/>
+                                        </div>
+                                    </div-->
                                 </div>
                             </div>
-                            <div class="row no-gutters dept-details">
-                                <div class="col-sm-8">
-                                    <h6>Contact Details</h6>
-                                    <div class="form-group row">
-                                        <label for="inp_{{dept.dept}}_firstname" class="col-sm-3 col-form-label">Name</label>
-                                        <div class="col-sm-4">
-                                            <input type="text" class="form-control"
-                                                    id="inp_{{dept.dept}}_firstname" data-type="dept" data-field="hodFirstname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
-                                                    placeholder="Firstname" data-old="{{dept.firstname}}" value="{{dept.firstname}}"/>
-                                            <span class="loader">
-                                                <span></span>
-                                                <span></span>
-                                                <span></span>
-                                            </span>
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <input type="text" class="form-control"
-                                                    id="inp_{{dept.dept}}_lastname" data-type="dept" data-field="hodLastname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
-                                                    placeholder="Lastname" data-old="{{dept.lastname}}" value="{{dept.lastname}}"/>
-                                            <span class="loader">
-                                                <span></span>
-                                                <span></span>
-                                                <span></span>
-                                            </span>
+                            <div class="col-md-3 mb-3">
+                                <label for="worflow_date_course">Course</label>
+
+                                <div class="row">
+                                    <div class="col-sm-7">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="worflow_date_course" value="{{workflow.date_course|date("Y-m-d")}}" data-toggle="datepicker"
+                                                    style="width: 70%"/>
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-outline-secondary" id="worflow_date_course_btn">
+                                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="form-group row">
-                                        <label for="inp_{{dept.dept}}_eid" class="col-sm-3 col-form-label">EID</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" class="form-control disabled"
-                                                    id="inp_{{dept.dept}}_eid" data-type="dept" data-field="hodEID" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
-                                                    placeholder="EID" data-old="{{dept.eid}}" value="{{dept.eid}}" readonly/>
-                                            <span class="loader">
-                                                <span></span>
-                                                <span></span>
-                                                <span></span>
-                                            </span>
+                                    <!--div class="col-sm-4" style="padding:0;">
+                                        <div class="input-group">
+                                            <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_course|date("H")}}"/>
+                                            <div class="input-group-mid">
+                                                <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
+                                            </div>
+                                            <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_course|date("i")}}"/>
+                                        </div>
+                                    </div-->
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="worflow_date_schedule">Schedule</label>
+
+                                <div class="row">
+                                    <div class="col-sm-7">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="worflow_date_schedule" value="{{workflow.date_schedule|date("Y-m-d")}}" data-toggle="datepicker"
+                                                    style="width: 70%"/>
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-outline-secondary" id="worflow_date_schedule_btn">
+                                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="form-group row">
-                                        <label for="inp_{{dept.dept}}_mail" class="col-sm-3 col-form-label">E-mail</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" class="form-control"
-                                                    id="inp_{{dept.dept}}_mail" data-type="dept" data-field="hodMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
-                                                    placeholder="E-mail" data-old="{{dept.email|lower}}" value="{{dept.email|lower}}"/>
-                                            <span class="loader">
-                                                <span></span>
-                                                <span></span>
-                                                <span></span>
-                                            </span>
+                                    <!--div class="col-sm-4" style="padding:0;">
+                                        <div class="input-group">
+                                            <input aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" class="form-control text-center" type="text" value="{{workflow.date_schedule|date("H")}}"/>
+                                            <div class="input-group-mid">
+                                                <span class="input-group-text" id="inputGroup-sizing-sm">:</span>
+                                            </div>
+                                            <input class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="width: 1%;" type="text" value="{{workflow.date_schedule|date("i")}}"/>
+                                        </div>
+                                    </div-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="departments" id="departments">
+                        {% if departments.success %}
+                            {% set newTitle = '0' %}
+                            {% for dept in departments.result %}
+                            <div>
+                                {% set curTitle = dept.dept|split('')|first %}
+                                {% if (curTitle != newTitle) %}
+                                    {% set newTitle = curTitle %}
+                                    <a name="{{newTitle}}" class="anchor"></a>
+                                {% endif %}
+                                <div class="row no-gutters dept-title">
+                                    <div class="col-sm-6">
+                                        {% if (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
+                                        <h5>
+                                            <a href="https://srvslscet001.uct.ac.za/optout/view/{{dept.hash}}" target="_blank">
+                                                <i class="far fa-envelope"></i>
+                                                {{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small>
+                                            </a>
+                                        </h5>
+                                        {% else %}
+                                        <h5 style="margin:0.4em;">{{dept.dept}}&nbsp;&nbsp;<small>{{dept.name}}</small></h5>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-sm-2" style="padding-top:0.6em;">
+                                        <label>Active</label>
+                                        <div class="switch">
+                                            <input type="checkbox" id="chk_use_{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" {% if (dept.use_dept == '1') %}checked{% endif %} /><label id="toggle_use_{{dept.dept}}" for="chk_use_{{dept.dept}}">Toggle</label>
                                         </div>
                                     </div>
-                                    <div class="form-group row">
-                                        <label for="inp_{{dept.dept}}_alt" class="col-sm-3 col-form-label">Alternative E-mail</label>
-                                        <div class="col-sm-8" id="{{dept.dept}}_alt_mail_container" style="position: relative;">
-                                            {% set alt_mails = dept.alt_email|split(',') %}
-                                            <input type="hidden" id="{{dept.dept}}_alt" name="{{dept.dept}}_alt" value="{{dept.alt_email}}"/>
-                                            <input type="hidden" id="inp_{{dept.dept}}_alt_mails" name="inp_{{dept.dept}}_alt_mails" value="{{alt_mails|length}}"/>
-                                            {% for mail in alt_mails %}
-                                            <div class="multi" id="{{dept.dept}}_alt_{{ loop.index }}">
-                                                <a href="#" class="{% if loop.index == 1 %}success{% else %}danger{% endif %}" rel="{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" data-index="{{ loop.index }}">
-                                                    <i class="fa {% if loop.index == 1 %}fa-plus{% else %}fa-minus{% endif %}" aria-hidden="true"></i>
-                                                </a>
+                                    <div class="col-sm-4" style="padding-top:0.6em;">
+                                        <label>Opted Out</label>
+                                        <label class="right" id="chk_opt_{{dept.dept}}_date">
+                                            {% if dept.updated_by|length > 1 %}{{dept.updated_by}}<br/>{{dept.updated_at|date("G:i l, jS F Y")}}{% endif %}
+                                        </label>
+                                        <div class="switch">
+                                            <input type="checkbox" id="chk_opt_{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" {% if dept.is_optout %}checked{% endif %}/><label id="toggle_opt_{{dept.dept}}" for="chk_opt_{{dept.dept}}">Toggle</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row no-gutters dept-details">
+                                    <div class="col-sm-8">
+                                        <h6>Contact Details</h6>
+                                        <div class="form-group row">
+                                            <label for="inp_{{dept.dept}}_firstname" class="col-sm-3 col-form-label">Name</label>
+                                            <div class="col-sm-4">
                                                 <input type="text" class="form-control"
-                                                        id="inp_{{dept.dept}}_alt_{{ loop.index }}" data-type="dept" data-field="altMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
-                                                        data-index="{{ loop.index }}"
-                                                        placeholder="E-mail" data-old="{{mail}}" value="{{mail|lower}}"/>
+                                                        id="inp_{{dept.dept}}_firstname" data-type="dept" data-field="hodFirstname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
+                                                        placeholder="Firstname" data-old="{{dept.firstname}}" value="{{dept.firstname}}"/>
                                                 <span class="loader">
                                                     <span></span>
                                                     <span></span>
                                                     <span></span>
                                                 </span>
                                             </div>
-                                            {% endfor %}
+                                            <div class="col-sm-4">
+                                                <input type="text" class="form-control"
+                                                        id="inp_{{dept.dept}}_lastname" data-type="dept" data-field="hodLastname" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
+                                                        placeholder="Lastname" data-old="{{dept.lastname}}" value="{{dept.lastname}}"/>
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="inp_{{dept.dept}}_eid" class="col-sm-3 col-form-label">EID</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control disabled"
+                                                        id="inp_{{dept.dept}}_eid" data-type="dept" data-field="hodEID" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
+                                                        placeholder="EID" data-old="{{dept.eid}}" value="{{dept.eid}}" readonly/>
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="inp_{{dept.dept}}_mail" class="col-sm-3 col-form-label">E-mail</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control"
+                                                        id="inp_{{dept.dept}}_mail" data-type="dept" data-field="hodMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
+                                                        placeholder="E-mail" data-old="{{dept.email|lower}}" value="{{dept.email|lower}}"/>
+                                                <span class="loader">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="inp_{{dept.dept}}_alt" class="col-sm-3 col-form-label">Alternative E-mail</label>
+                                            <div class="col-sm-8" id="{{dept.dept}}_alt_mail_container" style="position: relative;">
+                                                {% set alt_mails = dept.alt_email|split(',') %}
+                                                <input type="hidden" id="{{dept.dept}}_alt" name="{{dept.dept}}_alt" value="{{dept.alt_email}}"/>
+                                                <input type="hidden" id="inp_{{dept.dept}}_alt_mails" name="inp_{{dept.dept}}_alt_mails" value="{{alt_mails|length}}"/>
+                                                {% for mail in alt_mails %}
+                                                <div class="multi" id="{{dept.dept}}_alt_{{ loop.index }}">
+                                                    <a href="#" class="{% if loop.index == 1 %}success{% else %}danger{% endif %}" rel="{{dept.dept}}" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}" data-index="{{ loop.index }}">
+                                                        <i class="fa {% if loop.index == 1 %}fa-plus{% else %}fa-minus{% endif %}" aria-hidden="true"></i>
+                                                    </a>
+                                                    <input type="text" class="form-control"
+                                                            id="inp_{{dept.dept}}_alt_{{ loop.index }}" data-type="dept" data-field="altMail" data-dept="{{dept.dept}}" data-hash="{{dept.hash}}"
+                                                            data-index="{{ loop.index }}"
+                                                            placeholder="E-mail" data-old="{{mail}}" value="{{mail|lower}}"/>
+                                                    <span class="loader">
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                    </span>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <h6>&nbsp;</h6>
-                                    {% if (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th colspan="2" style="width: 180px;">&nbsp;</th>
-                                                    <th class="text-center" style="width: 80px;"><small style="color: #888;">S1</small></th>
-                                                    <th class="text-center" style="width: 80px;"><small style="color: #888;">S2</small></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td colspan="2" class="text-right">
-                                                        <strong>Eligble Courses:</strong>
-                                                    </td>
-                                                    <td class="text-center">{{dept.eligble_courses_S1}}</td>
-                                                    <td class="text-center">{{dept.eligble_courses_S2}}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td colspan="2"><hr/></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-right" rowspan="4">
-                                                        <strong>Mails:</strong>
-                                                    </td>
-                                                    <td class="text-right"><small>Notification</td>
-                                                    </td>
-                                                    <td class="text-center">{{dept.s1_mail_sent_note|default('0')}}</td>
-                                                    <td class="text-center">{{dept.s2_mail_sent_note|default('0')}}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-right"><small>Confirmation</small></td>
-                                                    <td class="text-center">{{dept.s1_mail_sent_confirm|default('0')}}</td>
-                                                    <td class="text-center">{{dept.s2_mail_sent_confirm|default('0')}}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-right"><small>To Send</small></td>
-                                                    <td class="text-center">
-                                                        {% if (dept.s1_mail_unsent > 0) %}
-                                                            <span class="info">{{dept.s1_mail_unsent|default('0')}}</span>
-                                                        {% else %}
-                                                            <small class="info">-</small>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td class="text-center">
-                                                        {% if (dept.s2_mail_unsent > 0) %}
-                                                            <span class="info">{{dept.s2_mail_unsent|default('0')}}</span>
-                                                        {% else %}
-                                                            <small class="info">-</small>
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-right"><small>Error</small></td>
-                                                    <td class="text-center">
-                                                        {% if (dept.s1_mail_err > 0) %}
-                                                            <span class="danger">{{dept.s1_mail_err|default('0')}}</span>
-                                                        {% else %}
-                                                            <small class="danger">-</small>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td class="text-center">
-                                                        {% if (dept.s2_mail_err > 0) %}
-                                                            <span class="danger">{{dept.s2_mail_err|default('0')}}</span>
-                                                        {% else %}
-                                                            <small class="danger">-</small>
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                        <br/>
-                                        <div class="text-center">
-                                            {% set out_semester = workflow.semester ~"|"~ dept.eligble_courses_S1 ~"|"~ dept.eligble_courses_S2 %}
-                                            {% set out_s1 = "s1|"~ dept.eligble_courses_S1 ~"|"~ dept.eligble_courses_S2 %}
-                                            {% set out_s2 = "s2|"~ dept.eligble_courses_S1 ~"|"~ dept.eligble_courses_S2 %}
-                                            {% if (dept.eligble_courses_S1 > 0) and (dept.eligble_courses_S2 > 0) %}
-                                                <div class="btn-group" style="width:60%">
-                                                    <button type="button" ref="btn_view_course" data-sem="{{out_semester}}" class="btn btn-outline-success btn-sm" style="width:80%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
-                                                    <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                                                    <div class="dropdown-menu dropdown-menu-right">
-                                                        <a class="dropdown-item" href="#" ref="btn_view_course" data-sem="{{out_s1}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">Semester 1</a>
-                                                        <a class="dropdown-item" href="#" ref="btn_view_course" data-sem="{{out_s2}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">Semester 2</a>
+                                    <div class="col-sm-4">
+                                        <h6>&nbsp;</h6>
+                                        {% if (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th colspan="2" style="width: 180px;">&nbsp;</th>
+                                                        <th class="text-center" style="width: 80px;"><small style="color: #888;">S1</small></th>
+                                                        <th class="text-center" style="width: 80px;"><small style="color: #888;">S2</small></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td colspan="2" class="text-right">
+                                                            <strong>Eligble Courses:</strong>
+                                                        </td>
+                                                        <td class="text-center">{{dept.eligble_courses_S1}}</td>
+                                                        <td class="text-center">{{dept.eligble_courses_S2}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="2"><hr/></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-right" rowspan="4">
+                                                            <strong>Mails:</strong>
+                                                        </td>
+                                                        <td class="text-right"><small>Notification</td>
+                                                        </td>
+                                                        <td class="text-center">{{dept.s1_mail_sent_note|default('0')}}</td>
+                                                        <td class="text-center">{{dept.s2_mail_sent_note|default('0')}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-right"><small>Confirmation</small></td>
+                                                        <td class="text-center">{{dept.s1_mail_sent_confirm|default('0')}}</td>
+                                                        <td class="text-center">{{dept.s2_mail_sent_confirm|default('0')}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-right"><small>To Send</small></td>
+                                                        <td class="text-center">
+                                                            {% if (dept.s1_mail_unsent > 0) %}
+                                                                <span class="info">{{dept.s1_mail_unsent|default('0')}}</span>
+                                                            {% else %}
+                                                                <small class="info">-</small>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {% if (dept.s2_mail_unsent > 0) %}
+                                                                <span class="info">{{dept.s2_mail_unsent|default('0')}}</span>
+                                                            {% else %}
+                                                                <small class="info">-</small>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-right"><small>Error</small></td>
+                                                        <td class="text-center">
+                                                            {% if (dept.s1_mail_err > 0) %}
+                                                                <span class="danger">{{dept.s1_mail_err|default('0')}}</span>
+                                                            {% else %}
+                                                                <small class="danger">-</small>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {% if (dept.s2_mail_err > 0) %}
+                                                                <span class="danger">{{dept.s2_mail_err|default('0')}}</span>
+                                                            {% else %}
+                                                                <small class="danger">-</small>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <br/>
+                                            <div class="text-center">
+                                                {% set out_semester = workflow.semester ~"|"~ dept.eligble_courses_S1 ~"|"~ dept.eligble_courses_S2 %}
+                                                {% set out_s1 = "s1|"~ dept.eligble_courses_S1 ~"|"~ dept.eligble_courses_S2 %}
+                                                {% set out_s2 = "s2|"~ dept.eligble_courses_S1 ~"|"~ dept.eligble_courses_S2 %}
+                                                {% if (dept.eligble_courses_S1 > 0) and (dept.eligble_courses_S2 > 0) %}
+                                                    <div class="btn-group" style="width:60%">
+                                                        <button type="button" ref="btn_view_course" data-sem="{{out_semester}}" class="btn btn-outline-success btn-sm" style="width:80%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
+                                                        <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                                        <div class="dropdown-menu dropdown-menu-right">
+                                                            <a class="dropdown-item" href="#" ref="btn_view_course" data-sem="{{out_s1}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">Semester 1</a>
+                                                            <a class="dropdown-item" href="#" ref="btn_view_course" data-sem="{{out_s2}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">Semester 2</a>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            {% elseif (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
-                                                <button type="button" ref="btn_view_course" data-sem="{{out_semester}}" class="btn btn-outline-success btn-sm" style="width:60%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
-                                            {% endif %}
-                                        </div>
-                                    {% endif %}
+                                                {% elseif (dept.eligble_courses_S1 > 0) or (dept.eligble_courses_S2 > 0) %}
+                                                    <button type="button" ref="btn_view_course" data-sem="{{out_semester}}" class="btn btn-outline-success btn-sm" style="width:60%" id="btn_view_{{dept.dept}}" data-rel="{{dept.dept}}" data-hash="{{dept.hash}}">View Courses</button>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row no-gutters dept-courses" id="{{dept.dept}}_courses">
+                                    <ul class="nav nav-tabs">
+                                        {% if (dept.eligble_courses_S1 > 0) %}
+                                        <li class="nav-item">
+                                            <a class="nav-link {% if (workflow.semester == 's1') %}active{% endif %}" id="{{dept.dept}}_courses-s1_tab" data-toggle="tab" href="#{{dept.dept}}_courses-s1" role="tab" aria-controls="{{dept.dept}}_courses-s1" aria-selected="{% if (workflow.semester == 's1') %}true{% endif %}">Semester 1</a>
+                                        </li>
+                                        {% endif %}
+                                        {% if (dept.eligble_courses_S2 > 0) %}
+                                        <li class="nav-item">
+                                            <a class="nav-link {% if (workflow.semester == 's2') %}active{% endif %}" id="{{dept.dept}}_courses-s2_tab" data-toggle="tab" href="#{{dept.dept}}_courses-s2" role="tab" aria-controls="{{dept.dept}}_courses-s2" aria-selected="{% if (workflow.semester == 's2') %}false{% endif %}">Semester 2</a>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                    <div class="tab-content" id="{{dept.dept}}_courses_html"></div>
                                 </div>
                             </div>
-                            <div class="row no-gutters dept-courses" id="{{dept.dept}}_courses">
-                                <ul class="nav nav-tabs">
-                                    {% if (dept.eligble_courses_S1 > 0) %}
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if (workflow.semester == 's1') %}active{% endif %}" id="{{dept.dept}}_courses-s1_tab" data-toggle="tab" href="#{{dept.dept}}_courses-s1" role="tab" aria-controls="{{dept.dept}}_courses-s1" aria-selected="{% if (workflow.semester == 's1') %}true{% endif %}">Semester 1</a>
-                                    </li>
-                                    {% endif %}
-                                    {% if (dept.eligble_courses_S2 > 0) %}
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if (workflow.semester == 's2') %}active{% endif %}" id="{{dept.dept}}_courses-s2_tab" data-toggle="tab" href="#{{dept.dept}}_courses-s2" role="tab" aria-controls="{{dept.dept}}_courses-s2" aria-selected="{% if (workflow.semester == 's2') %}false{% endif %}">Semester 2</a>
-                                    </li>
-                                    {% endif %}
-                                </ul>
-                                <div class="tab-content" id="{{dept.dept}}_courses_html"></div>
-                            </div>
-                        </div>
-                        {% endfor %}
+                            {% endfor %}
+                    </div>
+                    {% else %}
+                    {{departments|json_encode()}}
+                    {% endif %}
                 </div>
-                {% else %}
-                {{departments|json_encode()}}
-                {% endif %}
             </div>
         </div>
-    </div>
+    </div>        
     <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>
@@ -447,7 +450,7 @@
             });
             $('#worflow_date_course').on('dp.change', function (e) {
                 //$('#worflow_date_dept').datetimepicker('maxDate', e.date);
-               // $('#worflow_date_schedule').datetimepicker('minDate', e.date);
+            // $('#worflow_date_schedule').datetimepicker('minDate', e.date);
                 console.log(e);
             });
             $('#datetimepicker8').on('dp.change', function (e) {
@@ -504,7 +507,7 @@
                         $('#'+ btn.data('rel') +'_courses').hide();
                         btn.removeClass('btn-outline-info').addClass('btn-outline-success').html('View Courses');
                     } else {
-                       display_courses(btn.data('hash'), btn.data('rel'), sem);
+                    display_courses(btn.data('hash'), btn.data('rel'), sem);
                     }
                 }
             });
@@ -751,7 +754,5 @@
         });
     </script>
     {{ source('admin_templates.html') }}
-    {% include 'footer.html' %}
-    <!-- https://www.pexels.com/photo/auditorium-benches-chairs-class-207691/ -->
-</body>
-</html>
+{% include 'footer.html' %}
+{% include 'html_end.html' %}

@@ -1,15 +1,16 @@
-{% include 'header.html' %}
-    <div class="container post">
-        <div class="row post-body">
-            <div class="col-md-12 post-title">
-                <h3><span style="color: #5caad2;">Lecture Recording</span> Series Details</h3>
-                <br/>
-                <div class="alert alert-danger" role="alert">Error loading recordings.<br/>
-                    {% if err is defined %}<small>{{err | raw }}</small>{% endif %}</div>
+{% include 'html_start.html' %}
+    <div class="content">
+        {% include 'header.html' %}
+        <div class="container post">
+            <div class="row post-body">
+                <div class="col-md-12 post-title">
+                    <h3><span style="color: #5caad2;">Lecture Recording</span> Series Details</h3>
+                    <br/>
+                    <div class="alert alert-danger" role="alert">Error loading recordings.<br/>
+                        {% if err is defined %}<small>{{err | raw }}</small>{% endif %}</div>
+                </div>
             </div>
         </div>
     </div>
-    {% include 'footer.html' %}
-    <!-- https://www.pexels.com/photo/auditorium-benches-chairs-class-207691/ -->
-</body>
-</html>
+{% include 'footer.html' %}
+{% include 'html_end.html' %}
