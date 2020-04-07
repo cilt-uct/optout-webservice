@@ -1338,6 +1338,39 @@ aside li > a:active {
 }
 
 /******************************************/
+.graph_container {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  grid-column-gap: 4px;
+  grid-row-gap: 4px;
+}
+
+.graph_container > div {
+  border: 1px solid #337ab7;
+}
+  
+ 
+.graph_container > .div1 { grid-area: 1 / 1 / 4 / 2; }
+.graph_container > .div2 { grid-area: 1 / 2 / 4 / 5; }
+.graph_container > .div3 { grid-area: 1 / 5 / 3 / 7; }
+.graph_container > .div4 { grid-area: 3 / 5 / 4 / 7; }
+.graph_container > .div5 { grid-area: 1 / 7 / 4 / 8; }
+.graph_container > .div6 { grid-area: 4 / 1 / 5 / 2; }
+.graph_container > .div7 { grid-area: 4 / 2 / 5 / 4; }
+.graph_container > .div8 { grid-area: 4 / 4 / 5 / 6; }
+.graph_container > .div9 { grid-area: 4 / 6 / 5 / 8; }
+.graph_container > .div10 { grid-area: 5 / 1 / 6 / 2; }
+.graph_container > .div11 { grid-area: 5 / 2 / 6 / 5; }
+.graph_container > .div12 { grid-area: 5 / 5 / 6 / 8; }
+.graph_container > .div13 { grid-area: 6 / 1 / 7 / 2; }
+.graph_container > .div14 { grid-area: 6 / 2 / 7 / 8; }
+.graph_container > .div15 { grid-area: 7 / 1 / 8 / 2; }
+.graph_container > .div16 { grid-area: 7 / 2 / 8 / 3; }
+.graph_container > .div17 { grid-area: 7 / 3 / 8 / 5; }
+.graph_container > .div18 { grid-area: 7 / 5 / 8 / 8; }
+
+/******************************************/
 .select-css {
   display: block;
   font-size: 14px;

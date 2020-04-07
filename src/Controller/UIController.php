@@ -959,6 +959,8 @@ class UIController extends Controller
         $now = new \DateTime();
         $utils = new Utilities();
         $data = []; //$utils->getMail($hash);
+        $data['course'] = $hash;
+        $data['created_at'] = (new \DateTime())->format('Y-m-d H:i:s');     
 
         switch ($request->getMethod()) {
             case 'POST':

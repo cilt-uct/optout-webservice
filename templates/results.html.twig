@@ -5,9 +5,76 @@
             <div class="row post-body">
                 <div class="col-md-12 post-title">
 
-                    <h3><span style="color: #5caad2;">{ {course} }</span><small>&nbsp;:&nbsp;Automated setup of lecture recording</small></h3>
-                    <p class="author"><span class="text-muted">{ {created_at|date("F jS \\a\\t g:ia")} }</span></p>
+                    <h3><span style="color: #5caad2;">{{course|capitalize}}</span><small>&nbsp;:&nbsp;Student Survey Results</small></h3>
+                    <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
                     <br/>
+
+                    <div id="chartdiv"></div>
+
+                    <div class="graph_container">
+                        <div class="div1">
+                            <h4>Response</h4>
+                        </div>
+                        <div class="div2">
+                            <div>16,505</div>
+                            <div>Completed Surveys</div>
+                        </div>
+                        <div class="div3">
+                            <div>78.4%</div>
+                            <div>Undergraduate Response Rate</div>
+                        </div>
+                        <div class="div4">
+                            <div>31.7%</div>
+                            <div>Postgraduate Response Rate</div>
+                        </div>
+                        <div class="div5">
+                            <img src="{{ asset('public/build/images/DASS_logo_Round_Colour.png') }}" alt="DASS"/>
+                        </div>
+
+                        <div class="div6">
+                            <h4>Access</h4>
+                        </div>
+                        <div class="div7">
+                            <h5>Access to devices</h5>
+                        </div>
+                        <div class="div8">
+                            <h5>Access to internet</h5>
+                        </div>
+                        <div class="div9">
+                            <h5>Type of access to devices</h5>
+                        </div>
+
+                        <div class="div10">
+                            <h4>Engagement</h4>
+                        </div>
+                        <div class="div11">
+                            <h5>Conditions of access to laptop or desktop computer</h5>
+                        </div>
+                        <div class="div12">
+                            <h5>Hours per day I am able to study online (after lockdown)</h5>
+                        </div>
+
+                        <div class="div13">
+                            <h4>Activities</h4>
+                        </div>
+                        <div class="div14">
+                            <h5>Things I can do online ignoring data costs or usage caps (After lockdown ends)</h5>
+                        </div>
+
+                        <div class="div15">
+                            <h4>Tutors</h4>
+                        </div>
+                        <div class="div16">
+                            <div>1017</div>
+                            <div>Employed by UCT</div>
+                        </div>
+                        <div class="div17">
+                            <h5>Availability</h5>
+                        </div>
+                        <div class="div18">
+                            <h5>Hours per day I can tutor online</h5>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -16,10 +83,87 @@
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    
+    <script src="{{ asset('assets/amcharts4/core.js') }}"></script>
+    <script src="{{ asset('assets/amcharts4/charts.js') }}"></script>
+    <script src="{{ asset('assets/amcharts4/themes/animated.js') }}"></script>
+    <script src="index.js"></script>
     <script>
-        $(function() {
+        function drawGraph() {
+            am4core.useTheme(am4themes_animated);
 
+            var chart = am4core.create("chartdiv", am4charts.XYChart);
+
+
+            chart.colors.saturation = 0.4;
+
+            chart.data = [{
+                "country": "USA",
+                "visits": 3025
+            }, {
+                "country": "China",
+                "visits": 1882
+            }, {
+                "country": "Japan",
+                "visits": 1809
+            }, {
+                "country": "Germany",
+                "visits": 1322
+            }, {
+                "country": "UK",
+                "visits": 1122
+            }, {
+                "country": "France",
+                "visits": 1114
+            }, {
+                "country": "India",
+                "visits": 984
+            }, {
+                "country": "Spain",
+                "visits": 711
+            }, {
+                "country": "Netherlands",
+                "visits": 665
+            }, {
+                "country": "Russia",
+                "visits": 580
+            }, {
+                "country": "South Korea",
+                "visits": 443
+            }, {
+                "country": "Canada",
+                "visits": 441
+            }];
+
+
+            var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+            categoryAxis.renderer.grid.template.location = 0;
+            categoryAxis.dataFields.category = "country";
+            categoryAxis.renderer.minGridDistance = 20;
+
+            var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+            valueAxis.renderer.maxLabelPosition = 0.98;
+
+            var series = chart.series.push(new am4charts.ColumnSeries());
+            series.dataFields.categoryY = "country";
+            series.dataFields.valueX = "visits";
+            series.tooltipText = "{valueX.value}";
+            series.sequencedInterpolation = true;
+            series.defaultState.transitionDuration = 1000;
+            series.sequencedInterpolationDelay = 100;
+            series.columns.template.strokeOpacity = 0;
+
+            chart.cursor = new am4charts.XYCursor();
+            chart.cursor.behavior = "panY";
+
+
+            // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
+            series.columns.template.adapter.add("fill", function (fill, target) {
+                return chart.colors.getIndex(target.dataItem.index);
+            });
+        }    
+
+        $(function() {
+            drawGraph()
         });
     </script>
     
