@@ -1,0 +1,27 @@
+{% include 'html_start.html' %}
+    <div class="content">
+        {% include 'header.html' %}
+        <div class="container post">
+            <div class="row post-body">
+                <div class="col-md-12 post-title">
+
+                    <h3><span style="color: #5caad2;">{ {course} }</span><small>&nbsp;:&nbsp;Automated setup of lecture recording</small></h3>
+                    <p class="author"><span class="text-muted">{ {created_at|date("F jS \\a\\t g:ia")} }</span></p>
+                    <br/>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/js/tmpl.js') }}"></script>
+    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
+    <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    
+    <script>
+        $(function() {
+
+        });
+    </script>
+    
+{% include 'footer.html' %}
+{% include 'html_end.html' %}
