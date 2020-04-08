@@ -958,9 +958,12 @@ class UIController extends Controller
 
         $now = new \DateTime();
         $utils = new Utilities();
-        $data = []; //$utils->getMail($hash);
+        $data = $utils->getSurveyResults($hash);
+
         $data['course'] = $hash;
         $data['created_at'] = (new \DateTime())->format('Y-m-d H:i:s');     
+
+
 
         switch ($request->getMethod()) {
             case 'POST':
@@ -993,8 +996,8 @@ class UIController extends Controller
                 $authenticated['a'] = $session->get('username') ? true : false;
             break;
         }
-        //return new Response(json_encode($data), 201);
-        return $this->render('results.html.twig', $data);
+        return new Response(json_encode($data), 201);
+        // return $this->render('results.html.twig', $data);
 
         // if (!$data['success']) {
         //     return $this->render('error.html.twig', $data);

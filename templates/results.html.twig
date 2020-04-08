@@ -9,71 +9,86 @@
                     <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
                     <br/>
 
-                    <div id="chartdiv"></div>
-
                     <div class="graph_container">
                         <div class="div1">
                             <h4>Response</h4>
                         </div>
-                        <div class="div2">
-                            <div>16,505</div>
-                            <div>Completed Surveys</div>
+                        <div class="div2 text">
+                            <div class="text-L">
+                                <span>16,505</span>
+                                <span>Completed Surveys</span>
+                            </div>
                         </div>
-                        <div class="div3">
-                            <div>78.4%</div>
-                            <div>Undergraduate Response Rate</div>
+                        <div class="div3 text">
+                            <div class="text-M">
+                                <span>78.4%</span>
+                                <span>Undergraduate Response Rate</span>
+                            </div>
+                            <!--div class="div4 text">
+                                <div class="text-S">
+                                    <span>31.7%</span>
+                                    <span>Postgraduate Response Rate</span>
+                                </div>
+                            </div-->
                         </div>
+                        
                         <div class="div4">
-                            <div>31.7%</div>
-                            <div>Postgraduate Response Rate</div>
-                        </div>
-                        <div class="div5">
                             <img src="{{ asset('public/build/images/DASS_logo_Round_Colour.png') }}" alt="DASS"/>
                         </div>
 
-                        <div class="div6">
+                        <div class="div5">
                             <h4>Access</h4>
                         </div>
-                        <div class="div7">
+                        <div class="div6">
                             <h5>Access to devices</h5>
+                            <div id="chart_access_device"></div>
+                        </div>
+                        <div class="div7">
+                            <h5>Access to internet</h5>
+                            <div id="chart_access_internet"></div>
                         </div>
                         <div class="div8">
-                            <h5>Access to internet</h5>
-                        </div>
-                        <div class="div9">
                             <h5>Type of access to devices</h5>
+                            <div id="chart_access_type"></div>
                         </div>
 
-                        <div class="div10">
+                        <div class="div9">
                             <h4>Engagement</h4>
                         </div>
-                        <div class="div11">
+                        <div class="div10">
                             <h5>Conditions of access to laptop or desktop computer</h5>
+                            <div id="chart_engagement_acces"></div>
                         </div>
-                        <div class="div12">
+                        <div class="div11">
                             <h5>Hours per day I am able to study online (after lockdown)</h5>
+                            <div id="chart_engagement_hours"></div>
                         </div>
 
-                        <div class="div13">
+                        <div class="div12">
                             <h4>Activities</h4>
                         </div>
-                        <div class="div14">
+                        <div class="div13">
                             <h5>Things I can do online ignoring data costs or usage caps (After lockdown ends)</h5>
+                            <div id="chart_activities"></div>
                         </div>
 
-                        <div class="div15">
+                        <!--div class="div14">
                             <h4>Tutors</h4>
                         </div>
+                        <div class="div15 text">
+                            <div class="text-M">
+                                <span>1 017</span>
+                                <span>Employed by UCT</span>
+                            </div>
+                        </div>
                         <div class="div16">
-                            <div>1017</div>
-                            <div>Employed by UCT</div>
+                            <h5>Availability</h5>
+                            <div id="chart_tutor_availability"></div>
                         </div>
                         <div class="div17">
-                            <h5>Availability</h5>
-                        </div>
-                        <div class="div18">
                             <h5>Hours per day I can tutor online</h5>
-                        </div>
+                            <div id="chart_tutor_hours"></div>
+                        </div-->
                     </div>
                 </div>
             </div>
@@ -88,82 +103,703 @@
     <script src="{{ asset('assets/amcharts4/themes/animated.js') }}"></script>
     <script src="index.js"></script>
     <script>
-        function drawGraph() {
-            am4core.useTheme(am4themes_animated);
-
-            var chart = am4core.create("chartdiv", am4charts.XYChart);
-
-
-            chart.colors.saturation = 0.4;
-
-            chart.data = [{
-                "country": "USA",
-                "visits": 3025
-            }, {
-                "country": "China",
-                "visits": 1882
-            }, {
-                "country": "Japan",
-                "visits": 1809
-            }, {
-                "country": "Germany",
-                "visits": 1322
-            }, {
-                "country": "UK",
-                "visits": 1122
-            }, {
-                "country": "France",
-                "visits": 1114
-            }, {
-                "country": "India",
-                "visits": 984
-            }, {
-                "country": "Spain",
-                "visits": 711
-            }, {
-                "country": "Netherlands",
-                "visits": 665
-            }, {
-                "country": "Russia",
-                "visits": 580
-            }, {
-                "country": "South Korea",
-                "visits": 443
-            }, {
-                "country": "Canada",
-                "visits": 441
-            }];
-
-
-            var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
-            categoryAxis.renderer.grid.template.location = 0;
-            categoryAxis.dataFields.category = "country";
-            categoryAxis.renderer.minGridDistance = 20;
-
-            var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
-            valueAxis.renderer.maxLabelPosition = 0.98;
-
-            var series = chart.series.push(new am4charts.ColumnSeries());
-            series.dataFields.categoryY = "country";
-            series.dataFields.valueX = "visits";
-            series.tooltipText = "{valueX.value}";
-            series.sequencedInterpolation = true;
-            series.defaultState.transitionDuration = 1000;
-            series.sequencedInterpolationDelay = 100;
-            series.columns.template.strokeOpacity = 0;
-
-            chart.cursor = new am4charts.XYCursor();
-            chart.cursor.behavior = "panY";
-
-
-            // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
-            series.columns.template.adapter.add("fill", function (fill, target) {
-                return chart.colors.getIndex(target.dataItem.index);
-            });
-        }    
-
         $(function() {
-            drawGraph()
+            var chart = am4core.createFromConfig({
+                // Reduce saturation of colors to make them appear as toned down
+                "colors": {
+                    "saturation": 0.4
+                },
+
+                // Setting data
+                "data": [{
+                    "country": "USA",
+                    "visits": 3025
+                }, {
+                    "country": "China",
+                    "visits": 1882
+                }, {
+                    "country": "Japan",
+                    "visits": 1809
+                }, {
+                    "country": "Germany",
+                    "visits": 1322
+                }, {
+                    "country": "UK",
+                    "visits": 1122
+                }, {
+                    "country": "France",
+                    "visits": 1114
+                }, {
+                    "country": "India",
+                    "visits": 984
+                }, {
+                    "country": "Spain",
+                    "visits": 711
+                }, {
+                    "country": "Netherlands",
+                    "visits": 665
+                }, {
+                    "country": "Russia",
+                    "visits": 580
+                }, {
+                    "country": "South Korea",
+                    "visits": 443
+                }, {
+                    "country": "Canada",
+                    "visits": 441
+                }],
+
+                // Add Y axis
+                "yAxes": [{
+                    "type": "ValueAxis",
+                    "renderer": {
+                    "maxLabelPosition": 0.98
+                    }
+                }],
+
+                // Add X axis
+                "xAxes": [{
+                    "type": "CategoryAxis",
+                    "renderer": {
+                    "minGridDistance": 20,
+                    "grid": {
+                        "location": 0
+                    }
+                    },
+                    "dataFields": {
+                    "category": "country"
+                    }
+                }],
+
+                // Add series
+                "series": [{
+                    // Set type
+                    "type": "ColumnSeries",
+
+                    // Define data fields
+                    "dataFields": {
+                    "categoryX": "country",
+                    "valueY": "visits"
+                    },
+
+                    // Modify default state
+                    "defaultState": {
+                    "transitionDuration": 1000
+                    },
+
+                    // Set animation options
+                    "sequencedInterpolation": true,
+                    "sequencedInterpolationDelay": 100,
+
+                    // Modify color appearance
+                    "columns": {
+                    // Disable outline
+                    "strokeOpacity": 0,
+
+                    // Add adapter to apply different colors for each column
+                    "adapter": {
+                        "fill": function (fill, target) {
+                        return chart.colors.getIndex(target.dataItem.index);
+                        }
+                    }
+                    }
+                }],
+
+                // Enable chart cursor
+                "cursor": {
+                    "type": "XYCursor",
+                    "behavior": "zoomX"
+                }
+            }, "chart_access_device", "XYChart");
+
+            var chart = am4core.createFromConfig({
+                // Set data
+                data: [{
+                    "country": "Lithuania",
+                    "litres": 501.9
+                }, {
+                    "country": "Czech Republic",
+                    "litres": 301.9
+                }, {
+                    "country": "Ireland",
+                    "litres": 201.1
+                }, {
+                    "country": "Germany",
+                    "litres": 165.8
+                }, {
+                    "country": "Australia",
+                    "litres": 139.9
+                }, {
+                    "country": "Austria",
+                    "litres": 128.3
+                }, {
+                    "country": "UK",
+                    "litres": 99
+                }, {
+                    "country": "Belgium",
+                    "litres": 60
+                }, {
+                    "country": "The Netherlands",
+                    "litres": 50
+                }],
+
+                // Create series
+                "series": [{
+                    "type": "PieSeries",
+                    "dataFields": {
+                    "value": "litres",
+                    "category": "country"
+                    },
+                    "hiddenState": {
+                    "properties": {
+                        // this creates initial animation
+                        "opacity": 1,
+                        "endAngle": -90,
+                        "startAngle": -90
+                    }
+                    }
+                }],
+
+                // Add legend
+                "legend": {}
+            }, "chart_access_internet", "PieChart");
+
+            var chart = am4core.createFromConfig({
+                // Set data
+                data: [{
+                    "country": "Lithuania",
+                    "litres": 501.9
+                }, {
+                    "country": "Czech Republic",
+                    "litres": 301.9
+                }, {
+                    "country": "Ireland",
+                    "litres": 201.1
+                }, {
+                    "country": "Germany",
+                    "litres": 165.8
+                }, {
+                    "country": "Australia",
+                    "litres": 139.9
+                }, {
+                    "country": "Austria",
+                    "litres": 128.3
+                }, {
+                    "country": "UK",
+                    "litres": 99
+                }, {
+                    "country": "Belgium",
+                    "litres": 60
+                }, {
+                    "country": "The Netherlands",
+                    "litres": 50
+                }],
+
+                // Create series
+                "series": [{
+                    "type": "PieSeries",
+                    "dataFields": {
+                    "value": "litres",
+                    "category": "country"
+                    },
+                    "hiddenState": {
+                    "properties": {
+                        // this creates initial animation
+                        "opacity": 1,
+                        "endAngle": -90,
+                        "startAngle": -90
+                    }
+                    }
+                }],
+
+                // Add legend
+                "legend": {}
+            }, "chart_access_type", "PieChart");
+
+            var chart = am4core.createFromConfig({
+                // Reduce saturation of colors to make them appear as toned down
+                "colors": {
+                    "saturation": 0.4
+                },
+
+                // Setting data
+                "data": [{
+                    "country": "USA",
+                    "visits": 3025
+                }, {
+                    "country": "China",
+                    "visits": 1882
+                }, {
+                    "country": "Japan",
+                    "visits": 1809
+                }, {
+                    "country": "Germany",
+                    "visits": 1322
+                }, {
+                    "country": "UK",
+                    "visits": 1122
+                }, {
+                    "country": "France",
+                    "visits": 1114
+                }, {
+                    "country": "India",
+                    "visits": 984
+                }, {
+                    "country": "Spain",
+                    "visits": 711
+                }, {
+                    "country": "Netherlands",
+                    "visits": 665
+                }, {
+                    "country": "Russia",
+                    "visits": 580
+                }, {
+                    "country": "South Korea",
+                    "visits": 443
+                }, {
+                    "country": "Canada",
+                    "visits": 441
+                }],
+
+                // Add Y axis
+                "yAxes": [{
+                    "type": "ValueAxis",
+                    "renderer": {
+                    "maxLabelPosition": 0.98
+                    }
+                }],
+
+                // Add X axis
+                "xAxes": [{
+                    "type": "CategoryAxis",
+                    "renderer": {
+                    "minGridDistance": 20,
+                    "grid": {
+                        "location": 0
+                    }
+                    },
+                    "dataFields": {
+                    "category": "country"
+                    }
+                }],
+
+                // Add series
+                "series": [{
+                    // Set type
+                    "type": "ColumnSeries",
+
+                    // Define data fields
+                    "dataFields": {
+                    "categoryX": "country",
+                    "valueY": "visits"
+                    },
+
+                    // Modify default state
+                    "defaultState": {
+                    "transitionDuration": 1000
+                    },
+
+                    // Set animation options
+                    "sequencedInterpolation": true,
+                    "sequencedInterpolationDelay": 100,
+
+                    // Modify color appearance
+                    "columns": {
+                    // Disable outline
+                    "strokeOpacity": 0,
+
+                    // Add adapter to apply different colors for each column
+                    "adapter": {
+                        "fill": function (fill, target) {
+                        return chart.colors.getIndex(target.dataItem.index);
+                        }
+                    }
+                    }
+                }],
+
+                // Enable chart cursor
+                "cursor": {
+                    "type": "XYCursor",
+                    "behavior": "zoomX"
+                }
+            }, "chart_engagement_acces", "XYChart");
+
+            var chart = am4core.createFromConfig({
+                // Reduce saturation of colors to make them appear as toned down
+                "colors": {
+                    "saturation": 0.4
+                },
+
+                // Setting data
+                "data": [{
+                    "country": "USA",
+                    "visits": 3025
+                }, {
+                    "country": "China",
+                    "visits": 1882
+                }, {
+                    "country": "Japan",
+                    "visits": 1809
+                }, {
+                    "country": "Germany",
+                    "visits": 1322
+                }, {
+                    "country": "UK",
+                    "visits": 1122
+                }, {
+                    "country": "France",
+                    "visits": 1114
+                }, {
+                    "country": "India",
+                    "visits": 984
+                }, {
+                    "country": "Spain",
+                    "visits": 711
+                }, {
+                    "country": "Netherlands",
+                    "visits": 665
+                }, {
+                    "country": "Russia",
+                    "visits": 580
+                }, {
+                    "country": "South Korea",
+                    "visits": 443
+                }, {
+                    "country": "Canada",
+                    "visits": 441
+                }],
+
+                // Add Y axis
+                "yAxes": [{
+                    "type": "ValueAxis",
+                    "renderer": {
+                    "maxLabelPosition": 0.98
+                    }
+                }],
+
+                // Add X axis
+                "xAxes": [{
+                    "type": "CategoryAxis",
+                    "renderer": {
+                    "minGridDistance": 20,
+                    "grid": {
+                        "location": 0
+                    }
+                    },
+                    "dataFields": {
+                    "category": "country"
+                    }
+                }],
+
+                // Add series
+                "series": [{
+                    // Set type
+                    "type": "ColumnSeries",
+
+                    // Define data fields
+                    "dataFields": {
+                    "categoryX": "country",
+                    "valueY": "visits"
+                    },
+
+                    // Modify default state
+                    "defaultState": {
+                    "transitionDuration": 1000
+                    },
+
+                    // Set animation options
+                    "sequencedInterpolation": true,
+                    "sequencedInterpolationDelay": 100,
+
+                    // Modify color appearance
+                    "columns": {
+                    // Disable outline
+                    "strokeOpacity": 0,
+
+                    // Add adapter to apply different colors for each column
+                    "adapter": {
+                        "fill": function (fill, target) {
+                        return chart.colors.getIndex(target.dataItem.index);
+                        }
+                    }
+                    }
+                }],
+
+                // Enable chart cursor
+                "cursor": {
+                    "type": "XYCursor",
+                    "behavior": "zoomX"
+                }
+            }, "chart_engagement_hours", "XYChart");  
+
+            var chart = am4core.createFromConfig({
+                // Reduce saturation of colors to make them appear as toned down
+                "colors": {
+                    "saturation": 0.4
+                },
+
+                // Setting data
+                "data": [{
+                    "country": "USA",
+                    "visits": 3025
+                }, {
+                    "country": "China",
+                    "visits": 1882
+                }, {
+                    "country": "Japan",
+                    "visits": 1809
+                }, {
+                    "country": "Germany",
+                    "visits": 1322
+                }, {
+                    "country": "UK",
+                    "visits": 1122
+                }, {
+                    "country": "France",
+                    "visits": 1114
+                }, {
+                    "country": "India",
+                    "visits": 984
+                }, {
+                    "country": "Spain",
+                    "visits": 711
+                }, {
+                    "country": "Netherlands",
+                    "visits": 665
+                }, {
+                    "country": "Russia",
+                    "visits": 580
+                }, {
+                    "country": "South Korea",
+                    "visits": 443
+                }, {
+                    "country": "Canada",
+                    "visits": 441
+                }],
+
+                // Add Y axis
+                "yAxes": [{
+                    "type": "CategoryAxis",
+                    "renderer": {
+                    "minGridDistance": 20,
+                    "grid": {
+                        "location": 0
+                    }
+                    },
+                    "dataFields": {
+                    "category": "country"
+                    }
+                }],
+
+                // Add X axis
+                "xAxes": [{
+                    "type": "ValueAxis",
+                    "renderer": {
+                    "maxLabelPosition": 0.98
+                    }
+                }],
+
+                // Add series
+                "series": [{
+                    // Set type
+                    "type": "ColumnSeries",
+
+                    // Define data fields
+                    "dataFields": {
+                    "categoryY": "country",
+                    "valueX": "visits"
+                    },
+
+                    // Modify default state
+                    "defaultState": {
+                    "transitionDuration": 1000
+                    },
+
+                    // Set animation options
+                    "sequencedInterpolation": true,
+                    "sequencedInterpolationDelay": 100,
+
+                    // Modify color appearance
+                    "columns": {
+                    // Disable outline
+                    "strokeOpacity": 0,
+
+                    // Add adapter to apply different colors for each column
+                    "adapter": {
+                        "fill": function (fill, target) {
+                        return chart.colors.getIndex(target.dataItem.index);
+                        }
+                    }
+                    }
+                }],
+
+                // Enable chart cursor
+                "cursor": {
+                    "type": "XYCursor",
+                    "behavior": "zoomY"
+                }
+            }, "chart_activities", "XYChart");
+/*
+            var chart = am4core.createFromConfig({
+                // Set data
+                data: [{
+                    "country": "Lithuania",
+                    "litres": 501.9
+                }, {
+                    "country": "Czech Republic",
+                    "litres": 301.9
+                }, {
+                    "country": "Ireland",
+                    "litres": 201.1
+                }, {
+                    "country": "Germany",
+                    "litres": 165.8
+                }, {
+                    "country": "Australia",
+                    "litres": 139.9
+                }, {
+                    "country": "Austria",
+                    "litres": 128.3
+                }, {
+                    "country": "UK",
+                    "litres": 99
+                }, {
+                    "country": "Belgium",
+                    "litres": 60
+                }, {
+                    "country": "The Netherlands",
+                    "litres": 50
+                }],
+
+                // Create series
+                "series": [{
+                    "type": "PieSeries",
+                    "dataFields": {
+                    "value": "litres",
+                    "category": "country"
+                    },
+                    "hiddenState": {
+                    "properties": {
+                        // this creates initial animation
+                        "opacity": 1,
+                        "endAngle": -90,
+                        "startAngle": -90
+                    }
+                    }
+                }],
+
+                // Add legend
+                "legend": {}
+            }, "chart_tutor_availability", "PieChart");            
+
+            var chart = am4core.createFromConfig({
+                // Reduce saturation of colors to make them appear as toned down
+                "colors": {
+                    "saturation": 0.4
+                },
+
+                // Setting data
+                "data": [{
+                    "country": "USA",
+                    "visits": 3025
+                }, {
+                    "country": "China",
+                    "visits": 1882
+                }, {
+                    "country": "Japan",
+                    "visits": 1809
+                }, {
+                    "country": "Germany",
+                    "visits": 1322
+                }, {
+                    "country": "UK",
+                    "visits": 1122
+                }, {
+                    "country": "France",
+                    "visits": 1114
+                }, {
+                    "country": "India",
+                    "visits": 984
+                }, {
+                    "country": "Spain",
+                    "visits": 711
+                }, {
+                    "country": "Netherlands",
+                    "visits": 665
+                }, {
+                    "country": "Russia",
+                    "visits": 580
+                }, {
+                    "country": "South Korea",
+                    "visits": 443
+                }, {
+                    "country": "Canada",
+                    "visits": 441
+                }],
+
+                // Add Y axis
+                "yAxes": [{
+                    "type": "ValueAxis",
+                    "renderer": {
+                    "maxLabelPosition": 0.98
+                    }
+                }],
+
+                // Add X axis
+                "xAxes": [{
+                    "type": "CategoryAxis",
+                    "renderer": {
+                    "minGridDistance": 20,
+                    "grid": {
+                        "location": 0
+                    }
+                    },
+                    "dataFields": {
+                    "category": "country"
+                    }
+                }],
+
+                // Add series
+                "series": [{
+                    // Set type
+                    "type": "ColumnSeries",
+
+                    // Define data fields
+                    "dataFields": {
+                    "categoryX": "country",
+                    "valueY": "visits"
+                    },
+
+                    // Modify default state
+                    "defaultState": {
+                    "transitionDuration": 1000
+                    },
+
+                    // Set animation options
+                    "sequencedInterpolation": true,
+                    "sequencedInterpolationDelay": 100,
+
+                    // Modify color appearance
+                    "columns": {
+                    // Disable outline
+                    "strokeOpacity": 0,
+
+                    // Add adapter to apply different colors for each column
+                    "adapter": {
+                        "fill": function (fill, target) {
+                        return chart.colors.getIndex(target.dataItem.index);
+                        }
+                    }
+                    }
+                }],
+
+                // Enable chart cursor
+                "cursor": {
+                    "type": "XYCursor",
+                    "behavior": "zoomX"
+                }
+            }, "chart_tutor_hours", "XYChart");
+*/
         });
     </script>
     

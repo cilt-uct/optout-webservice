@@ -586,6 +586,31 @@ class Utilities
         // }
     }
 
+    public function getSurveyResults($hash) {
+        $result = [ 'success' => 1, 'result' => null ];
+        try {
+            $query = "SELECT count(*), `cohort`.level
+                FROM studentsurvey.results_valid `results`
+                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                where `cohort`.facultyCode = :faculty
+                group by `cohort`.level";
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':faculty' => "HUM"]);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$series_id.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        return $result;
+    }
+
+
     // Function to check string starting with given substring
     function startsWith ($string, $startString)
     {
