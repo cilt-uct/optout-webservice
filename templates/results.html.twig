@@ -1,6 +1,6 @@
 {% include 'html_start_survey.html' %}
     <div class="content">
-        {% include 'header_survey.html' %}
+        {% include 'header.html' %}
         
         <div class="container post">
             {% if (authenticated.a) %}
@@ -12,8 +12,12 @@
                     </a>
 
                     <h3 id="result_title"></h3>
-                    <p class="author"><span class="text-muted">April 8th at 11:14am</span></p>
+                    <p class="author"><span class="text-muted">{{result.created_at|date("F jS \\a\\t g:ia")}}</span></p>
 
+                    <!--
+                    3089 responses: XX.X% of ABCD students
+                    <img src="./Lecture Recording Automated Setup_files/DASS_logo_Round_Colour.png" alt="DASS">
+                    -->
                     <div class="graph_container">
                         <div class="div1 outline">
                             <h5>Access to devices</h5>
@@ -39,7 +43,7 @@
                             <h5>Things I can do online ignoring data costs or usage caps (After lockdown ends)</h5>
                             <div id="chart_activities"></div>
                         </div>
-                    </div>                       
+                    </div>                        
 
                 </div>
             </div>

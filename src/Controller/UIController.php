@@ -1084,7 +1084,8 @@ class UIController extends Controller
         // return new Response(json_encode($data), 201);
 
         $data = [
-            'hash' => $hash, 
+            'hash' => $hash,
+            'result' => ['course' => $hash]
             'authenticated' => $authenticated,
             'err' => $authenticated['z'],
             'out_link' => '/optout/survey/'. $hash
