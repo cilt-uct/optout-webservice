@@ -817,8 +817,16 @@ class Utilities
     public function getRawSurveyResults($hash) {
         $result = [ 'success' => 1 ,'result' => null];
 
-        $var = [':faculty' => "HUM"];
-        $where = 'where `cohort`.facultyCode = :faculty';
+        $var = [];
+        $where = '';
+
+        if (strtoupper($hash) == "TEST") {
+            // everything
+        } else {
+            // faculty
+            $var = [':faculty' => strtoupper($hash)];
+            $where = 'where `cohort`.facultyCode = :faculty';
+        }
 
         //survey_engagement_hours
         try {
@@ -826,7 +834,7 @@ class Utilities
                         Q2, Q3, Q4, Q5, Q6, Q7, Q8 
                     FROM studentsurvey.results_valid `results`
                     left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                    $where limit 10";
+                    $where";
 
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
