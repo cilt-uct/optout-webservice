@@ -852,7 +852,7 @@ class Utilities
 
         //survey_engagement_hours
         try {
-            $query = "select cohort.EID, employeeId, recordedDate, level, programCode, facultyCode, careerCode,
+            $query = "select cohort.EID, recordedDate, level, programCode, facultyCode, careerCode,
                         Q2, Q3, Q4, Q5, Q6, Q7, Q8 
                     FROM studentsurvey.results_valid `results`
                     left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
