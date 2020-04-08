@@ -1085,7 +1085,7 @@ class UIController extends Controller
 
         $data = [
             'hash' => $hash,
-            'result' => ['course' => $hash]
+            'result' => ['course' => $hash],
             'authenticated' => $authenticated,
             'err' => $authenticated['z'],
             'out_link' => '/optout/survey/'. $hash
