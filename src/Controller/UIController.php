@@ -1007,11 +1007,17 @@ class UIController extends Controller
             'err' => $authenticated['z'],
             'out_link' => '/optout/survey/'. $hash
         ];
-        
+
          // Require logged in user
         if ($authenticated['a'] === false) {
             return $this->render('results.html.twig', $data);
         }
+
+        if (!preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
+            if (!in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
+                return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
+            }
+        }        
 
         $now = new \DateTime();
         $utils = new Utilities();
@@ -1077,16 +1083,18 @@ class UIController extends Controller
         }
         // return new Response(json_encode($data), 201);
 
-        if (!in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
-            return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
-        }
-
         $data = [
             'hash' => $hash, 
             'authenticated' => $authenticated,
             'err' => $authenticated['z'],
             'out_link' => '/optout/survey/'. $hash
         ];
+
+        if (!preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
+            if (!in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
+                return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
+            }
+        }
 
         // Require logged in user
         if ($authenticated['a'] === false) {

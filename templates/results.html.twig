@@ -330,8 +330,6 @@
                 "has": "Other",
                 "val": (t_other / total) * 100
             }];
-
-
         }
 
         function drawEngagementHours() {
@@ -342,8 +340,6 @@
                 e.cnt = parseInt(e.cnt, 10);
                 e.per = ((e.cnt / total) * 100).toFixed(1);
             });
-
-            console.log(survey_engagement_hours);
             
             // create the chart and set the data
             var chart = am4core.create("chart_engagement_hours", am4charts.XYChart);
@@ -508,13 +504,30 @@
             survey_response.map(function(e){ e.cnt = parseInt(e.cnt,10); });
 
             var total = survey_response.sum("cnt"),
-                under = (getObj('Undergraduate',survey_response,'lvl').cnt / getObj('Undergraduate',cohort_response,'lvl').cnt) * 100,
-                post = (getObj('Postgraduate',survey_response,'lvl').cnt / getObj('Postgraduate',cohort_response,'lvl').cnt) * 100;
+                o_cohort_under = getObj('Undergraduate',cohort_response,'lvl'),
+                o_cohort_post = getObj('Postgraduate',cohort_response,'lvl'),
+                o_survey_under = getObj('Undergraduate',survey_response,'lvl'),
+                o_survey_post = getObj('Postgraduate',survey_response,'lvl'),
+                under = null, post = null;
+
+                if (o_cohort_under && o_survey_under) {
+                    under = ((o_survey_under.cnt / o_cohort_under.cnt) * 100).toFixed(1);
+                }
+                if (o_cohort_post && o_survey_post) {
+                    post = ((o_survey_post.cnt / o_cohort_post.cnt) * 100).toFixed(1);
+                }
 
             $("#survey_complete").html(tmpl('tmpl-graph-text', {'cls': 'text-L', 'no': new Intl.NumberFormat('en-US').format(total), 'txt': 'Completed Surveys' }));
-            $("#survey_under").html(tmpl('tmpl-graph-text', {'cls': 'text-M', 'no': under.toFixed(1) + '%', 'txt': 'Undergraduate Response Rate' }));
-            $("#survey_post").html(tmpl('tmpl-graph-text', {'cls': 'text-S', 'no': post.toFixed(1) + '%', 'txt': 'Postgraduate Response Rate' }));
-
+            if (under > 0) {
+                $("#survey_under").html(tmpl('tmpl-graph-text', {'cls': 'text-M', 'no': under + '%', 'txt': 'Undergraduate Response Rate' }));
+            } else {
+                $("#survey_under").html(tmpl('tmpl-graph-text', {'cls': 'text-M', 'no': '-', 'txt': 'Undergraduate Response Rate' }));
+            }
+            if (post > 0) {
+                $("#survey_post").html(tmpl('tmpl-graph-text', {'cls': 'text-S', 'no': post + '%', 'txt': 'Postgraduate Response Rate' }));
+            } else {
+                $("#survey_post").html(tmpl('tmpl-graph-text', {'cls': 'text-S', 'no': '-', 'txt': 'Postgraduate Response Rate' }));
+            }
         });
     </script>
     {{ source('result_template.html') }}

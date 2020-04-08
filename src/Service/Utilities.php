@@ -599,32 +599,45 @@ class Utilities
             ,'created_at' => (new \DateTime())->format('Y-m-d H:i:s')
         ];    
 
-        $var = [];//':faculty' => "HUM"];
-        $where = '';//'where `cohort`.facultyCode = :faculty';
+        $var = [];
+        $where = '';
 
         if (strtoupper($hash) == "TEST") {
             // everything
         } else {
-            // faculty
-            $var = [':faculty' => strtoupper($hash)];
-            $where = 'where `cohort`.facultyCode = :faculty';
 
-            try {
-                $query = "SELECT * FROM timetable.uct_faculty `faculty` where `faculty`.`code` = :faculty";
+            if (preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
+                // this is a course :)
+                $var = [':courseCode' => strtoupper($hash)];
+                $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode = :courseCode)';
 
-                $stmt = $this->dbh->prepare($query);
-                $stmt->execute($var);
-                if ($stmt->rowCount() === 0) {
-                    $result = [
-                        'success' => 0,
-                        'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                $result['course'] = strtoupper($hash);
+                $result['code'] = strtoupper($hash);
+
+            } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
+                // faculty
+                $var = [':faculty' => strtoupper($hash)];
+                $where = 'where `cohort`.facultyCode = :faculty';
+
+                try {
+                    $query = "SELECT * FROM timetable.uct_faculty `faculty` where `faculty`.`code` = :faculty";
+
+                    $stmt = $this->dbh->prepare($query);
+                    $stmt->execute($var);
+                    if ($stmt->rowCount() === 0) {
+                        $result = [
+                            'success' => 0,
+                            'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                    }
+
+                    $faculty = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    $result['course'] = $faculty[0]['name'];
+                    $result['code'] = $faculty[0]['code'];
+                } catch (\PDOException $e) {
+                    $result = [ 'success' => 0, 'err' => $e->getMessage()];
                 }
-
-                $faculty = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                $result['course'] = $faculty[0]['name'];
-                $result['code'] = $faculty[0]['code'];
-            } catch (\PDOException $e) {
-                $result = [ 'success' => 0, 'err' => $e->getMessage()];
+            } else {
+                return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
             }
         }
 
@@ -823,9 +836,18 @@ class Utilities
         if (strtoupper($hash) == "TEST") {
             // everything
         } else {
-            // faculty
-            $var = [':faculty' => strtoupper($hash)];
-            $where = 'where `cohort`.facultyCode = :faculty';
+
+            if (preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
+                // this is a course :)
+                $var = [':courseCode' => strtoupper($hash)];
+                $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode = :courseCode)';
+            } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
+                // faculty
+                $var = [':faculty' => strtoupper($hash)];
+                $where = 'where `cohort`.facultyCode = :faculty';
+            } else {
+                return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
+            }
         }
 
         //survey_engagement_hours
