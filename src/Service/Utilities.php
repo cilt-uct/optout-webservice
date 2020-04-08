@@ -588,21 +588,72 @@ class Utilities
 
     public function getSurveyResults($hash) {
         $result = [ 'success' => 1
+            ,'course' => $hash
+            ,'code' => $hash
             ,'survey_response' => null
             ,'survey_access_device' =>  null
             ,'survey_access_type' => null
             ,'survey_activities' => null
             ,'survey_engagement_conditions' => null
             ,'survey_engagement_hours' => null
-        ];
-        $var = [':faculty' => "HUM"];
+            ,'created_at' => (new \DateTime())->format('Y-m-d H:i:s')
+        ];    
+
+        $var = [];//':faculty' => "HUM"];
+        $where = '';//'where `cohort`.facultyCode = :faculty';
+
+        if (strtoupper($hash) == "TEST") {
+            // everything
+        } else {
+            // faculty
+            $var = [':faculty' => strtoupper($hash)];
+            $where = 'where `cohort`.facultyCode = :faculty';
+
+            try {
+                $query = "SELECT * FROM timetable.uct_faculty `faculty` where `faculty`.`code` = :faculty";
+
+                $stmt = $this->dbh->prepare($query);
+                $stmt->execute($var);
+                if ($stmt->rowCount() === 0) {
+                    $result = [
+                        'success' => 0,
+                        'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                }
+
+                $faculty = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                $result['course'] = $faculty[0]['name'];
+                $result['code'] = $faculty[0]['code'];
+            } catch (\PDOException $e) {
+                $result = [ 'success' => 0, 'err' => $e->getMessage()];
+            }
+        }
+
+        // cohort_response
+        try {
+            $query = "SELECT count(*) as cnt, `cohort`.level as lvl
+                from studentsurvey.cohort `cohort`
+                    $where
+                group by `cohort`.level";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['cohort_response'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
 
         // survey_response
         try {
             $query = "SELECT count(*) as cnt, `cohort`.level as lvl
                 FROM studentsurvey.results_valid `results`
                     left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                where `cohort`.facultyCode = :faculty
+                    $where
                 group by `cohort`.level";
 
             $stmt = $this->dbh->prepare($query);
@@ -630,7 +681,7 @@ class Utilities
                 `results`.Q3
                 FROM studentsurvey.results_valid `results`
                     left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                where `cohort`.facultyCode = :faculty
+                $where
                 group by `results`.Q3
                 order by `results`.Q3";
 
@@ -658,7 +709,7 @@ class Utilities
                 `results`.Q5
                 FROM studentsurvey.results_valid `results`
                     left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                    where `cohort`.facultyCode = :faculty
+                $where
                 group by `results`.Q5
                 order by `results`.Q5";
 
@@ -691,7 +742,7 @@ class Utilities
                 `results`.Q8
                 FROM studentsurvey.results_valid `results`
                     left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                    where `cohort`.facultyCode = :faculty
+                $where
                 group by `results`.Q8
                 order by `results`.Q8";
 
@@ -719,7 +770,7 @@ class Utilities
                 `results`.Q4
                 FROM studentsurvey.results_valid `results`
                     left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                    where `cohort`.facultyCode = :faculty
+                $where
                 group by `results`.Q4
                 order by `results`.Q4";
 
@@ -743,7 +794,7 @@ class Utilities
                 `results`.Q7
                 FROM studentsurvey.results_valid `results`
                     left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                    where `cohort`.facultyCode = :faculty
+                $where
                 group by `results`.Q7
                 order by `results`.Q7";
 
@@ -763,6 +814,35 @@ class Utilities
         return $result;
     }
 
+    public function getRawSurveyResults($hash) {
+        $result = [ 'success' => 1 ,'result' => null];
+
+        $var = [':faculty' => "HUM"];
+        $where = 'where `cohort`.facultyCode = :faculty';
+
+        //survey_engagement_hours
+        try {
+            $query = "select cohort.EID, employeeId, recordedDate, level, programCode, facultyCode, careerCode,
+                        Q2, Q3, Q4, Q5, Q6, Q7, Q8 
+                    FROM studentsurvey.results_valid `results`
+                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where limit 10";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }        
+
+        return $result;
+    }   
 
     // Function to check string starting with given substring
     function startsWith ($string, $startString)

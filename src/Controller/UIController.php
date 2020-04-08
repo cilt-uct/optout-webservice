@@ -948,20 +948,56 @@ class UIController extends Controller
         return $this->render('series_view.html.twig', $data);
     }
 
+
+    public function outputCSV($data, $useKeysForHeaderRow = true) {
+        if ($useKeysForHeaderRow) {
+            array_unshift($data, array_keys(reset($data)));
+        }
+    
+        $outputBuffer = fopen("php://output", 'w');
+        foreach($data as $v) {
+            fputcsv($outputBuffer, $v);
+        }
+        fclose($outputBuffer);
+    }
+
+    /**
+     * View the survey page according to the hash it receives
+     *
+     * @Route("/downloadsurvey/{hash}")
+     */
+    public function surveyDownloadFromHash($hash, Request $request) {
+        
+        $now = new \DateTime();
+        $utils = new Utilities();
+        $data = $utils->getRawSurveyResults($hash);
+        
+        // Generate response
+        $response = new Response();
+
+        // Set headers
+        $response->headers->set('Cache-Control', 'private');
+        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        $response->headers->set('Content-Disposition', 'attachment; filename="UCT Student Access Survey '. $now->format('Y-m-d_H-i'). '.csv"');
+        //$response->headers->set('Content-length', length($this->outputCSV($data['result'])));
+
+        // Send headers before outputting anything
+        $response->sendHeaders();
+
+        $response->setContent($this->outputCSV($data['result']));
+        return $response;
+    }
+
     /**
      * View the survey page according to the hash it receives
      *
      * @Route("/survey/{hash}")
      */
     public function surveyFromHash($hash, Request $request) {
-        $authenticated = ['a' => false, 'z' => '0'];
+        $authenticated = ['a' => false, 'z' => 'none'];
 
         $now = new \DateTime();
         $utils = new Utilities();
-        $data = $utils->getSurveyResults($hash);
-
-        $data['course'] = $hash;
-        $data['created_at'] = (new \DateTime())->format('Y-m-d H:i:s');     
 
         switch ($request->getMethod()) {
             case 'POST':
@@ -995,60 +1031,29 @@ class UIController extends Controller
             break;
         }
         // return new Response(json_encode($data), 201);
+
+        if (!in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
+            return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
+        }
+
+        $data = [
+            'hash' => $hash, 
+            'authenticated' => $authenticated,
+            'err' => $authenticated['z'],
+            'out_link' => '/optout/survey/'. $hash
+        ];
+
+        // Require logged in user
+        if ($authenticated['a'] === false) {
+            return $this->render('results.html.twig', $data);
+        } else {
+            $data['err'] = '';
+        }
+
+        $data['result'] = $utils->getSurveyResults($hash);
+        $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey/'. $hash;
+
+        // return new Response(json_encode($data), 201);
         return $this->render('results.html.twig', $data);
-
-        // if (!$data['success']) {
-        //     return $this->render('error.html.twig', $data);
-        // } else {
-        //     $data = $data['result'][0];
-        //     // $hash = $data['hash'];
-        //     $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/out/'. $data['hash'];
-        //     $data['authenticated'] = $authenticated;
-        // }
-
-        // if ($data['course'] === null ) {
-        //     $dept = new Department($data['dept'], $data['hash'], $data['year'], false, false, true);
-        //     $data['details'] = $dept->getDetails();
-        //     $data['readonly'] = 0; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
-        //     $data['readonly_s1'] = 0; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
-        //     $data['readonly_s2'] = 1; //($now->diff(new \DateTime($data['date_course']))->format('%R') == '-');
-
-        //     if (count($data['details']['courses']) == 0) {
-        //     //     return $this->viewOptOut($data['hash'], $request);
-        //     } else {
-        //         $semester_vals = array_column($data['details']['courses'], 'semester'); // take all 'semester' values
-        //         $data['counts'] = array_count_values($semester_vals);
-        //     }
-        //     if (!isset($data['counts']['s1'])) { $data['counts']['s1'] = -1; }
-        //     if (!isset($data['counts']['s2'])) { $data['counts']['s2'] = -1; }
-
-        //     //return new Response(json_encode($data), 201);
-        //     return $this->render('department.html.twig', $data);
-        // } else {
-        //     $vula = new SakaiWebService();
-        //     $ocService = new OCRestService();
-
-        //     $course = new Course($data['course'], $data['hash'], $data['year'], false, false); // last could be set to true
-
-        //     $data['details'] = $course->getDetails();
-        //     $data['readonly'] = ($now->diff(new \DateTime($data['date_schedule']))->format('%R') == '-');
-        //     $data['hasVulaSite'] = $vula->hasProviderId($data['course'], $data['year']);
-        //     $data['hasOCSeries'] = $ocService->hasOCSeries($data['course'], $data['year']);
-        //     $data['isTimetabled'] = $data['hasOCSeries'] ? $course->checkIsTimetabledInOC() : false;
-        //     $data['email_case'] = $data['case'];
-        //     $data['email_type'] = $data['type'];
-
-        //     // retrieve timetable information
-        //     $json = file_get_contents('https://srvslscet001.uct.ac.za/timetable/?historic=1&course='. $data['course'] .','. $data['year']);
-        //     $data['timetable'] = json_decode($json, TRUE);
-        //     if (!isset($data['timetable']['LEC'])) {
-        //         $data['timetable']['LEC'] = [];
-        //     }
-
-        //     // return new Response(json_encode($data), 201);
-        //     return $this->render('course.html.twig', $data);
-        // }
     }
-
-
 }

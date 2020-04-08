@@ -1,12 +1,18 @@
 {% include 'html_start.html' %}
     <div class="content">
         {% include 'header.html' %}
+        
         <div class="container post">
+            {% if (authenticated.a) %}
             <div class="row post-body">
                 <div class="col-md-12 post-title">
 
-                    <h3><span style="color: #5caad2;">{{course|capitalize}}</span><small>&nbsp;:&nbsp;Student Survey Results</small></h3>
-                    <p class="author"><span class="text-muted">{{created_at|date("F jS \\a\\t g:ia")}}</span></p>
+                    <a href="{{out_link}}" target="_blank" type="button" class="btn btn-outline-secondary" style="float: right;">
+                        <i class="fa fa-file-csv"></i>&nbsp;&nbsp;Download Dataset
+                    </a>
+
+                    <h3><span style="color: #5caad2;">{{result.course}}</span><small>&nbsp;:&nbsp;Student Access Survey</small></h3>
+                    <p class="author"><span class="text-muted">{{result.created_at|date("F jS \\a\\t g:ia")}}</span></p>
                     <br/>
 
                     <div class="graph_container">
@@ -82,9 +88,41 @@
 
                 </div>
             </div>
+            {% else %}
+            <div class="row post-body justify-content-md-center">
+                <div class="col-md-5 post-title">
+                    <form id="loginForm" method="post" action="{{out_link}}">
+                        <input type="hidden" id="type" name="type" value="login"/>
+                        <div class="modal-body">
+                            <div class="form-group row">
+                                <div class="col-sm-12">
+                                {% if err != 'none' %}
+                                    <div class="alert alert-danger" role="alert">{{err}}</div>
+                                {% endif %}
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-12">
+                                    <input type="text" class="form-control" name="eid" id="eid" value="" placeholder="User ID" style="width:100%">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-12">
+                                    <input type="password" class="form-control" name="pw" id="pw" placeholder="Password" style="width:100%">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
-
+    {% if (authenticated.a) %}
     <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>
@@ -102,27 +140,25 @@
             return total
         }
 
-        var survey_response = {{survey_response|json_encode|raw}};
-        var survey_access_device = {{survey_access_device|json_encode|raw}};
-        var survey_access_type = {{survey_access_type|json_encode|raw}};
-        var survey_activities = {{survey_activities|json_encode|raw}};
-        var survey_engagement_conditions = {{survey_engagement_conditions|json_encode|raw}};
-        var survey_engagement_hours = {{survey_engagement_hours|json_encode|raw}};
+        var cohort_response = {{result.cohort_response|json_encode|raw}};
+        var survey_response = {{result.survey_response|json_encode|raw}};
+        var survey_access_device = {{result.survey_access_device|json_encode|raw}};
+        var survey_access_type = {{result.survey_access_type|json_encode|raw}};
+        var survey_activities = {{result.survey_activities|json_encode|raw}};
+        var survey_engagement_conditions = {{result.survey_engagement_conditions|json_encode|raw}};
+        var survey_engagement_hours = {{result.survey_engagement_hours|json_encode|raw}};
    
-               // Global chart settings
+ // Global chart settings
         var chart_colors = { "saturation": 0.4 };
 
         function drawAccessDevices() {
-            var total = survey_access_device.sum("Laptop") + 
-                        survey_access_device.sum("Desktop") + 
-                        survey_access_device.sum("Smartphone") +
-                        survey_access_device.sum("Tablet") +
-                        survey_access_device.sum("Nothing");
+            var total = survey_access_device.sum("cnt"),
+                t_laptop_desktop = survey_access_device.filter(function(e){ return (e.Q3.indexOf("Desktop computer") >= 0) || (e.Q3.indexOf("Laptop") >= 0); }).sum("cnt");
             
             // create the chart and set the data
             var chart = am4core.create("chart_access_device", am4charts.XYChart);
             chart.data = [
-                { "type" : "Laptop/Desktop", "per" : (((survey_access_device.sum("Laptop") + survey_access_device.sum("Desktop")) / total) * 100).toFixed(1)},
+                { "type" : "Laptop/Desktop", "per" : ((t_laptop_desktop / total) * 100).toFixed(1)},
                 { "type" : "Smartphone", "per" :  ((survey_access_device.sum("Smartphone") / total) * 100).toFixed(1)},
                 { "type" : "Tablet", "per" :  ((survey_access_device.sum("Tablet") / total) * 100).toFixed(1)},
                 { "type" : "No Device", "per" :  ((survey_access_device.sum("Nothing") / total) * 100).toFixed(1)}
@@ -209,16 +245,16 @@
             hoverShadow.opacity = 0.7;
             hoverShadow.blur = 5;
 
-            var total = survey_access_type.sum("Mobile") + 
-                        survey_access_type.sum("Wifi") + 
-                        survey_access_type.sum("Other") + 
-                        survey_access_type.sum("Nothing");
+            var total = survey_access_type.sum('cnt'),
+                no_internet = survey_access_type.filter(function(i){ return (i.Q5.indexOf("No access to Internet") >= 0); }).sum("cnt")
+                some = total - no_internet;
+
             chart.data = [{
                 "has": "Yes",
-                "val": ((survey_access_type.sum("Mobile") + survey_access_type.sum("Wifi") + survey_access_type.sum("Other")) / total) * 100
+                "val": (some / total) * 100
             },{
                 "has": "No",
-                "val": (survey_access_type.sum("Nothing") / total) * 100,
+                "val": (no_internet / total) * 100,
             }];
         }
 
@@ -230,10 +266,12 @@
             var pieSeries = chart.series.push(new am4charts.PieSeries());
             pieSeries.dataFields.value = "val";
             pieSeries.dataFields.category = "has";
-            // pieSeries.colors.list = [
-            //     am4core.color("#67B7DC"),
-            //     am4core.color("#6C2C30")
-            // ];
+            pieSeries.colors.list = [
+                am4core.color("#68B7DC"),
+                am4core.color("#6894DC"),
+                am4core.color("#6871DC"),
+                am4core.color("#6C2C30")
+            ];
 
             // Let's cut a hole in our Pie chart the size of 30% the radius
             chart.innerRadius = am4core.percent(40);
@@ -466,18 +504,20 @@
                 drawActivities();
             }); // end am4core.ready()
 
+            cohort_response.map(function(e){ e.cnt = parseInt(e.cnt,10); });
+            survey_response.map(function(e){ e.cnt = parseInt(e.cnt,10); });
+
             var total = survey_response.sum("cnt"),
-                under = (parseInt(getObj('Undergraduate',survey_response,'lvl').cnt, 10) / total) * 100,
-                post = (parseInt(getObj('Postgraduate',survey_response,'lvl').cnt, 10) / total) * 100;
+                under = (getObj('Undergraduate',survey_response,'lvl').cnt / getObj('Undergraduate',cohort_response,'lvl').cnt) * 100,
+                post = (getObj('Postgraduate',survey_response,'lvl').cnt / getObj('Postgraduate',cohort_response,'lvl').cnt) * 100;
 
             $("#survey_complete").html(tmpl('tmpl-graph-text', {'cls': 'text-L', 'no': new Intl.NumberFormat('en-US').format(total), 'txt': 'Completed Surveys' }));
             $("#survey_under").html(tmpl('tmpl-graph-text', {'cls': 'text-M', 'no': under.toFixed(1) + '%', 'txt': 'Undergraduate Response Rate' }));
             $("#survey_post").html(tmpl('tmpl-graph-text', {'cls': 'text-S', 'no': post.toFixed(1) + '%', 'txt': 'Postgraduate Response Rate' }));
 
         });
-
     </script>
     {{ source('result_template.html') }}
-
+    {% endif %}
 {% include 'footer.html' %}
 {% include 'html_end.html' %}
