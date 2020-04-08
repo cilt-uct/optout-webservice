@@ -967,7 +967,52 @@ class UIController extends Controller
      * @Route("/downloadsurvey/{hash}")
      */
     public function surveyDownloadFromHash($hash, Request $request) {
+        $authenticated = ['a' => false, 'z' => 'none'];
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                    } else {
+                        $authenticated['z'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+            break;
+        }
+
+        $data = [
+            'hash' => $hash, 
+            'authenticated' => $authenticated,
+            'err' => $authenticated['z'],
+            'out_link' => '/optout/survey/'. $hash
+        ];
         
+         // Require logged in user
+        if ($authenticated['a'] === false) {
+            return $this->render('results.html.twig', $data);
+        }
+
         $now = new \DateTime();
         $utils = new Utilities();
         $data = $utils->getRawSurveyResults($hash);
