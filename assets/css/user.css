@@ -43,6 +43,12 @@ header .navbar-default {
 header img.navbar-brand{
   height: 75px;
 }
+header img.navbar-logo{
+  height: 90px; 
+  position: relative; 
+  top: -4px;
+  right: 44px;
+}
 
 .post-title {
   margin-top: 20px;
