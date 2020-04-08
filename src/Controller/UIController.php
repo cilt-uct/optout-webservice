@@ -963,8 +963,6 @@ class UIController extends Controller
         $data['course'] = $hash;
         $data['created_at'] = (new \DateTime())->format('Y-m-d H:i:s');     
 
-
-
         switch ($request->getMethod()) {
             case 'POST':
                 $ldap = new LDAPService();
@@ -996,8 +994,8 @@ class UIController extends Controller
                 $authenticated['a'] = $session->get('username') ? true : false;
             break;
         }
-        return new Response(json_encode($data), 201);
-        // return $this->render('results.html.twig', $data);
+        // return new Response(json_encode($data), 201);
+        return $this->render('results.html.twig', $data);
 
         // if (!$data['success']) {
         //     return $this->render('error.html.twig', $data);

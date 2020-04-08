@@ -89,11 +89,13 @@
                             <h5>Hours per day I can tutor online</h5>
                             <div id="chart_tutor_hours"></div>
                         </div-->
-                    </div>
+                    </div>                    
+
                 </div>
             </div>
         </div>
     </div>
+
     <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/tmpl.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>
@@ -101,707 +103,392 @@
     <script src="{{ asset('assets/amcharts4/core.js') }}"></script>
     <script src="{{ asset('assets/amcharts4/charts.js') }}"></script>
     <script src="{{ asset('assets/amcharts4/themes/animated.js') }}"></script>
-    <script src="index.js"></script>
     <script>
+        function getObj(id, arr, key) { key = key || 'id'; var o = null; $.each(arr, function (i, el) { if (el[key] == id) { o=el; return; } }); return o; };
+        Array.prototype.sum = function (prop) {
+            var total = 0
+            for ( var i = 0, _len = this.length; i < _len; i++ ) {
+                total += parseInt(this[i][prop]);
+            }
+            return total
+        }
+
+        var survey_response = {{survey_response|json_encode|raw}};
+        var survey_access_device = {{survey_access_device|json_encode|raw}};
+        var survey_access_type = {{survey_access_type|json_encode|raw}};
+        var survey_activities = {{survey_activities|json_encode|raw}};
+        var survey_engagement_conditions = {{survey_engagement_conditions|json_encode|raw}};
+        var survey_engagement_hours = {{survey_engagement_hours|json_encode|raw}};
+   
+               // Global chart settings
+        var chart_colors = { "saturation": 0.4 };
+
+        function drawAccessDevices() {
+            var total = survey_access_device.sum("Laptop") + 
+                        survey_access_device.sum("Desktop") + 
+                        survey_access_device.sum("Smartphone") +
+                        survey_access_device.sum("Tablet") +
+                        survey_access_device.sum("Nothing");
+            
+            // create the chart and set the data
+            var chart = am4core.create("chart_access_device", am4charts.XYChart);
+            chart.data = [
+                { "type" : "Laptop/Desktop", "per" : (((survey_access_device.sum("Laptop") + survey_access_device.sum("Desktop")) / total) * 100).toFixed(1)},
+                { "type" : "Smartphone", "per" :  ((survey_access_device.sum("Smartphone") / total) * 100).toFixed(1)},
+                { "type" : "Tablet", "per" :  ((survey_access_device.sum("Tablet") / total) * 100).toFixed(1)},
+                { "type" : "No Device", "per" :  ((survey_access_device.sum("Nothing") / total) * 100).toFixed(1)}
+            ];
+            chart.colors.list = [
+                am4core.color("#67B7DC"),
+                am4core.color("#67B7DC"),
+                am4core.color("#67B7DC"),
+                am4core.color("#6C2C30"),                
+                am4core.color("#67B7DC"),
+                am4core.color("#67B7DC")
+            ];
+
+            var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+            categoryAxis.dataFields.category = "type";
+            categoryAxis.renderer.grid.template.location = 0;
+            categoryAxis.renderer.minGridDistance = 30;
+            categoryAxis.renderer.fontSize = 10;
+
+            var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+                valueAxis.hide();
+
+            var series1 = chart.series.push(new am4charts.ColumnSeries());
+                series1.name = "Device";
+                series1.dataFields.categoryX = "type";
+                series1.dataFields.valueY = "per";
+
+            // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
+            series1.columns.template.adapter.add("fill", function(fill, target) {
+                return chart.colors.getIndex(target.dataItem.index);
+            });
+            series1.columns.template.adapter.add("stroke", function(fill, target) {
+                return chart.colors.getIndex(target.dataItem.index);
+            });
+
+            // Add label
+            var valueLabel = series1.bullets.push(new am4charts.LabelBullet());
+                valueLabel.scale = 0.8;    
+                valueLabel.label.text = "{valueY}%";
+                valueLabel.label.dy = -10;
+                valueLabel.label.hideOversized = false;
+                valueLabel.label.truncate = false;
+        }
+
+        function drawAccessToInternet() {
+            // Create chart instance
+            var chart = am4core.create("chart_access_internet", am4charts.PieChart);
+            chart.marginRight = 50;
+
+            // Add and configure Series
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "val";
+            pieSeries.dataFields.category = "has";
+            pieSeries.colors.list = [
+                am4core.color("#67B7DC"),
+                am4core.color("#6C2C30")
+            ];
+
+            // Let's cut a hole in our Pie chart the size of 30% the radius
+            chart.innerRadius = am4core.percent(40);
+
+            // Put a thick white border around each Slice
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeWidth = 2;
+            pieSeries.slices.template.strokeOpacity = 1;
+            pieSeries.slices.template
+            // change the cursor on hover to make it apparent the object can be interacted with
+            .cursorOverStyle = [
+                {
+                    "property": "cursor",
+                    "value": "pointer"
+                }
+            ];
+
+            // Create a base filter effect (as if it's not there) for the hover to return to
+            var shadow = pieSeries.slices.template.filters.push(new am4core.DropShadowFilter);
+            shadow.opacity = 0;
+
+            // Create hover state
+            var hoverState = pieSeries.slices.template.states.getKey("hover"); // normally we have to create the hover state, in this case it already exists
+
+            // Slightly shift the shadow and make it more prominent on hover
+            var hoverShadow = hoverState.filters.push(new am4core.DropShadowFilter);
+            hoverShadow.opacity = 0.7;
+            hoverShadow.blur = 5;
+
+            var total = survey_access_type.sum("Mobile") + 
+                        survey_access_type.sum("Wifi") + 
+                        survey_access_type.sum("Other") + 
+                        survey_access_type.sum("Nothing");
+            chart.data = [{
+                "has": "Yes",
+                "val": ((survey_access_type.sum("Mobile") + survey_access_type.sum("Wifi") + survey_access_type.sum("Other")) / total) * 100
+            },{
+                "has": "No",
+                "val": (survey_access_type.sum("Nothing") / total) * 100,
+            }];
+        }
+
+        function drawAccessType() {
+            // Create chart instance
+            var chart = am4core.create("chart_access_type", am4charts.PieChart);
+
+            // Add and configure Series
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "val";
+            pieSeries.dataFields.category = "has";
+            // pieSeries.colors.list = [
+            //     am4core.color("#67B7DC"),
+            //     am4core.color("#6C2C30")
+            // ];
+
+            // Let's cut a hole in our Pie chart the size of 30% the radius
+            chart.innerRadius = am4core.percent(40);
+
+            // Put a thick white border around each Slice
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeWidth = 2;
+            pieSeries.slices.template.strokeOpacity = 1;
+            pieSeries.slices.template
+            // change the cursor on hover to make it apparent the object can be interacted with
+            .cursorOverStyle = [
+                {
+                    "property": "cursor",
+                    "value": "pointer"
+                }
+            ];
+
+            // Create a base filter effect (as if it's not there) for the hover to return to
+            var shadow = pieSeries.slices.template.filters.push(new am4core.DropShadowFilter);
+            shadow.opacity = 0;
+
+            // Create hover state
+            var hoverState = pieSeries.slices.template.states.getKey("hover"); // normally we have to create the hover state, in this case it already exists
+
+            // Slightly shift the shadow and make it more prominent on hover
+            var hoverShadow = hoverState.filters.push(new am4core.DropShadowFilter);
+            hoverShadow.opacity = 0.7;
+            hoverShadow.blur = 5;
+
+            // Wifi only: those who selected wifi and nothng else
+            // Mobile only: those who selected mobile and nothing else
+            // Wifi+Mobile: those who selected the two only
+            // I dont have...: all that included "I dont have" regardless of what else they selected
+            // Other: all those who included "other" and regardless of their other options (except "i dont have...") 
+
+            var wifi_only = 'Wifi where I live (connected to home fibre, ADSL or a building network)',
+                mobile_only = 'Mobile data (e.g. 3G, 4G, LTE) through a smartphone, dongle or mobile wifi router',
+                wifi_mobile = 'Wifi where I live (connected to home fibre, ADSL or a building network),Mobile data (e.g. 3G, 4G, LTE) through a smartphone, dongle or mobile wifi router';
+
+            var t_wifi_only = parseInt(getObj(wifi_only,survey_access_type,'Q5').Wifi, 10),
+                t_mobile_only = parseInt(getObj(mobile_only,survey_access_type,'Q5').Mobile, 10),
+                t_wifi_mobile = parseInt(getObj(wifi_mobile,survey_access_type,'Q5').Wifi, 10),
+                t_other = survey_access_type.filter(function(i){ return (i.Q5.indexOf("Other") >=0) &&  (i.Q5.indexOf("No access to Internet") == -1); }).sum("Other"),
+                total = t_wifi_only + t_mobile_only + t_wifi_mobile + t_other;
+                    
+            chart.data = [{
+                "has": "Wifi only",
+                "val": ( t_wifi_only / total) * 100
+            },{
+                "has": "Mobile only",
+                "val": (t_mobile_only / total) * 100
+            },{
+                "has": "Wifi + Mobile",
+                "val": (t_wifi_mobile / total) * 100
+            },{
+                "has": "Other",
+                "val": (t_other / total) * 100
+            }];
+
+
+        }
+
+        function drawEngagementHours() {
+            var total = survey_engagement_hours.sum("cnt");
+            survey_engagement_hours.map(function(e){
+                e.Q7 = (e.Q7 == "0" ? "< 1" : e.Q7);
+                e.Q7 = (e.Q7 == "10" ? "+ 10" : e.Q7);
+                e.cnt = parseInt(e.cnt, 10);
+                e.per = ((e.cnt / total) * 100).toFixed(1);
+            });
+
+            console.log(survey_engagement_hours);
+            
+            // create the chart and set the data
+            var chart = am4core.create("chart_engagement_hours", am4charts.XYChart);
+            chart.data = survey_engagement_hours;
+
+            var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+            categoryAxis.dataFields.category = "Q7";
+            categoryAxis.renderer.grid.template.location = 0;
+            categoryAxis.renderer.minGridDistance = 30;
+
+            var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+                valueAxis.hide();
+
+            var series1 = chart.series.push(new am4charts.ColumnSeries());
+                series1.name = "Hours";
+                series1.dataFields.categoryX = "Q7";
+                series1.dataFields.valueY = "cnt";
+                series1.dataFields.valuePer = "per";
+
+            // Add label
+            var valueLabel = series1.bullets.push(new am4charts.LabelBullet());
+                valueLabel.scale = 0.8;    
+                valueLabel.label.text = "{valuePer}%";
+                valueLabel.label.dy = -10;
+                valueLabel.label.hideOversized = false;
+                valueLabel.label.truncate = false;
+        }
+
+        function drawEngagement() {
+            var total = survey_engagement_conditions.sum('cnt');
+            
+            // create the chart and set the data
+            var chart = am4core.create("chart_engagement_acces", am4charts.XYChart);
+            chart.data = [
+                { "type" : "Own Laptop/Desktop", "per" : ((survey_engagement_conditions.sum("own_laptop_desktop") / total) * 100).toFixed(1)},
+                { "type" : "I don't have any", "per" :  ((survey_engagement_conditions.sum("Nothing") / total) * 100).toFixed(1)},
+                { "type" : "I share mine with others", "per" :  ((survey_engagement_conditions.sum("share_laptop_desktop") / total) * 100).toFixed(1)},
+                { "type" : "I borrow from others", "per" :  ((survey_engagement_conditions.sum("borrow_laptop_desktop") / total) * 100).toFixed(1)}
+            ];
+            chart.colors.list = [
+                am4core.color("#67B7DC"),
+                am4core.color("#6C2C30"),
+                am4core.color("#67B7DC"),
+                am4core.color("#67B7DC"),
+                am4core.color("#67B7DC"),
+                am4core.color("#67B7DC")
+            ];
+            var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+            categoryAxis.dataFields.category = "type";
+            categoryAxis.renderer.grid.template.location = 0;
+            categoryAxis.renderer.minGridDistance = 30;
+            categoryAxis.renderer.fontSize = 10;
+
+            var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+                valueAxis.hide();
+
+            var series1 = chart.series.push(new am4charts.ColumnSeries());
+                series1.name = "Device";
+                series1.dataFields.categoryX = "type";
+                series1.dataFields.valueY = "per";
+
+            // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
+            series1.columns.template.adapter.add("fill", function(fill, target) {
+                return chart.colors.getIndex(target.dataItem.index);
+            });
+            series1.columns.template.adapter.add("stroke", function(fill, target) {
+                return chart.colors.getIndex(target.dataItem.index);
+            });
+
+            // Add label
+            var valueLabel = series1.bullets.push(new am4charts.LabelBullet());
+                valueLabel.scale = 0.8;    
+                valueLabel.label.text = "{valueY}%";
+                valueLabel.label.dy = -10;
+                valueLabel.label.hideOversized = false;
+                valueLabel.label.truncate = false;
+        }
+
+        function drawActivities() {
+            var total = survey_activities.filter(function(e){ return e.Q8 != ""; }).sum('cnt');
+            
+            // create the chart and set the data
+            var chart = am4core.create("chart_activities", am4charts.XYChart);
+            chart.minHeight = 240;
+            chart.data = [
+                { 
+                    "type" : "Login to Vula, read announcements, join a chatroom", 
+                    "per" : ((survey_activities.sum("login_vula") / total) * 100).toFixed(1)
+                }
+                ,{ 
+                    "type" : "Download a reading, notes or presentation from Vula (e.g. PDFs, Powerpoints, up to 10MB)", 
+                    "per" : ((survey_activities.sum("download") / total) * 100).toFixed(1)
+                }
+                ,{ 
+                    "type" : "Search for and download learning or research materials online or through UCT Library", 
+                    "per" : ((survey_activities.sum("search") / total) * 100).toFixed(1)
+                }
+               ,{ 
+                    "type" : "Download a lecture video (up to 500MB)", 
+                    "per" : ((survey_activities.sum("download_500") / total) * 100).toFixed(1)
+                }
+                ,{ 
+                    "type" : "Play a lecture video online (without buffering)", 
+                    "per" : ((survey_activities.sum("stream") / total) * 100).toFixed(1)
+                }
+                ,{ 
+                    "type" : "Voice call (e.g. Whatsapp voice call, Skype)", 
+                    "per" : ((survey_activities.sum("voice") / total) * 100).toFixed(1)
+                }                                                                      
+                ,{ 
+                    "type" : "Live video call or meeting (e.g. WhatsApp video, Skype, Zoom, Teams, Adobe Connect)", 
+                    "per" : ((survey_activities.sum("video") / total) * 100).toFixed(1)
+                } 
+                // ,{ 
+                //     "type" : "I don't know", 
+                //     "per" : ((survey_activities.sum("other") / total) * 100).toFixed(1)
+                // } 
+            ];
+            var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+            categoryAxis.dataFields.category = "type";
+            // categoryAxis.renderer.inversed = true;
+            categoryAxis.renderer.grid.template.location = 0;
+            categoryAxis.renderer.minGridDistance = 20;
+            categoryAxis.renderer.fontSize = 10;
+
+            var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+                // valueAxis.renderer.opposite = true;
+                valueAxis.hide();
+
+            var series1 = chart.series.push(new am4charts.ColumnSeries());
+                series1.dataFields.valueX = "per";
+                series1.dataFields.categoryY = "type";
+
+            // Add label
+            var valueLabel = series1.bullets.push(new am4charts.LabelBullet());
+                valueLabel.scale = 0.8;    
+                valueLabel.label.text = "{valueX}%";
+                valueLabel.label.horizontalCenter = "left";
+                valueLabel.label.dx = 10;
+                valueLabel.label.hideOversized = false;
+                valueLabel.label.truncate = false;
+        }
+
         $(function() {
-            var chart = am4core.createFromConfig({
-                // Reduce saturation of colors to make them appear as toned down
-                "colors": {
-                    "saturation": 0.4
-                },
 
-                // Setting data
-                "data": [{
-                    "country": "USA",
-                    "visits": 3025
-                }, {
-                    "country": "China",
-                    "visits": 1882
-                }, {
-                    "country": "Japan",
-                    "visits": 1809
-                }, {
-                    "country": "Germany",
-                    "visits": 1322
-                }, {
-                    "country": "UK",
-                    "visits": 1122
-                }, {
-                    "country": "France",
-                    "visits": 1114
-                }, {
-                    "country": "India",
-                    "visits": 984
-                }, {
-                    "country": "Spain",
-                    "visits": 711
-                }, {
-                    "country": "Netherlands",
-                    "visits": 665
-                }, {
-                    "country": "Russia",
-                    "visits": 580
-                }, {
-                    "country": "South Korea",
-                    "visits": 443
-                }, {
-                    "country": "Canada",
-                    "visits": 441
-                }],
+            am4core.ready(function() {
+                // Themes begin
+                am4core.useTheme(am4themes_animated);
+                // Themes end
 
-                // Add Y axis
-                "yAxes": [{
-                    "type": "ValueAxis",
-                    "renderer": {
-                    "maxLabelPosition": 0.98
-                    }
-                }],
+                drawAccessDevices();
+                drawAccessToInternet();
+                drawAccessType();
 
-                // Add X axis
-                "xAxes": [{
-                    "type": "CategoryAxis",
-                    "renderer": {
-                    "minGridDistance": 20,
-                    "grid": {
-                        "location": 0
-                    }
-                    },
-                    "dataFields": {
-                    "category": "country"
-                    }
-                }],
+                drawEngagementHours();
+                drawEngagement();
 
-                // Add series
-                "series": [{
-                    // Set type
-                    "type": "ColumnSeries",
+                drawActivities();
+            }); // end am4core.ready()
 
-                    // Define data fields
-                    "dataFields": {
-                    "categoryX": "country",
-                    "valueY": "visits"
-                    },
+            var total = survey_response.sum("cnt"),
+                under = (parseInt(getObj('Undergraduate',survey_response,'lvl').cnt, 10) / total) * 100,
+                post = (parseInt(getObj('Postgraduate',survey_response,'lvl').cnt, 10) / total) * 100;
 
-                    // Modify default state
-                    "defaultState": {
-                    "transitionDuration": 1000
-                    },
+            $("#survey_complete").html(tmpl('tmpl-graph-text', {'cls': 'text-L', 'no': new Intl.NumberFormat('en-US').format(total), 'txt': 'Completed Surveys' }));
+            $("#survey_under").html(tmpl('tmpl-graph-text', {'cls': 'text-M', 'no': under.toFixed(1) + '%', 'txt': 'Undergraduate Response Rate' }));
+            $("#survey_post").html(tmpl('tmpl-graph-text', {'cls': 'text-S', 'no': post.toFixed(1) + '%', 'txt': 'Postgraduate Response Rate' }));
 
-                    // Set animation options
-                    "sequencedInterpolation": true,
-                    "sequencedInterpolationDelay": 100,
-
-                    // Modify color appearance
-                    "columns": {
-                    // Disable outline
-                    "strokeOpacity": 0,
-
-                    // Add adapter to apply different colors for each column
-                    "adapter": {
-                        "fill": function (fill, target) {
-                        return chart.colors.getIndex(target.dataItem.index);
-                        }
-                    }
-                    }
-                }],
-
-                // Enable chart cursor
-                "cursor": {
-                    "type": "XYCursor",
-                    "behavior": "zoomX"
-                }
-            }, "chart_access_device", "XYChart");
-
-            var chart = am4core.createFromConfig({
-                // Set data
-                data: [{
-                    "country": "Lithuania",
-                    "litres": 501.9
-                }, {
-                    "country": "Czech Republic",
-                    "litres": 301.9
-                }, {
-                    "country": "Ireland",
-                    "litres": 201.1
-                }, {
-                    "country": "Germany",
-                    "litres": 165.8
-                }, {
-                    "country": "Australia",
-                    "litres": 139.9
-                }, {
-                    "country": "Austria",
-                    "litres": 128.3
-                }, {
-                    "country": "UK",
-                    "litres": 99
-                }, {
-                    "country": "Belgium",
-                    "litres": 60
-                }, {
-                    "country": "The Netherlands",
-                    "litres": 50
-                }],
-
-                // Create series
-                "series": [{
-                    "type": "PieSeries",
-                    "dataFields": {
-                    "value": "litres",
-                    "category": "country"
-                    },
-                    "hiddenState": {
-                    "properties": {
-                        // this creates initial animation
-                        "opacity": 1,
-                        "endAngle": -90,
-                        "startAngle": -90
-                    }
-                    }
-                }],
-
-                // Add legend
-                "legend": {}
-            }, "chart_access_internet", "PieChart");
-
-            var chart = am4core.createFromConfig({
-                // Set data
-                data: [{
-                    "country": "Lithuania",
-                    "litres": 501.9
-                }, {
-                    "country": "Czech Republic",
-                    "litres": 301.9
-                }, {
-                    "country": "Ireland",
-                    "litres": 201.1
-                }, {
-                    "country": "Germany",
-                    "litres": 165.8
-                }, {
-                    "country": "Australia",
-                    "litres": 139.9
-                }, {
-                    "country": "Austria",
-                    "litres": 128.3
-                }, {
-                    "country": "UK",
-                    "litres": 99
-                }, {
-                    "country": "Belgium",
-                    "litres": 60
-                }, {
-                    "country": "The Netherlands",
-                    "litres": 50
-                }],
-
-                // Create series
-                "series": [{
-                    "type": "PieSeries",
-                    "dataFields": {
-                    "value": "litres",
-                    "category": "country"
-                    },
-                    "hiddenState": {
-                    "properties": {
-                        // this creates initial animation
-                        "opacity": 1,
-                        "endAngle": -90,
-                        "startAngle": -90
-                    }
-                    }
-                }],
-
-                // Add legend
-                "legend": {}
-            }, "chart_access_type", "PieChart");
-
-            var chart = am4core.createFromConfig({
-                // Reduce saturation of colors to make them appear as toned down
-                "colors": {
-                    "saturation": 0.4
-                },
-
-                // Setting data
-                "data": [{
-                    "country": "USA",
-                    "visits": 3025
-                }, {
-                    "country": "China",
-                    "visits": 1882
-                }, {
-                    "country": "Japan",
-                    "visits": 1809
-                }, {
-                    "country": "Germany",
-                    "visits": 1322
-                }, {
-                    "country": "UK",
-                    "visits": 1122
-                }, {
-                    "country": "France",
-                    "visits": 1114
-                }, {
-                    "country": "India",
-                    "visits": 984
-                }, {
-                    "country": "Spain",
-                    "visits": 711
-                }, {
-                    "country": "Netherlands",
-                    "visits": 665
-                }, {
-                    "country": "Russia",
-                    "visits": 580
-                }, {
-                    "country": "South Korea",
-                    "visits": 443
-                }, {
-                    "country": "Canada",
-                    "visits": 441
-                }],
-
-                // Add Y axis
-                "yAxes": [{
-                    "type": "ValueAxis",
-                    "renderer": {
-                    "maxLabelPosition": 0.98
-                    }
-                }],
-
-                // Add X axis
-                "xAxes": [{
-                    "type": "CategoryAxis",
-                    "renderer": {
-                    "minGridDistance": 20,
-                    "grid": {
-                        "location": 0
-                    }
-                    },
-                    "dataFields": {
-                    "category": "country"
-                    }
-                }],
-
-                // Add series
-                "series": [{
-                    // Set type
-                    "type": "ColumnSeries",
-
-                    // Define data fields
-                    "dataFields": {
-                    "categoryX": "country",
-                    "valueY": "visits"
-                    },
-
-                    // Modify default state
-                    "defaultState": {
-                    "transitionDuration": 1000
-                    },
-
-                    // Set animation options
-                    "sequencedInterpolation": true,
-                    "sequencedInterpolationDelay": 100,
-
-                    // Modify color appearance
-                    "columns": {
-                    // Disable outline
-                    "strokeOpacity": 0,
-
-                    // Add adapter to apply different colors for each column
-                    "adapter": {
-                        "fill": function (fill, target) {
-                        return chart.colors.getIndex(target.dataItem.index);
-                        }
-                    }
-                    }
-                }],
-
-                // Enable chart cursor
-                "cursor": {
-                    "type": "XYCursor",
-                    "behavior": "zoomX"
-                }
-            }, "chart_engagement_acces", "XYChart");
-
-            var chart = am4core.createFromConfig({
-                // Reduce saturation of colors to make them appear as toned down
-                "colors": {
-                    "saturation": 0.4
-                },
-
-                // Setting data
-                "data": [{
-                    "country": "USA",
-                    "visits": 3025
-                }, {
-                    "country": "China",
-                    "visits": 1882
-                }, {
-                    "country": "Japan",
-                    "visits": 1809
-                }, {
-                    "country": "Germany",
-                    "visits": 1322
-                }, {
-                    "country": "UK",
-                    "visits": 1122
-                }, {
-                    "country": "France",
-                    "visits": 1114
-                }, {
-                    "country": "India",
-                    "visits": 984
-                }, {
-                    "country": "Spain",
-                    "visits": 711
-                }, {
-                    "country": "Netherlands",
-                    "visits": 665
-                }, {
-                    "country": "Russia",
-                    "visits": 580
-                }, {
-                    "country": "South Korea",
-                    "visits": 443
-                }, {
-                    "country": "Canada",
-                    "visits": 441
-                }],
-
-                // Add Y axis
-                "yAxes": [{
-                    "type": "ValueAxis",
-                    "renderer": {
-                    "maxLabelPosition": 0.98
-                    }
-                }],
-
-                // Add X axis
-                "xAxes": [{
-                    "type": "CategoryAxis",
-                    "renderer": {
-                    "minGridDistance": 20,
-                    "grid": {
-                        "location": 0
-                    }
-                    },
-                    "dataFields": {
-                    "category": "country"
-                    }
-                }],
-
-                // Add series
-                "series": [{
-                    // Set type
-                    "type": "ColumnSeries",
-
-                    // Define data fields
-                    "dataFields": {
-                    "categoryX": "country",
-                    "valueY": "visits"
-                    },
-
-                    // Modify default state
-                    "defaultState": {
-                    "transitionDuration": 1000
-                    },
-
-                    // Set animation options
-                    "sequencedInterpolation": true,
-                    "sequencedInterpolationDelay": 100,
-
-                    // Modify color appearance
-                    "columns": {
-                    // Disable outline
-                    "strokeOpacity": 0,
-
-                    // Add adapter to apply different colors for each column
-                    "adapter": {
-                        "fill": function (fill, target) {
-                        return chart.colors.getIndex(target.dataItem.index);
-                        }
-                    }
-                    }
-                }],
-
-                // Enable chart cursor
-                "cursor": {
-                    "type": "XYCursor",
-                    "behavior": "zoomX"
-                }
-            }, "chart_engagement_hours", "XYChart");  
-
-            var chart = am4core.createFromConfig({
-                // Reduce saturation of colors to make them appear as toned down
-                "colors": {
-                    "saturation": 0.4
-                },
-
-                // Setting data
-                "data": [{
-                    "country": "USA",
-                    "visits": 3025
-                }, {
-                    "country": "China",
-                    "visits": 1882
-                }, {
-                    "country": "Japan",
-                    "visits": 1809
-                }, {
-                    "country": "Germany",
-                    "visits": 1322
-                }, {
-                    "country": "UK",
-                    "visits": 1122
-                }, {
-                    "country": "France",
-                    "visits": 1114
-                }, {
-                    "country": "India",
-                    "visits": 984
-                }, {
-                    "country": "Spain",
-                    "visits": 711
-                }, {
-                    "country": "Netherlands",
-                    "visits": 665
-                }, {
-                    "country": "Russia",
-                    "visits": 580
-                }, {
-                    "country": "South Korea",
-                    "visits": 443
-                }, {
-                    "country": "Canada",
-                    "visits": 441
-                }],
-
-                // Add Y axis
-                "yAxes": [{
-                    "type": "CategoryAxis",
-                    "renderer": {
-                    "minGridDistance": 20,
-                    "grid": {
-                        "location": 0
-                    }
-                    },
-                    "dataFields": {
-                    "category": "country"
-                    }
-                }],
-
-                // Add X axis
-                "xAxes": [{
-                    "type": "ValueAxis",
-                    "renderer": {
-                    "maxLabelPosition": 0.98
-                    }
-                }],
-
-                // Add series
-                "series": [{
-                    // Set type
-                    "type": "ColumnSeries",
-
-                    // Define data fields
-                    "dataFields": {
-                    "categoryY": "country",
-                    "valueX": "visits"
-                    },
-
-                    // Modify default state
-                    "defaultState": {
-                    "transitionDuration": 1000
-                    },
-
-                    // Set animation options
-                    "sequencedInterpolation": true,
-                    "sequencedInterpolationDelay": 100,
-
-                    // Modify color appearance
-                    "columns": {
-                    // Disable outline
-                    "strokeOpacity": 0,
-
-                    // Add adapter to apply different colors for each column
-                    "adapter": {
-                        "fill": function (fill, target) {
-                        return chart.colors.getIndex(target.dataItem.index);
-                        }
-                    }
-                    }
-                }],
-
-                // Enable chart cursor
-                "cursor": {
-                    "type": "XYCursor",
-                    "behavior": "zoomY"
-                }
-            }, "chart_activities", "XYChart");
-/*
-            var chart = am4core.createFromConfig({
-                // Set data
-                data: [{
-                    "country": "Lithuania",
-                    "litres": 501.9
-                }, {
-                    "country": "Czech Republic",
-                    "litres": 301.9
-                }, {
-                    "country": "Ireland",
-                    "litres": 201.1
-                }, {
-                    "country": "Germany",
-                    "litres": 165.8
-                }, {
-                    "country": "Australia",
-                    "litres": 139.9
-                }, {
-                    "country": "Austria",
-                    "litres": 128.3
-                }, {
-                    "country": "UK",
-                    "litres": 99
-                }, {
-                    "country": "Belgium",
-                    "litres": 60
-                }, {
-                    "country": "The Netherlands",
-                    "litres": 50
-                }],
-
-                // Create series
-                "series": [{
-                    "type": "PieSeries",
-                    "dataFields": {
-                    "value": "litres",
-                    "category": "country"
-                    },
-                    "hiddenState": {
-                    "properties": {
-                        // this creates initial animation
-                        "opacity": 1,
-                        "endAngle": -90,
-                        "startAngle": -90
-                    }
-                    }
-                }],
-
-                // Add legend
-                "legend": {}
-            }, "chart_tutor_availability", "PieChart");            
-
-            var chart = am4core.createFromConfig({
-                // Reduce saturation of colors to make them appear as toned down
-                "colors": {
-                    "saturation": 0.4
-                },
-
-                // Setting data
-                "data": [{
-                    "country": "USA",
-                    "visits": 3025
-                }, {
-                    "country": "China",
-                    "visits": 1882
-                }, {
-                    "country": "Japan",
-                    "visits": 1809
-                }, {
-                    "country": "Germany",
-                    "visits": 1322
-                }, {
-                    "country": "UK",
-                    "visits": 1122
-                }, {
-                    "country": "France",
-                    "visits": 1114
-                }, {
-                    "country": "India",
-                    "visits": 984
-                }, {
-                    "country": "Spain",
-                    "visits": 711
-                }, {
-                    "country": "Netherlands",
-                    "visits": 665
-                }, {
-                    "country": "Russia",
-                    "visits": 580
-                }, {
-                    "country": "South Korea",
-                    "visits": 443
-                }, {
-                    "country": "Canada",
-                    "visits": 441
-                }],
-
-                // Add Y axis
-                "yAxes": [{
-                    "type": "ValueAxis",
-                    "renderer": {
-                    "maxLabelPosition": 0.98
-                    }
-                }],
-
-                // Add X axis
-                "xAxes": [{
-                    "type": "CategoryAxis",
-                    "renderer": {
-                    "minGridDistance": 20,
-                    "grid": {
-                        "location": 0
-                    }
-                    },
-                    "dataFields": {
-                    "category": "country"
-                    }
-                }],
-
-                // Add series
-                "series": [{
-                    // Set type
-                    "type": "ColumnSeries",
-
-                    // Define data fields
-                    "dataFields": {
-                    "categoryX": "country",
-                    "valueY": "visits"
-                    },
-
-                    // Modify default state
-                    "defaultState": {
-                    "transitionDuration": 1000
-                    },
-
-                    // Set animation options
-                    "sequencedInterpolation": true,
-                    "sequencedInterpolationDelay": 100,
-
-                    // Modify color appearance
-                    "columns": {
-                    // Disable outline
-                    "strokeOpacity": 0,
-
-                    // Add adapter to apply different colors for each column
-                    "adapter": {
-                        "fill": function (fill, target) {
-                        return chart.colors.getIndex(target.dataItem.index);
-                        }
-                    }
-                    }
-                }],
-
-                // Enable chart cursor
-                "cursor": {
-                    "type": "XYCursor",
-                    "behavior": "zoomX"
-                }
-            }, "chart_tutor_hours", "XYChart");
-*/
         });
+
     </script>
-    
+    {{ source('result_template.html') }}
+
 {% include 'footer.html' %}
 {% include 'html_end.html' %}

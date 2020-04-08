@@ -587,25 +587,178 @@ class Utilities
     }
 
     public function getSurveyResults($hash) {
-        $result = [ 'success' => 1, 'result' => null ];
+        $result = [ 'success' => 1
+            ,'survey_response' => null
+            ,'survey_access_device' =>  null
+            ,'survey_access_type' => null
+            ,'survey_activities' => null
+            ,'survey_engagement_conditions' => null
+            ,'survey_engagement_hours' => null
+        ];
+        $var = [':faculty' => "HUM"];
+
+        // survey_response
         try {
-            $query = "SELECT count(*), `cohort`.level
+            $query = "SELECT count(*) as cnt, `cohort`.level as lvl
                 FROM studentsurvey.results_valid `results`
                     left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
                 where `cohort`.facultyCode = :faculty
                 group by `cohort`.level";
+
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute([':faculty' => "HUM"]);
+            $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$series_id.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
             }
 
-            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $result['survey_response'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             $result = [ 'success' => 0, 'err' => $e->getMessage()];
         }
+
+        // survey_access_device
+        try {
+            $query = "SELECT 
+                sum(`results`.Q3 REGEXP 'Laptop') as Laptop,
+                sum(`results`.Q3 REGEXP 'Desktop computer') as Desktop,
+                sum(`results`.Q3 REGEXP 'Smartphone') as Smartphone,
+                sum(`results`.Q3 REGEXP 'Tablet') as Tablet,
+                sum(`results`.Q3 REGEXP \"I don't have access to any device\") as Nothing,
+                count(*) as cnt,
+                `results`.Q3
+                FROM studentsurvey.results_valid `results`
+                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                where `cohort`.facultyCode = :faculty
+                group by `results`.Q3
+                order by `results`.Q3";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['survey_access_device'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        //survey_access_type
+        try {
+            $query = "SELECT 
+                sum(`results`.Q5 REGEXP 'Mobile data') as Mobile,
+                sum(`results`.Q5 REGEXP 'Wifi') as Wifi,
+                sum(`results`.Q5 REGEXP 'Other') as Other,
+                sum(`results`.Q5 REGEXP 'No access') as Nothing,
+                count(*) as cnt,
+                `results`.Q5
+                FROM studentsurvey.results_valid `results`
+                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    where `cohort`.facultyCode = :faculty
+                group by `results`.Q5
+                order by `results`.Q5";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['survey_access_type'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        //survey_activities
+        try {
+            $query = "SELECT 
+                sum(`results`.Q8 REGEXP \"Login to Vula, read announcements, join a chatroom\") as login_vula,
+                sum(`results`.Q8 REGEXP \"Download a reading, notes or presentation from Vula\") as download,
+                sum(`results`.Q8 REGEXP \"Search for and download learning or research materials online or through UCT Library\") as search,
+                sum(`results`.Q8 REGEXP \"Download a lecture video\") as download_500,
+                sum(`results`.Q8 REGEXP \"Play a lecture video online\") as stream,
+                sum(`results`.Q8 REGEXP \"Voice call\") as voice,
+                sum(`results`.Q8 REGEXP \"Live video call or meeting\") as video,
+                sum(`results`.Q8 REGEXP \"I don't know\") as other,
+                sum(`results`.Q8 = \"\") as n,
+                count(*) as cnt,
+                `results`.Q8
+                FROM studentsurvey.results_valid `results`
+                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    where `cohort`.facultyCode = :faculty
+                group by `results`.Q8
+                order by `results`.Q8";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['survey_activities'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        //survey_engagement_conditions
+        try {
+            $query = "SELECT 
+                sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer that I can use whenever I need to\") as own_laptop_desktop,
+                sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer but share it with others so it's not always available\") as share_laptop_desktop,
+                sum(`results`.Q4 REGEXP \"I share someone else's laptop or desktop computer, so it's not always available\") as borrow_laptop_desktop,
+                sum(`results`.Q4 REGEXP \"I don't have a laptop or desktop computer that I can use\") as Nothing,
+                count(*) as cnt,
+                `results`.Q4
+                FROM studentsurvey.results_valid `results`
+                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    where `cohort`.facultyCode = :faculty
+                group by `results`.Q4
+                order by `results`.Q4";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['survey_engagement_conditions'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        //survey_engagement_hours
+        try {
+            $query = "SELECT 
+                count(`results`.Q7) as cnt,
+                `results`.Q7
+                FROM studentsurvey.results_valid `results`
+                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    where `cohort`.facultyCode = :faculty
+                group by `results`.Q7
+                order by `results`.Q7";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['survey_engagement_hours'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }        
 
         return $result;
     }
