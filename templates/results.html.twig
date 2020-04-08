@@ -1,6 +1,6 @@
 {% include 'html_start_survey.html' %}
     <div class="content">
-        {% include 'header.html' %}
+        {% include 'header_survey.html' %}
         
         <div class="container post">
             {% if (authenticated.a) %}
@@ -485,7 +485,7 @@
             var survey_total = (o_survey_under ? o_survey_under.cnt : 0) + (o_survey_post ? o_survey_post.cnt : 0);
 
             per = ((survey_total / cohort_total) * 100).toFixed(1);
-            $("#result_title").html(tmpl('tmpl-page-title', {'no': new Intl.NumberFormat('en-US').format(total), "per": per, "cls": "Test"}));
+            $("#result_title").html(tmpl('tmpl-page-title', {'no': new Intl.NumberFormat('en-US').format(total), "per": per, "cls": "{{result.course}}"}));
 
             $("#survey_complete").html(tmpl('tmpl-graph-text', {'cls': 'text-L', 'no': new Intl.NumberFormat('en-US').format(total), 'txt': 'Responses' }));
             if (under > 0) {
