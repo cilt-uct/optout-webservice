@@ -598,6 +598,7 @@ class Utilities
             ,'survey_engagement_hours' => null
             ,'created_at' => (new \DateTime())->format('Y-m-d H:i:s')
             ,'updated_at' => ''
+            ,'err_msg' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'
         ];    
 
         $var = [];
@@ -628,7 +629,7 @@ class Utilities
                     if ($stmt->rowCount() === 0) {
                         $result = [
                             'success' => 0,
-                            'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                            'err' => 'faculty'];
                     }
 
                     $faculty = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -642,19 +643,23 @@ class Utilities
             }
         }
 
+        $result['where'] = $where;
+        $result['var'] = $var;
+
         // updated_at
         try {
-            $query = "SELECT max(recordedDate) as d FROM studentsurvey.results $where;";
+            $query = "SELECT max(`results`.updated_at) as d 
+            FROM studentsurvey.results_valid `results`
+                left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID $where;";
 
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
-                $result = [
-                    'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                $result['success'] = 0;
+                $result['err'] = 'updated_at';
             }
 
-            $result['updated_at'] = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0]['d'];
+            $result['updated_at'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             $result = [ 'success' => 0, 'err' => $e->getMessage()];
         }
@@ -669,9 +674,8 @@ class Utilities
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
-                $result = [
-                    'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                $result['success'] = 0;
+                $result['err'] = 'cohort_response';
             }
 
             $result['cohort_response'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -690,9 +694,8 @@ class Utilities
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
-                $result = [
-                    'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                $result['success'] = 0;
+                $result['err'] = 'survey_response';
             }
 
             $result['survey_response'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -719,9 +722,8 @@ class Utilities
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
-                $result = [
-                    'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                $result['success'] = 0;
+                $result['err'] = 'survey_access_device';
             }
 
             $result['survey_access_device'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -747,9 +749,8 @@ class Utilities
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
-                $result = [
-                    'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                $result['success'] = 0;
+                $result['err'] = 'survey_access_type';
             }
 
             $result['survey_access_type'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -780,9 +781,8 @@ class Utilities
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
-                $result = [
-                    'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                $result['success'] = 0;
+                $result['err'] = 'survey_activities';
             }
 
             $result['survey_activities'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -808,9 +808,8 @@ class Utilities
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
-                $result = [
-                    'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                $result['success'] = 0;
+                $result['err'] = 'survey_engagement_conditions';
             }
 
             $result['survey_engagement_conditions'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -832,9 +831,8 @@ class Utilities
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
-                $result = [
-                    'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                    $result['success'] = 0;
+                    $result['err'] = 'survey_engagement_hours';
             }
 
             $result['survey_engagement_hours'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
