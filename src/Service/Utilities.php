@@ -586,10 +586,14 @@ class Utilities
         // }
     }
 
-    public function getSurveyResults($hash) {
+    public function getSurveyResults($in_hash) {
+
+        $hash = $this->decryptHash($in_hash);
+
         $result = [ 'success' => 1
             ,'course' => $hash
             ,'code' => $hash
+            ,'hash' => $in_hash
             ,'survey_response' => null
             ,'survey_access_device' =>  null
             ,'survey_access_type' => null
@@ -606,6 +610,7 @@ class Utilities
 
         if (strtoupper($hash) == "TEST") {
             // everything
+            $result['course'] = "ALL Results";
         } else {
 
             if (preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
@@ -854,11 +859,12 @@ class Utilities
         return $result;
     }
 
-    public function getRawSurveyResults($hash) {
+    public function getRawSurveyResults($in_hash) {
         $result = [ 'success' => 1 ,'result' => null];
 
         $var = [];
         $where = '';
+        $hash = $this->decryptHash($in_hash);
 
         if (strtoupper($hash) == "TEST") {
             // everything
@@ -917,20 +923,24 @@ class Utilities
         return $result;
     }
 
+    public function getSurveyForEmail($in_hash) {
 
-    public function getSurveyForEmail($hash) {
+        $hash = $this->decryptHash($in_hash);
         $result = [
             'success' => 1
             ,'updated_at' => ""
             ,'title' => ""
             ,'name' => ""
             ,'email' => ""
-            ,'hash' => $hash
+            ,'code' => $hash
+            ,'hash' => $in_hash
             ,'link' => 'https://srvslscet001.uct.ac.za/optout/survey/'. $hash
             ,'is_course' => 0
             ,'is_department' => 0
             ,'is_faculty' => 0
         ];
+        $var = [];
+        $where = '';
 
         if (strtoupper($hash) == "TEST") {
             // everything
@@ -1062,6 +1072,43 @@ class Utilities
         }
         
         return $result;
+    }
+
+    public function encryptHash($hash) {
+                
+        // Store the cipher method 
+        $ciphering = "AES-128-CTR"; 
+        
+        // Use OpenSSl Encryption method 
+        $iv_length = openssl_cipher_iv_length($ciphering); 
+        $options = 0; 
+        
+        // Non-NULL Initialization Vector for encryption 
+        $encryption_iv = '7767875091113121'; 
+        
+        // Store the encryption key 
+        $encryption_key = "AbstractOrganisationalEntity"; 
+        
+        // Use openssl_encrypt() function to encrypt the data 
+        return openssl_encrypt($hash, $ciphering, $encryption_key, $options, $encryption_iv); 
+    }
+
+    public function decryptHash($val) {
+        // Store the cipher method 
+        $ciphering = "AES-128-CTR"; 
+        
+        // Use OpenSSl Encryption method 
+        $iv_length = openssl_cipher_iv_length($ciphering); 
+        $options = 0; 
+
+        // Non-NULL Initialization Vector for decryption 
+        $decryption_iv = '7767875091113121'; 
+        
+        // Store the decryption key 
+        $decryption_key = "AbstractOrganisationalEntity"; 
+        
+        // Use openssl_decrypt() function to decrypt the data 
+        return openssl_decrypt ($val, $ciphering, $decryption_key, $options, $decryption_iv); 
     }
 
     // Function to check string starting with given substring

@@ -1118,6 +1118,8 @@ class UIController extends Controller
         if ($data['success']) {
 
             $str = "Student Access Survey: results as of ". (new \DateTime($data['updated_at']))->format('jS F Y g:ia');
+            //$en = $utils->encryptHash($hash);
+            //$str = "|". $en .'|'. $utils->decryptHash($en).'|';
             return new Response($str, 201);
         } else {
             return new Response("ERROR_MAIL_HASH", 500);
