@@ -904,7 +904,70 @@ class Utilities
             'success' => 1
             ,'updated_at' => "2020-04-08 10:46:17"
             ,'name' => "test name"
+            ,'hash' => $hash
+            ,'title' => "AAA0000F"
+            ,'link' => 'https://srvslscet001.uct.ac.za/optout/survey/'. $hash
+            ,'is_course' => 0
+            ,'is_department' => 0
+            ,'is_faculty' => 0
         ];
+
+        if (strtoupper($hash) == "TEST") {
+            // everything
+        } else {
+
+            if (preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
+                // this is a course :)
+                $var = [':courseCode' => strtoupper($hash)];
+                $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode = :courseCode)';
+
+                $result['course'] = strtoupper($hash);
+                
+                $result['is_course'] = 1;
+
+            } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI"])) {
+                // faculty
+                $var = [':faculty' => strtoupper($hash)];
+                $where = 'where `cohort`.facultyCode = :faculty';
+
+                $result['is_faculty'] = 1;
+                try {
+                    $query = "SELECT * FROM timetable.uct_faculty `faculty` where `faculty`.`code` = :faculty";
+
+                    $stmt = $this->dbh->prepare($query);
+                    $stmt->execute($var);
+                    if ($stmt->rowCount() === 0) {
+                        $result = [
+                            'success' => 0,
+                            'err' => 'faculty'];
+                    }
+
+                    $faculty = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    $result['title'] = $faculty[0]['name'];
+                } catch (\PDOException $e) {
+                    $result = [ 'success' => 0, 'err' => $e->getMessage()];
+                }
+            } else {
+                // so probably a Department
+                try {
+                    $var = [':dept' => strtoupper($hash)];
+                    //$where = 'where `cohort`.facultyCode = :faculty';
+
+                    $query = "SELECT dept, name FROM timetable.uct_dept where dept = :dept";
+
+                    $stmt = $this->dbh->prepare($query);
+                    $stmt->execute($var);
+                    if ($stmt->rowCount() === 0) {
+                        $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                    }
+
+                    $dept = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    $result['title'] = $dept[0]['name'];
+                } catch (\PDOException $e) {
+                    $result = [ 'success' => 0, 'err' => $e->getMessage()];
+                }
+            }
+        }
 
         return $result;
     }
