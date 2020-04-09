@@ -1029,7 +1029,7 @@ class UIController extends Controller
         // Set headers
         $response->headers->set('Cache-Control', 'private');
         $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
-        $response->headers->set('Content-Disposition', 'attachment; filename="UCT Student Access Survey '. $now->format('Y-m-d_H-i'). '.csv"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="UCT DASS '. $hash .' '. $now->format('Y-m-d_H-i'). '.csv"');
         //$response->headers->set('Content-length', length($this->outputCSV($data['result'])));
 
         // Send headers before outputting anything

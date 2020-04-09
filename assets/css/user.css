@@ -1396,16 +1396,16 @@ aside li > a:active {
   display: block;
 }
 
-.graph_container div[id^=chart_] {
-  height: 220px;
-}
-
 .graph_container > div .text-L > span:first-child { font-size: 5rem; }
 .graph_container > div .text-L > span:last-child { font-size: 1.2rem; }
 .graph_container > div .text-M > span:first-child { font-size: 3rem; }
 .graph_container > div .text-M > span:last-child { font-size: 1rem; }
 .graph_container > div .text-S > span:first-child { font-size: 1.6rem; }
 .graph_container > div .text-S > span:last-child { font-size: 1rem; }
+
+.graph_container div[id^=chart_] {
+  height: 220px;
+}
 
 .graph_container > .div1 { grid-area: 1 / 1 / 2 / 3; }
 .graph_container > .div2 { grid-area: 1 / 3 / 2 / 5; }
@@ -1414,47 +1414,79 @@ aside li > a:active {
 .graph_container > .div5 { grid-area: 2 / 4 / 3 / 7; }
 .graph_container > .div6 { grid-area: 3 / 1 / 4 / 7; }
 
-/* .graph_container > .div1 { grid-area: 1 / 1 / 2 / 2; }
-.graph_container > .div2 { grid-area: 1 / 2 / 2 / 5; border: 1px solid #EFEFEF;}
-.graph_container > .div3 { 
-      grid-area: 1 / 5 / 2 / 7;
-  }
-.graph_container > .div3 > div {
-  width: 100%;
-  align-self: stretch;
+h3#result_title {
+  margin-bottom: 2px; 
+}
+
+.header_grid {
   display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: repeat(5, 1fr);
-  grid-column-gap: 6px;
-  grid-row-gap: 6px;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: 1fr;
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
 }
-.graph_container > .div3 div.div1 { grid-area: 1 / 1 / 4 / 2; border: 1px solid #EFEFEF; background-color: #EFEFEF; }
-.graph_container > .div3 div.div2 { grid-area: 4 / 1 / 6 / 2; border: 1px solid #EFEFEF; background-color: #EFEFEF; } */
 
-/* // .graph_container > .div4 { grid-area: 2 / 5 / 3 / 7; border: 1px solid #EFEFEF; background-color: #EFEFEF;} */
-/* this is the logo box */
-/* .graph_container > .div4 {    
-  grid-area: 1 / 7 / 2 / 8;
+.header_grid label {
+  cursor: default;
+  width: 125px;
+  text-align: right;
+  margin-bottom: 10px;
+  padding-right: 8px;
+}
+
+.header_grid > .div1 { grid-area: 1 / 1 / 2 / 3; }
+.header_grid > .div2 { grid-area: 1 / 3 / 2 / 4; }
+.header_grid > .div3 { grid-area: 1 / 4 / 2 / 6; }
+.header_grid > .div4 { grid-area: 1 / 6 / 2 / 7; }
+
+.header_grid > .div2 {
+ align-self: center;
+}
+
+.header_grid > .div4 {
+ text-align: center;
+ align-self: center;
+}
+.header_grid > .div4 > img {
+ width: 120px;
+}
+
+.header_grid > div .text {
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  position: relative;
+  text-align: center;
+  display: block;
+  line-height: 1.3rem;
+}
+
+.header_grid > div .text > span:first-child { font-size: 3rem; }
+.header_grid > div .text > span:last-child { font-size: 1.2rem; }
+
+.header_grid > .div3 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: 1fr;
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
+}
+.header_grid > .div3 > div {
   align-self: center;
-  text-align: center; 
 }
-.graph_container > .div4 > img { width: 150px; } */
-/* .graph_container > .div5 { grid-area: 2 / 1 / 3 / 2; }
-.graph_container > .div6 { grid-area: 2 / 2 / 3 / 4; border: 1px solid #EFEFEF;}
-.graph_container > .div7 { grid-area: 2 / 4 / 3 / 6; border: 1px solid #EFEFEF;}
-.graph_container > .div8 { grid-area: 2 / 6 / 3 / 8; border: 1px solid #EFEFEF;}
 
-.graph_container > .div9 { grid-area: 3 / 1 / 4 / 2; }
-.graph_container > .div10 { grid-area: 3 / 2 / 4 / 5; border: 1px solid #EFEFEF;}
-.graph_container > .div11 { grid-area: 3 / 5 / 4 / 8; border: 1px solid #EFEFEF;}
+.header_grid > .div3 > .div1 { grid-area: 1 / 1 / 2 / 3; }
+.header_grid > .div3 > .div2 { grid-area: 1 / 3 / 2 / 4; }
+.header_grid > .div3 > .div3 { grid-area: 1 / 4 / 2 / 6; }
 
-.graph_container > .div12 { grid-area: 4 / 1 / 5 / 2; }
-.graph_container > .div13 { grid-area: 4 / 2 / 5 / 8; border: 1px solid #EFEFEF;}
+.header_grid > .div3 > .div2 {
+  font-size: 2rem;
+  text-align: center;
+  align-self: center;
+}
 
-.graph_container > .div14 { grid-area: 5 / 1 / 6 / 2; }
-.graph_container > .div15 { grid-area: 5 / 2 / 6 / 3; border: 1px solid #EFEFEF; }
-.graph_container > .div16 { grid-area: 5 / 3 / 6 / 5; border: 1px solid #EFEFEF;}
-.graph_container > .div17 { grid-area: 5 / 5 / 6 / 8; border: 1px solid #EFEFEF;} */
+/******************************************/
+
 .select-css {
   display: block;
   font-size: 14px;

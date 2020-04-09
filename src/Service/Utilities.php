@@ -597,6 +597,7 @@ class Utilities
             ,'survey_engagement_conditions' => null
             ,'survey_engagement_hours' => null
             ,'created_at' => (new \DateTime())->format('Y-m-d H:i:s')
+            ,'updated_at' => ''
         ];    
 
         $var = [];
@@ -639,6 +640,23 @@ class Utilities
             } else {
                 return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
             }
+        }
+
+        // updated_at
+        try {
+            $query = "SELECT max(recordedDate) as d FROM studentsurvey.results $where;";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [
+                    'success' => 0,
+                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+            }
+
+            $result['updated_at'] = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0]['d'];
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
         }
 
         // cohort_response
@@ -852,11 +870,20 @@ class Utilities
 
         //survey_engagement_hours
         try {
-            $query = "select cohort.EID, recordedDate, level, programCode, facultyCode, careerCode,
-                        Q2, Q3, Q4, Q5, Q6, Q7, Q8 
-                    FROM studentsurvey.results_valid `results`
-                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                    $where";
+            $query = "select 
+                        `cohort`.EID, `cohort`.level, `cohort`.programCode, `cohort`.facultyCode, `cohort`.careerCode, 
+                        ifnull(`results`.recordedDate,'NA'), 
+                        ifnull(`results`.Q2,'NA'), 
+                        ifnull(`results`.Q3,'NA'), 
+                        ifnull(`results`.Q4,'NA'), 
+                        ifnull(`results`.Q5,'NA'),  
+                        ifnull(`results`.Q6,'NA'), 
+                        ifnull(`results`.Q7,'NA'),  
+                        ifnull(`results`.Q8,'NA') 
+                    from studentsurvey.cohort `cohort` 
+                        left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
+                        $where
+                        order by `cohort`.EID;";
 
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);

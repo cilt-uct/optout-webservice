@@ -7,17 +7,36 @@
             <div class="row post-body">
                 <div class="col-md-12 post-title">
 
-                    <a href="{{out_link}}" target="_blank" type="button" class="btn btn-outline-secondary" style="float: right;">
-                        <i class="fa fa-file-csv"></i>&nbsp;&nbsp;Download Dataset
-                    </a>
+                    <h3 id="result_title">Student Access Survey: <span style="color: #5caad2;">{{result.course}}</span></h3>
+                    <p class="author">
+                        <span class="text-muted">{{result.created_at|date("F jS \\a\\t g:ia")}}<small>(data last refreshed at {{result.updated_at|date("F jS \\a\\t g:ia")}})</small></span>
+                    </p>
+                  
+                    <div class="header_grid">
+                        <div class="div1" style="padding-top: 10px;">
+                            <label>Important:</label>
+                            <a href="https://docs.google.com/document/d/17G2Vy1SJO2-rvF0Y6RhAKp3trcm9_zztNOeUniQoGts/edit" 
+                                title="UCT Student Access Survey: Interpreting the survey">Interpreting the survey</a>
 
-                    <h3 id="result_title"></h3>
-                    <p class="author"><span class="text-muted">{{result.created_at|date("F jS \\a\\t g:ia")}}</span></p>
-
-                    <!--
-                    3089 responses: XX.X% of ABCD students
-                    <img src="./Lecture Recording Automated Setup_files/DASS_logo_Round_Colour.png" alt="DASS">
-                    -->
+                            <label>Questions?</label>
+                            <a href="mailto:help@vula.uct.ac.za?Subject=Student Access Survey course results query ({{result.course}})" 
+                                title="Help: Student Access Survey course results query ({{result.course}}">help@vula.uct.ac.za</a>
+                            
+                            <label>Download results:</label>
+                            <a href="{{out_link}}" target="_blank"> <i class="fa fa-file-csv"></i> CSV File </a>    
+                        </div>
+                     
+                        <div class="div2" id="survey_response"></div>
+                        <div class="div3">
+                            <div class="div1" id="survey_per"></div>
+                            <div class="div2 text-muted">of</div>
+                            <div class="div3" id="survey_students"></div>
+                        </div>
+                        <div class="div4">
+                            <img src="{{ asset('public/build/images/DASS_logo_Round_Colour.png') }}" alt="DASS">
+                        </div>
+                    </div>
+                                        
                     <div class="graph_container">
                         <div class="div1 outline">
                             <h5>Access to devices</h5>
@@ -40,11 +59,10 @@
                             <div id="chart_engagement_hours"></div>
                         </div>
                         <div class="div6 outline">
-                            <h5>Things I can do online ignoring data costs or usage caps (After lockdown ends)</h5>
+                            <h5>Things I can do online ignoring data costs or usage caps (after lockdown ends)</h5>
                             <div id="chart_activities"></div>
                         </div>
-                    </div>                        
-
+                    </div>  
                 </div>
             </div>
             {% else %}
@@ -109,7 +127,6 @@
    
         // Global chart settings
         var chart_colors = { "saturation": 0.4 };
-        test =null
 
         function drawAccessDevices() {
             var total = survey_access_device.sum("cnt"),
@@ -290,8 +307,6 @@
                 "has": "Other",
                 "val": (t_other / total) * 100
             }];
-
-
         }
 
         function drawEngagementHours() {
@@ -302,8 +317,6 @@
                 e.cnt = parseInt(e.cnt, 10);
                 e.per = ((e.cnt / total) * 100).toFixed(1);
             });
-
-            console.log(survey_engagement_hours);
             
             // create the chart and set the data
             var chart = am4core.create("chart_engagement_hours", am4charts.XYChart);
@@ -383,48 +396,51 @@
         }
 
         function drawActivities() {
-            var total = survey_activities.filter(function(e){ return e.Q8 != ""; }).sum('cnt');
-            
+            var total = survey_activities.filter(function(e){ return e.Q8 != ""; }).sum('cnt'),
+                data_array =  [
+                    { 
+                        "type" : "Login to Vula, read announcements, join a chatroom", 
+                        "per" : ((survey_activities.sum("login_vula") / total) * 100).toFixed(1)
+                    }
+                    ,{ 
+                        "type" : "Download a reading, notes or presentation from Vula (e.g. PDFs, Powerpoints, up to 10MB)", 
+                        "per" : ((survey_activities.sum("download") / total) * 100).toFixed(1)
+                    }
+                    ,{ 
+                        "type" : "Search for and download learning or research materials online or through UCT Library", 
+                        "per" : ((survey_activities.sum("search") / total) * 100).toFixed(1)
+                    }
+                    ,{ 
+                        "type" : "Download a lecture video (up to 500MB)", 
+                        "per" : ((survey_activities.sum("download_500") / total) * 100).toFixed(1)
+                    }
+                    ,{ 
+                        "type" : "Play a lecture video online (without buffering)", 
+                        "per" : ((survey_activities.sum("stream") / total) * 100).toFixed(1)
+                    }
+                    ,{ 
+                        "type" : "Voice call (e.g. Whatsapp voice call, Skype)", 
+                        "per" : ((survey_activities.sum("voice") / total) * 100).toFixed(1)
+                    }                                                                      
+                    ,{ 
+                        "type" : "Live video call or meeting (e.g. WhatsApp video, Skype, Zoom, Teams, Adobe Connect)", 
+                        "per" : ((survey_activities.sum("video") / total) * 100).toFixed(1)
+                    } 
+                    // ,{ 
+                    //     "type" : "I don't know", 
+                    //     "per" : ((survey_activities.sum("other") / total) * 100).toFixed(1)
+                    // } 
+                ];
+            // sort these by highest % (top) to lowest % (bottom)
+            data_array.sort(function (a, b) { return (a.per < b.per ? 1 : -1); });
+
             // create the chart and set the data
             var chart = am4core.create("chart_activities", am4charts.XYChart);
             chart.minHeight = 240;
-            chart.data = [
-                { 
-                    "type" : "Login to Vula, read announcements, join a chatroom", 
-                    "per" : ((survey_activities.sum("login_vula") / total) * 100).toFixed(1)
-                }
-                ,{ 
-                    "type" : "Download a reading, notes or presentation from Vula (e.g. PDFs, Powerpoints, up to 10MB)", 
-                    "per" : ((survey_activities.sum("download") / total) * 100).toFixed(1)
-                }
-                ,{ 
-                    "type" : "Search for and download learning or research materials online or through UCT Library", 
-                    "per" : ((survey_activities.sum("search") / total) * 100).toFixed(1)
-                }
-               ,{ 
-                    "type" : "Download a lecture video (up to 500MB)", 
-                    "per" : ((survey_activities.sum("download_500") / total) * 100).toFixed(1)
-                }
-                ,{ 
-                    "type" : "Play a lecture video online (without buffering)", 
-                    "per" : ((survey_activities.sum("stream") / total) * 100).toFixed(1)
-                }
-                ,{ 
-                    "type" : "Voice call (e.g. Whatsapp voice call, Skype)", 
-                    "per" : ((survey_activities.sum("voice") / total) * 100).toFixed(1)
-                }                                                                      
-                ,{ 
-                    "type" : "Live video call or meeting (e.g. WhatsApp video, Skype, Zoom, Teams, Adobe Connect)", 
-                    "per" : ((survey_activities.sum("video") / total) * 100).toFixed(1)
-                } 
-                // ,{ 
-                //     "type" : "I don't know", 
-                //     "per" : ((survey_activities.sum("other") / total) * 100).toFixed(1)
-                // } 
-            ];
+            chart.data = data_array;
             var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
-            // categoryAxis.renderer.inversed = true;
+            categoryAxis.renderer.inversed = true;
             categoryAxis.renderer.grid.template.location = 0;
             categoryAxis.renderer.minGridDistance = 20;
             categoryAxis.renderer.fontSize = 10;
@@ -485,19 +501,10 @@
             var survey_total = (o_survey_under ? o_survey_under.cnt : 0) + (o_survey_post ? o_survey_post.cnt : 0);
 
             per = ((survey_total / cohort_total) * 100).toFixed(1);
-            $("#result_title").html(tmpl('tmpl-page-title', {'no': new Intl.NumberFormat('en-US').format(total), "per": per, "cls": "{{result.course}}"}));
-
-            $("#survey_complete").html(tmpl('tmpl-graph-text', {'cls': 'text-L', 'no': new Intl.NumberFormat('en-US').format(total), 'txt': 'Responses' }));
-            if (under > 0) {
-                $("#survey_under").html(tmpl('tmpl-graph-text', {'cls': 'text-M', 'no': under + '%', 'txt': 'Undergraduate Response Rate' }));
-            } else {
-                $("#survey_under").html(tmpl('tmpl-graph-text', {'cls': 'text-M', 'no': '-', 'txt': 'Undergraduate Response Rate' }));
-            }
-            if (post > 0) {
-                $("#survey_post").html(tmpl('tmpl-graph-text', {'cls': 'text-S', 'no': post + '%', 'txt': 'Postgraduate Response Rate' }));
-            } else {
-                $("#survey_post").html(tmpl('tmpl-graph-text', {'cls': 'text-S', 'no': '-', 'txt': 'Postgraduate Response Rate' }));
-            }
+           
+            $("#survey_response").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(total), 'txt': 'Responses' }));
+            $("#survey_per").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(per) +'%', 'txt': 'Response Rate' }));
+            $("#survey_students").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(cohort_total), 'txt': 'Students' }));
         });
     </script>
     {{ source('result_template.html') }}
