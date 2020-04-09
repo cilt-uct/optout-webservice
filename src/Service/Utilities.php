@@ -598,7 +598,7 @@ class Utilities
             ,'survey_engagement_hours' => null
             ,'created_at' => (new \DateTime())->format('Y-m-d H:i:s')
             ,'updated_at' => ''
-            ,'err_msg' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'
+            ,'err_msg' => 'The reference was not found, please contact help@vula.uct.ac.za.'
         ];    
 
         $var = [];
@@ -659,7 +659,7 @@ class Utilities
                 $result['err'] = 'updated_at';
             }
 
-            $result['updated_at'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $result['updated_at'] = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0]['d'];
         } catch (\PDOException $e) {
             $result = [ 'success' => 0, 'err' => $e->getMessage()];
         }
