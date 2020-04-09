@@ -462,7 +462,6 @@ class UIController extends Controller
         return new Response("ERROR_MAIL_HASH", 500);
     }
 
-
     /**
      * @Route("/subject/{hash}")
      */
@@ -1110,4 +1109,36 @@ class UIController extends Controller
         // return new Response(json_encode($data), 201);
         return $this->render('results.html.twig', $data);
     }
+
+    /**
+     * @Route("/mail_subject_results/{hash}")
+     */
+    public function getMailSubjectForResults($hash, Request $request) {
+        $utils = new Utilities();
+        $data = $utils->getSurveyForEmail($hash);
+
+        if ($data['success']) {
+
+            $str = "Student Access Survey: results as of ". (new \DateTime($data['updated_at']))->format('jS F Y g:ia');
+            return new Response($str, 201);
+        } else {
+            return new Response("ERROR_MAIL_HASH", 500);
+        }
+    }
+
+    /**
+     * @Route("/mail_body_results/{hash}")
+     */
+    public function getMailBodyForResults($hash, Request $request) {
+        $utils = new Utilities();
+        $data = $utils->getSurveyForEmail($hash);
+
+        if ($data['success']) {
+
+            return $this->render('results_mail.html.twig', $data);
+        } else {
+            return new Response("ERROR_MAIL_HASH", 500);
+        }
+    }
+
 }

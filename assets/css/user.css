@@ -1458,9 +1458,12 @@ h3#result_title {
   position: relative;
   text-align: center;
   display: block;
-  line-height: 1.3rem;
+  line-height: 2rem;
 }
 
+.header_grid > div .text > span { 
+  display: block;
+}
 .header_grid > div .text > span:first-child { font-size: 3rem; }
 .header_grid > div .text > span:last-child { font-size: 1.2rem; }
 

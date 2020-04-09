@@ -899,6 +899,16 @@ class Utilities
         return $result;
     }   
 
+    public function getSurveyForEmail($hash) {
+        $result = [
+            'success' => 1
+            ,'updated_at' => "2020-04-08 10:46:17"
+            ,'name' => "test name"
+        ];
+
+        return $result;
+    }
+
     // Function to check string starting with given substring
     function startsWith ($string, $startString)
     {

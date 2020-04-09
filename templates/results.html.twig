@@ -9,13 +9,13 @@
 
                     <h3 id="result_title">Student Access Survey: <span style="color: #5caad2;">{{result.course}}</span></h3>
                     <p class="author">
-                        <span class="text-muted">{{result.created_at|date("F jS \\a\\t g:ia")}}<small>(data last refreshed at {{result.updated_at|date("F jS \\a\\t g:ia")}})</small></span>
+                        <span class="text-muted">{{result.created_at|date("F jS \\a\\t g:ia")}} <small>(data last refreshed at {{result.updated_at|date("F jS \\a\\t g:ia")}})</small></span>
                     </p>
                   
                     <div class="header_grid">
                         <div class="div1" style="padding-top: 10px;">
                             <label>Important:</label>
-                            <a href="https://docs.google.com/document/d/17G2Vy1SJO2-rvF0Y6RhAKp3trcm9_zztNOeUniQoGts/edit" 
+                            <a href="https://docs.google.com/document/d/17G2Vy1SJO2-rvF0Y6RhAKp3trcm9_zztNOeUniQoGts/edit?usp=sharing" 
                                 title="UCT Student Access Survey: Interpreting the survey">Interpreting the survey</a>
 
                             <label>Questions?</label>
@@ -115,6 +115,9 @@
                 total += parseInt(this[i][prop]);
             }
             return total
+        }
+        function formatNumber(num) {
+            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ')
         }
 
         var cohort_response = {{result.cohort_response|json_encode|raw}};
