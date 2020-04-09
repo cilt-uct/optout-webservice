@@ -590,6 +590,9 @@ class Utilities
 
         $hash = $this->decryptHash($in_hash);
 
+        $date = new \DateTime('now');
+        $date->setTimezone(new \DateTimeZone('Africa/Johannesburg'));
+
         $result = [ 'success' => 1
             ,'course' => $hash
             ,'code' => $hash
@@ -600,7 +603,7 @@ class Utilities
             ,'survey_activities' => null
             ,'survey_engagement_conditions' => null
             ,'survey_engagement_hours' => null
-            ,'created_at' => (new \DateTime())->format('Y-m-d H:i:s')
+            ,'created_at' =>  $date->format('Y-m-d H:i:s')
             ,'updated_at' => ''
             ,'err_msg' => 'The reference was not found, please contact help@vula.uct.ac.za.'
         ];    
@@ -860,11 +863,15 @@ class Utilities
     }
 
     public function getRawSurveyResults($in_hash) {
-        $result = [ 'success' => 1 ,'result' => null];
 
         $var = [];
         $where = '';
         $hash = $this->decryptHash($in_hash);
+        $result = [ 'success' => 1
+            ,'result' => null
+            ,'code' => $hash
+            ,'hash' => $in_hash
+        ];
 
         if (strtoupper($hash) == "TEST") {
             // everything
@@ -893,15 +900,15 @@ class Utilities
         //survey_engagement_hours
         try {
             $query = "select 
-                        `cohort`.EID, `cohort`.level, `cohort`.programCode, `cohort`.facultyCode, `cohort`.careerCode, 
-                        ifnull(`results`.recordedDate,'NA'), 
-                        ifnull(`results`.Q2,'NA'), 
-                        ifnull(`results`.Q3,'NA'), 
-                        ifnull(`results`.Q4,'NA'), 
-                        ifnull(`results`.Q5,'NA'),  
-                        ifnull(`results`.Q6,'NA'), 
-                        ifnull(`results`.Q7,'NA'),  
-                        ifnull(`results`.Q8,'NA') 
+                        `cohort`.EID as StudentNumber, `cohort`.level, `cohort`.programCode, `cohort`.facultyCode, `cohort`.careerCode, 
+                        ifnull(`results`.recordedDate,'') as recordedDate, 
+                        ifnull(`results`.Q2,'') as Q2 , 
+                        ifnull(`results`.Q3,'') as Q3, 
+                        ifnull(`results`.Q4,'') as Q4, 
+                        ifnull(`results`.Q5,'') as Q5,
+                        ifnull(`results`.Q6,'') as Q6,  
+                        ifnull(`results`.Q7,'') as Q7,
+                        ifnull(`results`.Q8,'') as Q8
                     from studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         $where
@@ -934,7 +941,7 @@ class Utilities
             ,'email' => ""
             ,'code' => $hash
             ,'hash' => $in_hash
-            ,'link' => 'https://srvslscet001.uct.ac.za/optout/survey/'. $hash
+            ,'link' => 'https://srvslscet001.uct.ac.za/optout/survey/'. $in_hash
             ,'is_course' => 0
             ,'is_department' => 0
             ,'is_faculty' => 0
@@ -1109,6 +1116,93 @@ class Utilities
         
         // Use openssl_decrypt() function to decrypt the data 
         return openssl_decrypt ($val, $ciphering, $decryption_key, $options, $decryption_iv); 
+    }
+
+    public function generateResultEmails() {
+        $done = [ 'count' => 0, 'update' => 0, 'mail' => 0];
+
+        $faculties = array("TEST","COM","EBE","HUM","LAW","MED","SCI");
+        foreach ($faculties as &$hash) {
+
+            $data = $this->getSurveyForEmail($this->encryptHash($hash));
+
+            if ($data['success']) {
+                $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $hash, "faculty") ? 1 : 0;
+            }
+        }
+
+        try {
+            $query = "select substr(courseCode,1,3) as code from studentsurvey.cohort_class group by substr(courseCode,1,3);";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute();
+            while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+
+                $data = $this->getSurveyForEmail($this->encryptHash($line['code']));
+
+                if ($data['success']) {
+                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['code'], "dept") ? 1 : 0;
+                }
+            }
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }        
+        
+        try {
+            $query = "select A.course_code
+                        from timetable.ps_courses A
+                    where A.term = 2020 and A.start_date < '2020-06-01' 
+                    and A.course_code in (SELECT `cls`.courseCode FROM studentsurvey.cohort `cohort`
+                                            left join studentsurvey.cohort_class `cls` on `cls`.EID = `cohort`.EID
+                                            where `cohort`.careerCode not in ('PDOC','NDGP') 
+                                                and NOT(`cls`.courseCode regexp '(.*)[S|X|Z]$') and NOT(`cls`.courseCode regexp '^[A-Z]{3}9'));";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute();
+            while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+
+                $data = $this->getSurveyForEmail($this->encryptHash($line['course_code']));
+
+                if ($data['success']) {
+                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['course_code'], "course") ? 1 : 0;
+                }
+            }
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }    
+
+        return $done;
+    }
+
+    public function addResultEmails($hash, $name, $mail_to, $mail_cc, $code, $type) {
+
+        $insertQry = "replace into timetable.results_notification_emails (hash, name, mail_to, mail_cc, state, code, type)
+                        VALUES (:hash, :name, :mail_to, :mail_cc, 0, :code, :type)";
+
+        if (trim($mail_to) === '') {
+            $name = 'Stephen Marquard';
+            $mail_to = 'stephen.marquard@uct.ac.za';
+        }
+
+        try {
+            $insertStmt = $this->dbh->prepare($insertQry);
+            $bind = [
+                ':hash' => $hash,
+                ':code' => $code,
+                ':type' => $type,
+                ':name' => $name,
+                ':mail_to' => $mail_to,
+                ':mail_cc' => $mail_cc
+            ];
+            $insertStmt->execute($bind);
+            if ($insertStmt->rowCount() === 0) {
+                return FALSE;
+            }
+        } catch (\PDOException $e) {
+            return 'ERR:'. $e->getMessage();
+        }
+
+        return TRUE;
     }
 
     // Function to check string starting with given substring

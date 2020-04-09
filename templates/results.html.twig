@@ -15,7 +15,7 @@
                     <div class="header_grid">
                         <div class="div1" style="padding-top: 10px;">
                             <label>Important:</label>
-                            <a href="https://docs.google.com/document/d/17G2Vy1SJO2-rvF0Y6RhAKp3trcm9_zztNOeUniQoGts/edit?usp=sharing" 
+                            <a href="https://docs.google.com/document/d/17G2Vy1SJO2-rvF0Y6RhAKp3trcm9_zztNOeUniQoGts/edit?usp=sharing" target="_blank" 
                                 title="UCT Student Access Survey: Interpreting the survey">Interpreting the survey</a>
 
                             <label>Questions?</label>
@@ -55,7 +55,7 @@
                             <div id="chart_engagement_acces"></div>
                         </div>
                         <div class="div5 outline">
-                            <h5>Hours per day I am able to study online (after lockdown)</h5>
+                            <h5>Hours per day I am able to study online (after lockdown ends)</h5>
                             <div id="chart_engagement_hours"></div>
                         </div>
                         <div class="div6 outline">
@@ -446,6 +446,7 @@
                     // } 
                 ];
             // sort these by highest % (top) to lowest % (bottom)
+            data_array.map(function(i) { return {"type": i.type, "per": parseFloat(i.per)}; });
             data_array.sort(function (a, b) { return (a.per < b.per ? 1 : -1); });
 
             // create the chart and set the data
@@ -521,7 +522,7 @@
             $("#survey_students").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(cohort_total), 'txt': 'Students' }));
         });
     </script>
-    {{ source('result_template.html') }}
+    {{ source('results_template.html') }}
     {% endif %}
 {% include 'footer.html' %}
 {% include 'html_end.html' %}

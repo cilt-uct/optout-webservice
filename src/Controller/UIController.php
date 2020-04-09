@@ -1010,25 +1010,25 @@ class UIController extends Controller
          // Require logged in user
         if ($authenticated['a'] === false) {
             return $this->render('results.html.twig', $data);
-        }
-
-        if (!preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
-            if (!in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
-                return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
-            }
-        }        
+        }  
 
         $now = new \DateTime();
+        $now->setTimezone(new \DateTimeZone('Africa/Johannesburg'));
+
         $utils = new Utilities();
         $data = $utils->getRawSurveyResults($hash);
         
+        if (!$data['success']) {
+            return $this->render('results_error.html.twig', ['err' => $data['result']['err']]);
+        }
+
         // Generate response
         $response = new Response();
 
         // Set headers
         $response->headers->set('Cache-Control', 'private');
         $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
-        $response->headers->set('Content-Disposition', 'attachment; filename="UCT DASS '. $hash .' '. $now->format('Y-m-d_H-i'). '.csv"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="UCT Survey Results '. $data['code'] .' '. $now->format('Y-m-d_H-i'). '.csv"');
         //$response->headers->set('Content-length', length($this->outputCSV($data['result'])));
 
         // Send headers before outputting anything
@@ -1098,7 +1098,7 @@ class UIController extends Controller
         }
 
         $data['result'] = $utils->getSurveyResults($hash);
-        $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey/'. $hash;
+        $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey/'. $hash .'?t='. time();
 
         if (!$data['result']['success']) {
             return $this->render('results_error.html.twig', ['err' => $data['result']['err']]);
@@ -1117,7 +1117,7 @@ class UIController extends Controller
 
         if ($data['success']) {
 
-            $str = "Student Access Survey: results as of ". (new \DateTime($data['updated_at']))->format('jS F Y g:ia');
+            $str = "Student Access Survey for ". $data['code']; //." as of ". (new \DateTime($data['updated_at']))->format('jS F Y g:ia');
             //$en = $utils->encryptHash($hash);
             //$str = "|". $en .'|'. $utils->decryptHash($en).'|';
             return new Response($str, 201);
@@ -1140,5 +1140,16 @@ class UIController extends Controller
             return new Response("ERROR_MAIL_HASH", 500);
         }
     }
+
+    /**
+     * @Route("/generate_result_emails/")
+     */
+    public function generateResultEmails(Request $request) {
+        $utils = new Utilities();
+        $data = $utils->generateResultEmails();
+
+        return new Response(json_encode($data), 201);
+    }
+    
 
 }
