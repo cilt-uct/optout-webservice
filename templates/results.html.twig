@@ -131,6 +131,17 @@
         // Global chart settings
         var chart_colors = { "saturation": 0.4 };
 
+        function getParseValue(id, arr, key, ref) {
+            var o = getObj(id, arr, key);
+
+            if (o) { 
+                if ("undefined" !== typeof(o[ref])){
+                    return parseInt(o[ref], 10);
+                } 
+            }
+            return 0;
+        }
+
         function drawAccessDevices() {
             var total = survey_access_device.sum("cnt"),
                 t_laptop_desktop = survey_access_device.filter(function(e){ return (e.Q3.indexOf("Desktop computer") >= 0) || (e.Q3.indexOf("Laptop") >= 0); }).sum("cnt");
@@ -291,24 +302,24 @@
                 mobile_only = 'Mobile data (e.g. 3G, 4G, LTE) through a smartphone, dongle or mobile wifi router',
                 wifi_mobile = 'Wifi where I live (connected to home fibre, ADSL or a building network),Mobile data (e.g. 3G, 4G, LTE) through a smartphone, dongle or mobile wifi router';
 
-            var t_wifi_only = parseInt(getObj(wifi_only,survey_access_type,'Q5').Wifi, 10),
-                t_mobile_only = parseInt(getObj(mobile_only,survey_access_type,'Q5').Mobile, 10),
-                t_wifi_mobile = parseInt(getObj(wifi_mobile,survey_access_type,'Q5').Wifi, 10),
+            var t_wifi_only = getParseValue(wifi_only,survey_access_type,'Q5','Wifi'),
+                t_mobile_only = getParseValue(mobile_only,survey_access_type,'Q5','Mobile'),
+                t_wifi_mobile = getParseValue(wifi_mobile,survey_access_type,'Q5','Wifi'),
                 t_other = survey_access_type.filter(function(i){ return (i.Q5.indexOf("Other") >=0) &&  (i.Q5.indexOf("No access to Internet") == -1); }).sum("Other"),
                 total = t_wifi_only + t_mobile_only + t_wifi_mobile + t_other;
                     
             chart.data = [{
                 "has": "Wifi only",
-                "val": ( t_wifi_only / total) * 100
+                "val": (total > 0 ? ( t_wifi_only / total) * 100 : 0)
             },{
                 "has": "Mobile only",
-                "val": (t_mobile_only / total) * 100
+                "val":  (total > 0 ? (t_mobile_only / total) * 100 : 0)
             },{
                 "has": "Wifi + Mobile",
-                "val": (t_wifi_mobile / total) * 100
+                "val": (total > 0 ? (t_wifi_mobile / total) * 100 : 0)
             },{
                 "has": "Other",
-                "val": (t_other / total) * 100
+                "val": (total > 0 ? (t_other / total) * 100 : 0)
             }];
         }
 
@@ -318,7 +329,7 @@
                 e.Q7 = (e.Q7 == "0" ? "< 1" : e.Q7);
                 e.Q7 = (e.Q7 == "10" ? "+ 10" : e.Q7);
                 e.cnt = parseInt(e.cnt, 10);
-                e.per = ((e.cnt / total) * 100).toFixed(1);
+                e.per =  (total > 0 ? ((e.cnt / total) * 100).toFixed(1) : 0);
             });
             
             // create the chart and set the data
@@ -354,10 +365,10 @@
             // create the chart and set the data
             var chart = am4core.create("chart_engagement_acces", am4charts.XYChart);
             chart.data = [
-                { "type" : "Own Laptop/Desktop", "per" : ((survey_engagement_conditions.sum("own_laptop_desktop") / total) * 100).toFixed(1)},
-                { "type" : "I don't have any", "per" :  ((survey_engagement_conditions.sum("Nothing") / total) * 100).toFixed(1)},
-                { "type" : "I share mine with others", "per" :  ((survey_engagement_conditions.sum("share_laptop_desktop") / total) * 100).toFixed(1)},
-                { "type" : "I borrow from others", "per" :  ((survey_engagement_conditions.sum("borrow_laptop_desktop") / total) * 100).toFixed(1)}
+                { "type" : "Own Laptop/Desktop", "per" : (total > 0 ? ((survey_engagement_conditions.sum("own_laptop_desktop") / total) * 100).toFixed(1) : 0)},
+                { "type" : "I don't have any", "per" : (total > 0 ? ((survey_engagement_conditions.sum("Nothing") / total) * 100).toFixed(1) : 0)},
+                { "type" : "I share mine with others", "per" : (total > 0 ? ((survey_engagement_conditions.sum("share_laptop_desktop") / total) * 100).toFixed(1) : 0)},
+                { "type" : "I borrow from others", "per" : (total > 0 ? ((survey_engagement_conditions.sum("borrow_laptop_desktop") / total) * 100).toFixed(1) : 0)}
             ];
             chart.colors.list = [
                 am4core.color("#67B7DC"),
@@ -403,35 +414,35 @@
                 data_array =  [
                     { 
                         "type" : "Login to Vula, read announcements, join a chatroom", 
-                        "per" : ((survey_activities.sum("login_vula") / total) * 100).toFixed(1)
+                        "per" : (total > 0 ? ((survey_activities.sum("login_vula") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Download a reading, notes or presentation from Vula (e.g. PDFs, Powerpoints, up to 10MB)", 
-                        "per" : ((survey_activities.sum("download") / total) * 100).toFixed(1)
+                        "per" : (total > 0 ? ((survey_activities.sum("download") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Search for and download learning or research materials online or through UCT Library", 
-                        "per" : ((survey_activities.sum("search") / total) * 100).toFixed(1)
+                        "per" : (total > 0 ? ((survey_activities.sum("search") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Download a lecture video (up to 500MB)", 
-                        "per" : ((survey_activities.sum("download_500") / total) * 100).toFixed(1)
+                        "per" : (total > 0 ? ((survey_activities.sum("download_500") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Play a lecture video online (without buffering)", 
-                        "per" : ((survey_activities.sum("stream") / total) * 100).toFixed(1)
+                        "per" : (total > 0 ? ((survey_activities.sum("stream") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Voice call (e.g. Whatsapp voice call, Skype)", 
-                        "per" : ((survey_activities.sum("voice") / total) * 100).toFixed(1)
+                        "per" : (total > 0 ? ((survey_activities.sum("voice") / total) * 100).toFixed(1) : 0)
                     }                                                                      
                     ,{ 
                         "type" : "Live video call or meeting (e.g. WhatsApp video, Skype, Zoom, Teams, Adobe Connect)", 
-                        "per" : ((survey_activities.sum("video") / total) * 100).toFixed(1)
+                        "per" : (total > 0 ? ((survey_activities.sum("video") / total) * 100).toFixed(1) : 0)
                     } 
                     // ,{ 
                     //     "type" : "I don't know", 
-                    //     "per" : ((survey_activities.sum("other") / total) * 100).toFixed(1)
+                    //     "per" : (total > 0 ? ((survey_activities.sum("other") / total) * 100).toFixed(1) : 0)
                     // } 
                 ];
             // sort these by highest % (top) to lowest % (bottom)

@@ -238,21 +238,25 @@
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                         <tr>
                             <td style="padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #333333;">
-                                <p>Dear {{name}},</p>
-
+                                {% if not name is empty %}
+                                    <p>Dear {{name | title}},</p>
+                                {% else %}
+                                    <p>Hi,</p>
+                                {% endif %}
+                                <p><i>{{email}}</i> - <i>{{hash}}</i></p>
                                 {% if is_course %}
-                                <p>You are receiving this email as the course convenor for {{title}}, or as the HoD if the 
+                                <p>You are receiving this email as the course convenor for <strong>{{title}}</strong>, or as the HoD if the 
                                     course convenor is not on record. Please forward this email as required if you're not the course convenor.</p>
                                 {% endif %}
-                                {% if is_department %}
-                                <p>You are receiving this email as the course convenor for {{title}}, or as the HoD if the 
-                                    course convenor is not on record. Please forward this email as required if you're not the course convenor.</p>
-                                {% endif %}
-                                {% if is_faculty %}
-                                <p>You are receiving this email as the course convenor for {{title}}, or as the HoD if the 
-                                    course convenor is not on record. Please forward this email as required if you're not the course convenor.</p>
-                                {% endif %}                                                                
 
+                                {% if is_department %}
+                                <p>You are receiving this email as the HoD of <strong>{{title}}</strong>.</p>
+                                {% endif %}
+
+                                {% if is_faculty %}
+                                <p>You are receiving this email to view the Student Access Survey results for the <strong>{{title}}</strong>.</p>
+                                {% endif %}                                                                                                
+                                
                                 <p>Here are the summary results and data set for the <a href="{{link}}">UCT Student Access Survey, with student responses up to {{updated_at|date("jS F Y g:ia")}}</a>.</p>
 
                                 <p>For notes on interpreting the results, please see: 

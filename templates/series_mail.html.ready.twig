@@ -238,7 +238,11 @@
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                         <tr>
                             <td style="padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #333333;">
-                                <p>Dear {{creator}}, </p>
+                                 {% if not creator is empty %}
+                                <p>Dear {{creator | title}},</p>
+                                {% else %}
+                                <p>Hi,</p>
+                                {% endif %}
                                 <p>A new retention cycle policy has been implemented for lecture recording at UCT. Lecture videos will be retained for 4 years by default, with options to retain recordings for 8 years or keep them indefinitely. The selected retention period applies to all recordings within a recording series (set of recordings).</p>
                                 <p>The recordings for {{title}} are queued for deletion. As you are the contact person for this set of recordings, we would like you to review the set and decide if you want to keep them around for a bit longer.</p>
                                 <p><strong>If you take no action, these recordings will soon be deleted.</strong></p>

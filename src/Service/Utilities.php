@@ -639,7 +639,18 @@ class Utilities
                     $result = [ 'success' => 0, 'err' => $e->getMessage()];
                 }
             } else {
-                return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
+                // so probably a Department
+                $data = $this->getHOD($hash);
+                if ($data['success']) {
+                    $var = [':dept' => "$hash%"];
+                    $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode like :dept)';
+
+                    $data = $data['result'][0];
+                    $result['course'] = trim($data['name']);
+                    $result['code'] = strtoupper($hash);
+                } else {
+                    $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                }
             }
         }
 
@@ -862,7 +873,14 @@ class Utilities
                 $var = [':faculty' => strtoupper($hash)];
                 $where = 'where `cohort`.facultyCode = :faculty';
             } else {
-                return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
+                // so probably a Department
+                $data = $this->getHOD($hash);
+                if ($data['success']) {
+                    $var = [':dept' => "$hash%"];
+                    $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode like :dept)';
+                } else {
+                    $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                }
             }
         }
 
@@ -897,15 +915,17 @@ class Utilities
         }        
 
         return $result;
-    }   
+    }
+
 
     public function getSurveyForEmail($hash) {
         $result = [
             'success' => 1
-            ,'updated_at' => "2020-04-08 10:46:17"
-            ,'name' => "test name"
+            ,'updated_at' => ""
+            ,'title' => ""
+            ,'name' => ""
+            ,'email' => ""
             ,'hash' => $hash
-            ,'title' => "AAA0000F"
             ,'link' => 'https://srvslscet001.uct.ac.za/optout/survey/'. $hash
             ,'is_course' => 0
             ,'is_department' => 0
@@ -920,11 +940,46 @@ class Utilities
                 // this is a course :)
                 $var = [':courseCode' => strtoupper($hash)];
                 $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode = :courseCode)';
-
-                $result['course'] = strtoupper($hash);
                 
-                $result['is_course'] = 1;
+                try {
+                    $query = "select A.course_code, A.title, A.dept,
+                    ifnull(C.convenor_name, A.convenor_name) as convenor_name,
+                    ifnull(C.convenor_eid, A.convenor_eid) as convenor_eid,
+                    ifnull(C.convenor_email, (select E.email from timetable.view_sakai_users E where C.convenor_eid = E.eid or (C.convenor_eid is null and A.convenor_eid = E.eid))) as email
+                        from timetable.ps_courses A
+                        left join timetable.course_updates C on A.course_code = C.course_code and C.year = 2020 and C.workflow_id = 4
+                    where A.term = 2020 and A.start_date < '2020-06-01' and A.course_code in (select distinct courseCode from studentsurvey.cohort_class)
+                    and A.course_code = :courseCode";
 
+                    $stmt = $this->dbh->prepare($query);
+                    $stmt->execute($var);
+                    if ($stmt->rowCount() === 0) {
+                        $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                    }
+
+                    $course = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    $result['title'] = $course[0]['course_code'];
+                    $result['name'] = $course[0]['convenor_name'];
+                    $result['email'] = $course[0]['email'];
+                    $result['is_course'] = 1;
+
+                    if ($result['email'] == '') {
+                        // empty course convenor
+                        $data = $this->getHOD($course[0]['dept']);
+                        if ($data['success']) {
+                            $data = $data['result'][0];
+                            // $result['title'] = trim($data['name']);
+                            $result['name'] = trim($data['user']);
+                            $result['email'] = trim($data['email']);
+                            // $result['is_department'] = 1;
+                        } else {
+                            $result = $data;
+                        }
+                    }
+                } catch (\PDOException $e) {
+                    $result = [ 'success' => 0, 'err' => $e->getMessage()];
+                }
+                
             } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI"])) {
                 // faculty
                 $var = [':faculty' => strtoupper($hash)];
@@ -949,26 +1004,63 @@ class Utilities
                 }
             } else {
                 // so probably a Department
-                try {
-                    $var = [':dept' => strtoupper($hash)];
-                    //$where = 'where `cohort`.facultyCode = :faculty';
+                $var = [':dept' => "$hash%"];
+                $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode like :dept)';
 
-                    $query = "SELECT dept, name FROM timetable.uct_dept where dept = :dept";
-
-                    $stmt = $this->dbh->prepare($query);
-                    $stmt->execute($var);
-                    if ($stmt->rowCount() === 0) {
-                        $result = [ 'success' => 0, 'err' => "Invalid reference."];
-                    }
-
-                    $dept = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                    $result['title'] = $dept[0]['name'];
-                } catch (\PDOException $e) {
-                    $result = [ 'success' => 0, 'err' => $e->getMessage()];
+                $data = $this->getHOD($hash);
+                if ($data['success']) {
+                    $data = $data['result'][0];
+                    $result['title'] = trim($data['name']);
+                    $result['name'] = trim($data['user']);
+                    $result['email'] = trim($data['email']);
+                    $result['is_department'] = 1;
+                } else {
+                    $result = [ 'success' => 0, 'err' => "Invalid reference."];
                 }
             }
         }
 
+        // updated_at
+        try {
+            $query = "SELECT max(`results`.updated_at) as d 
+            FROM studentsurvey.results_valid `results`
+                left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID $where;";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result['success'] = 0;
+                $result['err'] = 'updated_at';
+            }
+
+            $result['updated_at'] = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0]['d'];
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        return $result;
+    }
+
+    public function getHOD($dept) {
+        $result = [ 'success' => 1, 'err' => '', 'result' => []];
+
+        try {
+            $var = [':dept' => strtoupper($dept)];
+            // $where = 'where `cohort`.facultyCode = :faculty';
+
+            $query = "SELECT `dept`,`name`, concat(firstname,' ',lastname) as `user`, email FROM timetable.uct_dept where dept = :dept";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [ 'success' => 0, 'err' => "Invalid reference."];
+            }
+
+            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+        
         return $result;
     }
 

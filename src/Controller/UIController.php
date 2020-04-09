@@ -1090,12 +1090,6 @@ class UIController extends Controller
             'out_link' => '/optout/survey/'. $hash
         ];
 
-        if (!preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
-            if (!in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
-                return $this->render('results_error.html.twig', ['err' => "Invalid reference."]);
-            }
-        }
-
         // Require logged in user
         if ($authenticated['a'] === false) {
             return $this->render('results.html.twig', $data);
@@ -1105,6 +1099,10 @@ class UIController extends Controller
 
         $data['result'] = $utils->getSurveyResults($hash);
         $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey/'. $hash;
+
+        if (!$data['result']['success']) {
+            return $this->render('results_error.html.twig', ['err' => $data['result']['err']]);
+        }
 
         // return new Response(json_encode($data), 201);
         return $this->render('results.html.twig', $data);
