@@ -9,6 +9,7 @@ use App\Entity\HashableInterface;
 use App\Entity\Course;
 use App\Entity\Department;
 use App\Entity\Workflow;
+use App\Entity\User;
 use App\Entity\OpencastSeries;
 
 class Utilities
@@ -1053,7 +1054,15 @@ class Utilities
                     $result['title'] = $course[0]['course_code'];
                     $result['name'] = $course[0]['convenor_name'];
                     $result['email'] = $course[0]['email'];
+                    $result['eid'] = $course[0]['convenor_eid'];
                     $result['is_course'] = 1;
+
+                    // Get Firstname and lastname from EID 
+                    if ($course[0]['convenor_eid'] != '') {
+                        $user = (new User($course[0]['convenor_eid']))->getDetails();
+                        $result['name'] = $user['first_name'] .' '. $user['last_name'];
+                        $result['email'] = $user['email'];
+                    }
 
                     if ($result['email'] == '') {
                         // empty course convenor
@@ -1116,8 +1125,8 @@ class Utilities
         try {
             $query = "SELECT `state` FROM timetable.results_notification_emails where mail_to = :mail and code = :code limit 1;";
 
-            $stmt = $this->dbh->prepare([':code' => $result['title'], ':mail' => $result['email']]);
-            $stmt->execute($var);
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':code' => $result['title'], ':mail' => $result['email']]);
             if ($stmt->rowCount() === 0) {
                 $state = 0;
             } else {
@@ -1223,47 +1232,47 @@ class Utilities
             }
         }
 
-        // try {
-        //     $query = "select substr(courseCode,1,3) as code from studentsurvey.cohort_class group by substr(courseCode,1,3);";
+        try {
+            $query = "select substr(courseCode,1,3) as code from studentsurvey.cohort_class group by substr(courseCode,1,3);";
 
-        //     $stmt = $this->dbh->prepare($query);
-        //     $stmt->execute();
-        //     while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute();
+            while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
-        //         $data = $this->getSurveyForEmail($this->encryptHash($line['code']));
+                $data = $this->getSurveyForEmail($this->encryptHash($line['code']));
 
-        //         if ($data['success']) {
-        //             $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['code'], "dept", $data['state']) ? 1 : 0;
-        //         }
-        //     }
-        // } catch (\PDOException $e) {
-        //     $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        // }        
+                if ($data['success']) {
+                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['code'], "dept", $data['state']) ? 1 : 0;
+                }
+            }
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }        
         
-        // try {
-        //     $query = "select A.course_code
-        //                 from timetable.ps_courses A
-        //             where A.term = 2020 and A.start_date < '2020-06-01' 
-        //             and A.course_code in (SELECT `cls`.courseCode FROM studentsurvey.cohort `cohort`
-        //                                     left join studentsurvey.cohort_class `cls` on `cls`.EID = `cohort`.EID
-        //                                     where `cohort`.careerCode not in ('PDOC','NDGP') 
-        //                                         and NOT(`cls`.courseCode regexp '(.*)[S]$') and NOT(`cls`.courseCode regexp '^[A-Z]{3}9'));";
+        try {
+            $query = "select A.course_code
+                        from timetable.ps_courses A
+                    where A.term = 2020 and A.start_date < '2020-06-01' 
+                    and A.course_code in (SELECT `cls`.courseCode FROM studentsurvey.cohort `cohort`
+                                            left join studentsurvey.cohort_class `cls` on `cls`.EID = `cohort`.EID
+                                            where `cohort`.careerCode not in ('PDOC','NDGP') 
+                                                and NOT(`cls`.courseCode regexp '(.*)[S]$') and NOT(`cls`.courseCode regexp '^[A-Z]{3}9'));";
 
-        //     $stmt = $this->dbh->prepare($query);
-        //     $stmt->execute();
-        //     while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute();
+            while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
-        //         $data = $this->getSurveyForEmail($this->encryptHash($line['course_code']));
+                $data = $this->getSurveyForEmail($this->encryptHash($line['course_code']));
 
-        //         if ($data['success']) {
-        //             $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['course_code'], "course", $data['state']) ? 1 : 0;
-        //         }
-        //     }
-        // } catch (\PDOException $e) {
-        //     $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        // }    
+                if ($data['success']) {
+                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['course_code'], "course", $data['state']) ? 1 : 0;
+                }
+            }
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }    
 
-        return $done;
+        return $data;
     }
 
     public function addResultEmails($hash, $name, $mail_to, $mail_cc, $code, $type, $state) {
