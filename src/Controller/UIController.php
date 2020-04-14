@@ -948,7 +948,7 @@ class UIController extends Controller
     }
 
     /**
-     * @Route("/dass/")
+     * @Route("/survey/")
      */
     public function showSurveyOverview(Request $request) {
         $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
@@ -994,15 +994,13 @@ class UIController extends Controller
 
         $data = [
             'dept' => 'CILT',
-            'authenticated' => $authenticated,
-            'batches' => $utils->getAllBatches()
+            'authenticated' => $authenticated
         ];
 
         if ($authenticated['z']['success']) {
-            return new Response(json_encode($data), 201);
-            //return $this->render('results_overview.html.twig', $data);
+            return $this->render('results_overview.html.twig', $data);
         } else {
-            return $this->render('series_login.html.twig', $authenticated['z']);
+            return $this->render('results_overview_login.html.twig', $authenticated['z']);
         }
     }
 
