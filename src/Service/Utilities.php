@@ -601,7 +601,7 @@ class Utilities
         try {
             $where = '';
             $arg = [];
-            $query = "SELECT `updated_at`, `name` as mail_name, mail_to, `hash`, `state`, `type`, `code` FROM timetable.results_notification_emails;";
+            $query = "SELECT `updated_at`, `name` as mail_name, mail_to, `hash`, `state`, `type`, `code` FROM timetable.results_notification_emails";
             if ($filter != "") {
                 $where = " where (`code` like :text or `name` like :text or mail_to like :text)";
                 $arg[":text"] = '%'. $filter .'%';

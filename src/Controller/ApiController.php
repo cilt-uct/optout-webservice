@@ -725,7 +725,7 @@ class ApiController extends Controller
           $offset = ($page - 1) * $limit;
 
           if (count($order) != 2) {
-            $order = ['title','asc'];
+            $order = ['code','asc'];
           }
 
           $response = $utils->getResultEmails($offset, $limit, $order[1], $order[0], $filter, $type, $state);

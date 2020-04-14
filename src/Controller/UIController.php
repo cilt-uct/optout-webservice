@@ -993,7 +993,6 @@ class UIController extends Controller
         }
 
         $data = [
-            'dept' => 'CILT',
             'authenticated' => $authenticated
         ];
 

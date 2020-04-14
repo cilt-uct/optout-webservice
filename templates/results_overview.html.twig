@@ -6,7 +6,7 @@
             {% include 'header_nav.html' %}
             <div class="row post-body">
                 <div class="col-md-12 post-title">
-                    <h3><span style="color: #5caad2;">Student Access Survey</span> Overview</h3>
+                    <h3><span style="color: #5caad2;">Student Access Survey:</span> Overview</h3>
                     <br/>
                     <div id="main-table" class="workflow-details">
                         <!--p>{{authenticated|json_encode()}}</p-->
@@ -21,7 +21,7 @@
     <script src="{{ asset('public/build/js/tmpl.js') }}"></script>
     <script src="{{ asset('public/build/js/utils.js') }}"></script>
     <script>
-        var options = { "page": 1, "limit": 15, "filter": "", "order": "title,asc", "max": 0, "type": "all", "state":"all", "batch": 0};
+        var options = { "page": 1, "limit": 15, "filter": "", "order": "code,asc", "max": 0, "type": "all", "state":"all", "batch": 0};
 
         function showTable() {
             var $order = options.order,
@@ -43,9 +43,9 @@
                 dataType: 'json'
             }).done(function(data) {
                 console.log(data);
-                //options.max = Math.ceil(data.total / data.limit);
-                //if(isNaN(options.max)) { options.max = 0; }
-                //$('#main-table').html(tmpl('tmpl-table-series', data))
+                options.max = Math.ceil(data.total / data.limit);
+                if(isNaN(options.max)) { options.max = 0; }
+                $('#main-table').html(tmpl('tmpl-table-series', data))
             }).fail(function(xhr) {
                 console.log(xhr);
             });
