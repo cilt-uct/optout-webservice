@@ -5,13 +5,13 @@
     <table class="main-tbl" data-current="{%=(current+1)%}" data-total="{%=o.total%}" data-offset="{%=o.offset%}" data-count="{%=o.count%}" data-limit="{%=o.limit%}">
         <thead>
             <tr>
-                <th style="width: 260px;" class="sort {%=sort_dir(o.order,'code')%}" data-rel="code">
+                <th style="width: 100px;" class="sort {%=sort_dir(o.order,'code')%}" data-rel="code">
                     <span>
                         Code
                         <i></i>
                     </span>
                 </th>
-                <th style="width: 220px;" class="sort {%=sort_dir(o.order,'convener')%}" data-rel="convener">
+                <th style="width: 420px;" class="sort {%=sort_dir(o.order,'convener')%}" data-rel="convener">
                     <span>
                         Convener(s)
                         <i></i>
@@ -23,19 +23,19 @@
                         <i></i>
                     </span>
                 </th>
-                <th style="width: 96px;" class="sort {%=sort_dir(o.order,'type')%}" data-rel="type">
+                <th style="width: 80px;" class="sort {%=sort_dir(o.order,'type')%}" data-rel="type">
                     <span>
-                        type
+                        Type
                         <i></i>
                     </span>
                 </th>                
-                <th style="width: 96px;" class="sort {%=sort_dir(o.order,'state')%}" data-rel="state">
+                <th style="width: 80px;" class="sort {%=sort_dir(o.order,'state')%}" data-rel="state">
                     <span>
                         State
                         <i></i>
                     </span>
                 </th>
-                <th style="width: 96px;">
+                <th style="width: 130px;">
                     <span>
                         Actions
                         <i></i>
@@ -85,19 +85,31 @@
     {% } else {
         $.each(o, function( i, row ) { %}
     <tr>
-        <td>{%=row.code%}</td>
-        <td>{%=row.mail_name%} %=row.mail_to%}</td>
-        <td>{%=row.hash%}</td>
-        <td>{%=row.state%}</td>
+        <td style="padding: 0px;">
+            <a href="{%=row.hash%}" style="display:block;padding:10px;">{%=row.code%}</a>
+        </td>
+        <td>
+            <div style="display:inline-block; width:50%;float: left;">{%=row.mail_name%}</div>
+            <div style="display:inline-block; width:50%;">{%=row.mail_to%}</div>
+        </td>
+        <td>
+            {% if (row.updated_at == '1970-01-01 00:00:00') { %}-{% } else { %}
+            {%=moment(row.updated_at).format('YYYY-MM-DD HH:mm')%}
+            {% } %}
+        </td>
         <td>{%=row.type%}</td>
-        <td>&nbsp;</td>        
+        <td>{%=row.state%}</td>
+        <td>
+            <div class="col"><a style="font-size: large; padding: 5px;" href="https://srvslscet001.uct.ac.za/optout/survey/{%=row.hash%}"><i class="fas fa-align-left"></i></a></div>
+            <div class="col"><a style="font-size: large; padding: 5px;" href="#"><i class="fas fa-plus-square"></i></a></div>
+        </td>        
     </tr>
     {% } ); } %}
 </script>
 
 <script type="text/x-tmpl" id="tmpl-row-loading">
     <tr>
-        <td colspan="8">
+        <td colspan="6">
             <i class="fas fa-cog fa-spin fa-2x"></i>
             <span style="display: inline-block; position: relative; left: 10px;top: -5px;">Loading results...</span>
         </td>

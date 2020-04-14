@@ -45,7 +45,7 @@
                 console.log(data);
                 options.max = Math.ceil(data.total / data.limit);
                 if(isNaN(options.max)) { options.max = 0; }
-                $('#main-table').html(tmpl('tmpl-table-series', data))
+                $('#main-table').html(tmpl('tmpl-table', data))
             }).fail(function(xhr) {
                 console.log(xhr);
             });
