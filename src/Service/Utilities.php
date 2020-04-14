@@ -597,6 +597,18 @@ class Utilities
         return $result;
     }
 
+    private function getResultEmailsCustomCount($val = "faculty", $where = "", $a = "", $st = "`type`=:v") {
+        $result = 0;
+        $w = $where = ($where == "" ? " where ": $where ." and ") . $st;
+        $a[':v'] = $val;
+        $q = $this->dbh->prepare("select count(*) as cnt FROM timetable.results_notification_emails $where");
+        if ($q->execute($a)) {
+            $f = $q->fetch();
+            $result = $f['cnt'];
+        }
+        return $result;
+    }
+
     public function getResultEmails($offset = 0, $limit = 15, $sort_dir = 'asc', $sort_field = 'title', $filter = "", $type = "all", $state = "all") {
 
         $result = [ 'success' => true,
@@ -619,19 +631,19 @@ class Utilities
             }
 
             $result['cnt_all'] = $this->getResultEmailsCount($where, $arg);
-            $result['cnt_faculty'] = $this->getResultEmailsCount("faculty", $where, $arg);
-            $result['cnt_dept'] = $this->getResultEmailsCount("dept", $where, $arg);
-            $result['cnt_course'] = $this->getResultEmailsCount("course", $where, $arg);
+            $result['cnt_faculty'] = $this->getResultEmailsCustomCount("faculty", $where, $arg, " `type`=:v");
+            $result['cnt_dept'] = $this->getResultEmailsCustomCount("dept", $where, $arg, " `type`=:v");
+            $result['cnt_course'] = $this->getResultEmailsCustomCount("course", $where, $arg, " `type`=:v");
 
             if ($type != "all") {
                 $where = ($where == "" ? " where ": $where ." and ") ." `type`=:type";
                 $arg[":type"] = $type;
             }       
 
-            $result['cnt_0'] = $this->getResultEmailsCount("0", $where, $arg);
-            $result['cnt_1'] = $this->getResultEmailsCount("1", $where, $arg);
-            $result['cnt_2']  = $this->getResultEmailsCount("2", $where, $arg);
-            $result['cnt_3'] = $this->getResultEmailsCount("3", $where, $arg);
+            $result['cnt_0'] = $this->getResultEmailsCustomCount("0", $where, $arg, " `state`=:v");
+            $result['cnt_1'] = $this->getResultEmailsCustomCount("1", $where, $arg, " `state`=:v");
+            $result['cnt_2']  = $this->getResultEmailsCustomCount("2", $where, $arg, " `state`=:v");
+            $result['cnt_3'] = $this->getResultEmailsCustomCount("3", $where, $arg, " `state`=:v");
 
             if ($state != "all") {
                 $where = ($where == "" ? " where ": $where ." and ") ." `state`=:state";
