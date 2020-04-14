@@ -1112,6 +1112,23 @@ class Utilities
             }
         }
 
+        $state = 0;
+        try {
+            $query = "SELECT `state` FROM timetable.results_notification_emails where mail_to = :mail and code = :code limit 1;";
+
+            $stmt = $this->dbh->prepare([':code' => $result['title'], ':mail' => $result['email']]);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $state = 0;
+            } else {
+                $state = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0]['state'];
+            }
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+        $result['state'] = $state;
+
+
         // updated_at
         try {
             $query = "SELECT max(`results`.updated_at) as d 
@@ -1202,57 +1219,57 @@ class Utilities
             $data = $this->getSurveyForEmail($this->encryptHash($hash));
 
             if ($data['success']) {
-                $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $hash, "faculty") ? 1 : 0;
+                $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $hash, "faculty", $data['state']) ? 1 : 0;
             }
         }
 
-        try {
-            $query = "select substr(courseCode,1,3) as code from studentsurvey.cohort_class group by substr(courseCode,1,3);";
+        // try {
+        //     $query = "select substr(courseCode,1,3) as code from studentsurvey.cohort_class group by substr(courseCode,1,3);";
 
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute();
-            while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+        //     $stmt = $this->dbh->prepare($query);
+        //     $stmt->execute();
+        //     while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
-                $data = $this->getSurveyForEmail($this->encryptHash($line['code']));
+        //         $data = $this->getSurveyForEmail($this->encryptHash($line['code']));
 
-                if ($data['success']) {
-                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['code'], "dept") ? 1 : 0;
-                }
-            }
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }        
+        //         if ($data['success']) {
+        //             $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['code'], "dept", $data['state']) ? 1 : 0;
+        //         }
+        //     }
+        // } catch (\PDOException $e) {
+        //     $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        // }        
         
-        try {
-            $query = "select A.course_code
-                        from timetable.ps_courses A
-                    where A.term = 2020 and A.start_date < '2020-06-01' 
-                    and A.course_code in (SELECT `cls`.courseCode FROM studentsurvey.cohort `cohort`
-                                            left join studentsurvey.cohort_class `cls` on `cls`.EID = `cohort`.EID
-                                            where `cohort`.careerCode not in ('PDOC','NDGP') 
-                                                and NOT(`cls`.courseCode regexp '(.*)[S|X|Z]$') and NOT(`cls`.courseCode regexp '^[A-Z]{3}9'));";
+        // try {
+        //     $query = "select A.course_code
+        //                 from timetable.ps_courses A
+        //             where A.term = 2020 and A.start_date < '2020-06-01' 
+        //             and A.course_code in (SELECT `cls`.courseCode FROM studentsurvey.cohort `cohort`
+        //                                     left join studentsurvey.cohort_class `cls` on `cls`.EID = `cohort`.EID
+        //                                     where `cohort`.careerCode not in ('PDOC','NDGP') 
+        //                                         and NOT(`cls`.courseCode regexp '(.*)[S]$') and NOT(`cls`.courseCode regexp '^[A-Z]{3}9'));";
 
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute();
-            while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+        //     $stmt = $this->dbh->prepare($query);
+        //     $stmt->execute();
+        //     while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
-                $data = $this->getSurveyForEmail($this->encryptHash($line['course_code']));
+        //         $data = $this->getSurveyForEmail($this->encryptHash($line['course_code']));
 
-                if ($data['success']) {
-                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['course_code'], "course") ? 1 : 0;
-                }
-            }
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }    
+        //         if ($data['success']) {
+        //             $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['course_code'], "course", $data['state']) ? 1 : 0;
+        //         }
+        //     }
+        // } catch (\PDOException $e) {
+        //     $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        // }    
 
         return $done;
     }
 
-    public function addResultEmails($hash, $name, $mail_to, $mail_cc, $code, $type) {
+    public function addResultEmails($hash, $name, $mail_to, $mail_cc, $code, $type, $state) {
 
         $insertQry = "replace into timetable.results_notification_emails (hash, name, mail_to, mail_cc, state, code, type)
-                        VALUES (:hash, :name, :mail_to, :mail_cc, 0, :code, :type)";
+                        VALUES (:hash, :name, :mail_to, :mail_cc, :state, :code, :type)";
 
         if (trim($mail_to) === '') {
             $name = 'Stephen Marquard';
@@ -1267,7 +1284,8 @@ class Utilities
                 ':type' => $type,
                 ':name' => $name,
                 ':mail_to' => $mail_to,
-                ':mail_cc' => $mail_cc
+                ':mail_cc' => $mail_cc,
+                ':state' => $state
             ];
             $insertStmt->execute($bind);
             if ($insertStmt->rowCount() === 0) {
