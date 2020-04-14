@@ -999,8 +999,8 @@ class UIController extends Controller
         ];
 
         if ($authenticated['z']['success']) {
-            //return new Response(json_encode($data), 201);
-            return $this->render('results_overview.html.twig', $data);
+            return new Response(json_encode($data), 201);
+            //return $this->render('results_overview.html.twig', $data);
         } else {
             return $this->render('series_login.html.twig', $authenticated['z']);
         }

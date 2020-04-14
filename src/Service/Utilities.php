@@ -586,6 +586,83 @@ class Utilities
         // }
     }
 
+    public function getResultEmails($offset = 0, $limit = 15, $sort_dir = 'asc', $sort_field = 'title', $filter = "", $type = "all", $state = "all") {
+
+        $result = [ 'success' => true,
+                    'result' => null,
+                    "offset" => $offset,
+                    "limit" => $limit,
+                    "filter" =>  $filter,
+                    "order" => $sort_field .",". $sort_dir,
+                    "type" => $type,
+                    "state" => $state,
+                    "total" => 0, "count" => 0
+                ];
+        try {
+            $where = '';
+            $arg = [];
+            $query = "SELECT `updated_at`, `name` as mail_name, mail_to, `hash`, `state`, `type`, `code` FROM timetable.results_notification_emails;";
+            if ($filter != "") {
+                $where = " where (`code` like :text or `name` like :text or mail_to like :text)";
+                $arg[":text"] = '%'. $filter .'%';
+            }
+
+            // $result['all'] = $this->getSeriesCount($where, $arg);
+            // $result['normal'] = $this->getSeriesCustomCount("normal", $where, $arg);
+            // $result['long'] = $this->getSeriesCustomCount("long", $where, $arg);
+            // $result['forever'] = $this->getSeriesCustomCount("forever", $where, $arg);
+
+            // if ($ret != "all") {
+            //     $where = ($where == "" ? " where ": $where ." and ") ." `series`.`retention`=:ret";
+            //     $arg[":ret"] = $ret;
+            // }
+
+            // $result['action'] = $act;
+            // $result['state_ready'] = $this->getSeriesCustomCount("ready", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+            // $result['state_review'] = $this->getSeriesCustomCount("review", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+            // $result['state_done']  = $this->getSeriesCustomCount("done", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+            // $result['state_error'] = $this->getSeriesCustomCount("error", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+            // $result['state_empty'] = $this->getSeriesCustomCount("empty", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+
+            // if ($act != "none") {
+            //     $where = ($where == "" ? " where ": $where ." and ") ." `hash`.action=:act and `hash`.batch >= 1";
+            //     $arg[":act"] = $act;
+            // }
+
+            // switch ($sort_field) {
+            //     case 'retention': $sort_field = 'retention'; break;
+            //     case 'organizer': $sort_field = 'contributor'; break;
+            //     case 'events': $sort_field = 'count'; break;
+            // }
+
+            $query .= $where . " order by $sort_field $sort_dir LIMIT $limit OFFSET $offset";
+
+            $result['query'] = str_replace("\n","",$query);
+            $result['where'] = $where;
+            $result['arg'] = $arg;
+
+            $stmt = $this->dbh->prepare($query);
+            if ($stmt->execute($arg)) {
+                if ($stmt->rowCount() === 0) {
+                    $result['success'] = false;
+                    $result['err'] = 'Query is empty';
+                }
+
+                $result['total'] = $this->getSeriesCount($where, $arg);
+                $result['count'] = $stmt->rowCount();
+                $result['result'] = $row;
+            } else {
+                $result['success'] = false;
+                $result['err'] = $stmt->errorInfo();
+            }
+        } catch (\PDOException $e) {
+            $result['success'] = false;
+            $result['err'] = $e->getMessage();
+        }
+
+        return $result;
+    }
+
     public function getSurveyResults($in_hash) {
 
         $hash = $this->decryptHash($in_hash);
@@ -1206,8 +1283,7 @@ class Utilities
     }
 
     // Function to check string starting with given substring
-    function startsWith ($string, $startString)
-    {
+    function startsWith ($string, $startString) {
         $len = strlen($startString);
         return (substr($string, 0, $len) === $startString);
     }
