@@ -1069,7 +1069,6 @@ class Utilities
                         $data = $this->getHOD($course[0]['dept']);
                         if ($data['success']) {
                             $data = $data['result'][0];
-                            // $result['title'] = trim($data['name']);
                             $result['name'] = trim($data['user']);
                             $result['email'] = trim($data['email']);
                             // $result['is_department'] = 1;
@@ -1126,14 +1125,14 @@ class Utilities
             $query = "SELECT `state` FROM timetable.results_notification_emails where mail_to = :mail and code = :code limit 1;";
 
             $stmt = $this->dbh->prepare($query);
-            $stmt->execute([':code' => $result['title'], ':mail' => $result['email']]);
+            $stmt->execute([':code' => strtoupper($hash), ':mail' => $result['email']]);
             if ($stmt->rowCount() === 0) {
                 $state = 0;
             } else {
                 $state = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0]['state'];
             }
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        } catch (\Exception $e) {
+            $state = 0;
         }
         $result['state'] = $state;
 
@@ -1220,7 +1219,7 @@ class Utilities
     }
 
     public function generateResultEmails() {
-        $done = [ 'count' => 0, 'update' => 0, 'mail' => 0];
+        $done = [ 'count' => 0, 'pass' => 0, 'mail' => 0];
 
         $faculties = array("TEST","COM","EBE","HUM","LAW","MED","SCI");
         foreach ($faculties as &$hash) {
@@ -1228,7 +1227,11 @@ class Utilities
             $data = $this->getSurveyForEmail($this->encryptHash($hash));
 
             if ($data['success']) {
-                $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $hash, "faculty", $data['state']) ? 1 : 0;
+                if ($data['state'] == 0) {
+                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $hash, "faculty", $data['state']) ? 1 : 0;
+                } else {
+                    $done['pass'] ++;
+                }
             }
         }
 
@@ -1242,7 +1245,11 @@ class Utilities
                 $data = $this->getSurveyForEmail($this->encryptHash($line['code']));
 
                 if ($data['success']) {
-                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['code'], "dept", $data['state']) ? 1 : 0;
+                    if ($data['state'] == 0) {
+                        $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['code'], "dept", $data['state']) ? 1 : 0;
+                    } else {
+                        $done['pass'] ++;
+                    }
                 }
             }
         } catch (\PDOException $e) {
@@ -1265,7 +1272,11 @@ class Utilities
                 $data = $this->getSurveyForEmail($this->encryptHash($line['course_code']));
 
                 if ($data['success']) {
-                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['course_code'], "course", $data['state']) ? 1 : 0;
+                    if ($data['state'] == 0) {
+                        $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['course_code'], "course", $data['state']) ? 1 : 0;
+                    } else {
+                        $done['pass'] ++;
+                    }
                 }
             }
         } catch (\PDOException $e) {
