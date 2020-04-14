@@ -629,11 +629,9 @@ class Utilities
             //     $arg[":act"] = $act;
             // }
 
-            // switch ($sort_field) {
-            //     case 'retention': $sort_field = 'retention'; break;
-            //     case 'organizer': $sort_field = 'contributor'; break;
-            //     case 'events': $sort_field = 'count'; break;
-            // }
+            switch ($sort_field) {
+                case 'convener': $sort_field = 'mail_to'; break;
+            }
 
             $query .= $where . " order by $sort_field $sort_dir LIMIT $limit OFFSET $offset";
 
