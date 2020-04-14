@@ -947,6 +947,64 @@ class UIController extends Controller
         return $this->render('series_view.html.twig', $data);
     }
 
+    /**
+     * @Route("/dass/")
+     */
+    public function showSurveyOverview(Request $request) {
+        $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
+
+        $now = new \DateTime();
+        $utils = new Utilities();
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                        $authenticated['z'] = $utils->getAuthorizedUsers($details[0]['cn']);
+                    } else {
+                        $authenticated['z']['err'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z']['err'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z']['err'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+                if ($session->get('username')) {
+                    $authenticated['z'] = $utils->getAuthorizedUsers($session->get('username'));
+                }
+            break;
+        }
+
+        $data = [
+            'dept' => 'CILT',
+            'authenticated' => $authenticated,
+            'batches' => $utils->getAllBatches()
+        ];
+
+        if ($authenticated['z']['success']) {
+            //return new Response(json_encode($data), 201);
+            return $this->render('results_overview.html.twig', $data);
+        } else {
+            return $this->render('series_login.html.twig', $authenticated['z']);
+        }
+    }
 
     public function outputCSV($data, $useKeysForHeaderRow = true) {
         if ($useKeysForHeaderRow) {

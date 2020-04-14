@@ -11,21 +11,7 @@
         </aside>
         <a name="top" class="anchor"></a>
         <div class="container post">
-            <div class="row no-gutters" style="position: absolute; top: -38px; width: 100%;">
-                <div class="col-sm-8" style="padding-top: 10px;padding-left: 84px;">
-                    <span style="color: #222;font-size: 0.8em;">Hi {{authenticated.z.result.0.name}},</span>
-                </div>
-                <div class="col-sm-4 align-self-end">
-                    <ul class="nav nav-tabs">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#">Courses</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="https://srvslscet001.uct.ac.za/optout/series/">Series</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            {% include 'header_nav.html' %}
             <div class="row post-body">
                 <div class="col-md-12 post-title">
                     <h3><span style="color: #5caad2;">Lecture Recording</span> Admin</h3>
