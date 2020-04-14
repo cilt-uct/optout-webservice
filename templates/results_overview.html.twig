@@ -54,7 +54,7 @@
         $(function() {
             
             $('#main-table')
-                .html(tmpl('tmpl-table-series', {}))
+                .html(tmpl('tmpl-table', {}))
                 .on('click','th.sort', function(event) {
                     event.preventDefault();
                     var $el = $(this);
@@ -66,7 +66,7 @@
                     }
                     options.order = $el.data('rel') +','+
                                 $el.attr('class').split(' ').filter(function(item) { return item == 'asc' || item == 'desc'; }).join();
-                    showSeries();
+                    showTable();
                 }).on('click', 'nav > .pagination a', function(event){
                     event.preventDefault();
                     var n = parseInt(options.page,10),
@@ -80,30 +80,31 @@
                         default: n = $(this).attr('rel'); break;
                     }
                     options.page = n;
-                    showSeries();
+                    showTable();
                 }).on('click','#filter-survey #set1 a', function(event) {
                     event.preventDefault();
                     options.type = $(this).attr('rel');
+                    options.state = "all";
                     options.page = 1;
                     options.offset = 0;
-                    showSeries();
-                }).on('click','#filter-retention #set2 a', function(event) {
+                    showTable();
+                }).on('click','#filter-survey #set2 a', function(event) {
                     event.preventDefault();                    
-                    options.state = $(this).attr('rel');
+                    options.state = $(this).attr('rel').substring(2);
                     options.page = 1;
                     options.offset = 0;
-                    showSeries();
+                    showTable();
                 }).on('submit', '#search_form', function(event) {
                     event.preventDefault();
                     options.filter = $('#series_filter').val();
                     options.page = 1;
                     options.offset = 0;
-                    showSeries();
+                    showTable();
                 }).on('click', '#search_form .btn-dark', function(event) {
                     event.preventDefault();
                     $('#series_filter').val('');
                     options.filter = '';
-                    showSeries();
+                    showTable();
                 });
 
             showTable();

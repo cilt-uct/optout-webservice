@@ -587,6 +587,16 @@ class Utilities
         // }
     }
 
+    private function getResultEmailsCount($where = "", $arg = "") {
+        $result = 0;
+        $q = $this->dbh->prepare("select count(*) as cnt FROM timetable.results_notification_emails $where");
+        if ($q->execute($arg)) {
+            $f = $q->fetch();
+            $result = $f['cnt'];
+        }
+        return $result;
+    }
+
     public function getResultEmails($offset = 0, $limit = 15, $sort_dir = 'asc', $sort_field = 'title', $filter = "", $type = "all", $state = "all") {
 
         $result = [ 'success' => true,
@@ -608,27 +618,25 @@ class Utilities
                 $arg[":text"] = '%'. $filter .'%';
             }
 
-            // $result['all'] = $this->getSeriesCount($where, $arg);
-            // $result['normal'] = $this->getSeriesCustomCount("normal", $where, $arg);
-            // $result['long'] = $this->getSeriesCustomCount("long", $where, $arg);
-            // $result['forever'] = $this->getSeriesCustomCount("forever", $where, $arg);
+            $result['cnt_all'] = $this->getResultEmailsCount($where, $arg);
+            $result['cnt_faculty'] = $this->getResultEmailsCount("faculty", $where, $arg);
+            $result['cnt_dept'] = $this->getResultEmailsCount("dept", $where, $arg);
+            $result['cnt_course'] = $this->getResultEmailsCount("course", $where, $arg);
 
-            // if ($ret != "all") {
-            //     $where = ($where == "" ? " where ": $where ." and ") ." `series`.`retention`=:ret";
-            //     $arg[":ret"] = $ret;
-            // }
+            if ($type != "all") {
+                $where = ($where == "" ? " where ": $where ." and ") ." `type`=:type";
+                $arg[":type"] = $type;
+            }       
 
-            // $result['action'] = $act;
-            // $result['state_ready'] = $this->getSeriesCustomCount("ready", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
-            // $result['state_review'] = $this->getSeriesCustomCount("review", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
-            // $result['state_done']  = $this->getSeriesCustomCount("done", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
-            // $result['state_error'] = $this->getSeriesCustomCount("error", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
-            // $result['state_empty'] = $this->getSeriesCustomCount("empty", $where, $arg, " `hash`.action=:v and `hash`.batch >= 1");
+            $result['cnt_0'] = $this->getResultEmailsCount("0", $where, $arg);
+            $result['cnt_1'] = $this->getResultEmailsCount("1", $where, $arg);
+            $result['cnt_2']  = $this->getResultEmailsCount("2", $where, $arg);
+            $result['cnt_3'] = $this->getResultEmailsCount("3", $where, $arg);
 
-            // if ($act != "none") {
-            //     $where = ($where == "" ? " where ": $where ." and ") ." `hash`.action=:act and `hash`.batch >= 1";
-            //     $arg[":act"] = $act;
-            // }
+            if ($state != "all") {
+                $where = ($where == "" ? " where ": $where ." and ") ." `state`=:state";
+                $arg[":state"] = $state;
+            }    
 
             switch ($sort_field) {
                 case 'convener': $sort_field = 'mail_to'; break;

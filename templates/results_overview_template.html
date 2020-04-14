@@ -18,7 +18,7 @@
             <div class="col-6">
                 <div id="filter-survey">
                     <div id="set1">
-                        <a href="#" rel="all" class="badge badge-pill {%  if (o.type =="all") { %}badge-primary{% } else { %}badge-light{% } %}">All <span class="badge badge-light">{%=o.all%}</span></a>
+                        <a href="#" rel="all" class="badge badge-pill {%  if (o.type =="all") { %}badge-primary{% } else { %}badge-light{% } %}">All <span class="badge badge-light">{%=o.cnt_all%}</span></a>
                         <a href="#" rel="faculty" class="badge badge-pill {%  if (o.type =="faculty") { %}badge-primary{% } else { %}badge-light{% } %}">Faculty <span class="badge badge-light">{%=o.cnt_faculty%}</span></a>
                         <a href="#" rel="dept" class="badge badge-pill {%  if (o.type =="dept") { %}badge-primary{% } else { %}badge-light{% } %}">Department <span class="badge badge-light">{%=o.cnt_dept%}</span></a>
                         <a href="#" rel="course" class="badge badge-pill {%  if (o.type =="course") { %}badge-primary{% } else { %}badge-light{% } %}">Course <span class="badge badge-light">{%=o.cnt_course%}</span></a>
@@ -118,7 +118,7 @@
         $.each(o, function( i, row ) { %}
     <tr>
         <td style="padding: 0px;">
-            <a href="{%=row.hash%}" style="display:block;padding:10px;">{%=row.code%}</a>
+            <a href="{%=row.hash%}" style="display:block;padding:10px;" target="_blank">{%=row.code%}</a>
         </td>
         <td>
             <div style="display:inline-block; width:50%;float: left;">{%=row.mail_name%}</div>
