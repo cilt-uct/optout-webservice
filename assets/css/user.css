@@ -1157,19 +1157,23 @@ aside li > a:active {
   opacity: 1.0;
 }
 
-.post-body #filter-retention {
+.post-body #filter-retention,
+.post-body #filter-survey {
   padding-bottom: 5px;
   position: absolute;
   top: -20px;
 }
 
-.post-body #filter-retention > div {
+.post-body #filter-retention > div,
+.post-body #filter-survey > div {
   margin-bottom: 8px;
 }
 
 .post-body #filter-retention #set1:before,
 .post-body #filter-retention #set2:before,
-.post-body #filter-retention #set3:before {
+.post-body #filter-retention #set3:before,
+.post-body #filter-survey #set1:before,
+.post-body #filter-survey #set2:before {
   content: "Retention: ";
   padding-right: 8px;
   width: 100px;
@@ -1185,6 +1189,14 @@ aside li > a:active {
 
 .post-body #filter-retention #set3:before {
   content: "Active: ";
+}
+
+.post-body #filter-survey #set1:before {
+  content: "Type: ";
+}
+
+.post-body #filter-survey #set2:before {
+  content: "State: ";
 }
 
 .post-body #filter-retention #set3 .switch label {
