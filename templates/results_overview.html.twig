@@ -42,9 +42,10 @@
                 method: 'GET',
                 dataType: 'json'
             }).done(function(data) {
-                options.max = Math.ceil(data.total / data.limit);
-                if(isNaN(options.max)) { options.max = 0; }
-                $('#main-table').html(tmpl('tmpl-table-series', data))
+                console.log(data);
+                //options.max = Math.ceil(data.total / data.limit);
+                //if(isNaN(options.max)) { options.max = 0; }
+                //$('#main-table').html(tmpl('tmpl-table-series', data))
             }).fail(function(xhr) {
                 console.log(xhr);
             });

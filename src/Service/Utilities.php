@@ -650,7 +650,7 @@ class Utilities
 
                 $result['total'] = $this->getSeriesCount($where, $arg);
                 $result['count'] = $stmt->rowCount();
-                $result['result'] = $row;
+                $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             } else {
                 $result['success'] = false;
                 $result['err'] = $stmt->errorInfo();
