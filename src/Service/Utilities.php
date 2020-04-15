@@ -682,6 +682,23 @@ class Utilities
         return $result;
     }
 
+    public function getSurveyResultsExec($args, $query) {
+        $result = [];
+        try {
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($args);
+            if ($stmt->rowCount() === 0) {
+                $result['success'] = 0;
+                $result['err'] = 'cohort_response';
+            }
+
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = $e->getMessage();
+        }
+        return $result;
+    }
+
     public function getSurveyResults($in_hash) {
 
         $hash = $this->decryptHash($in_hash);
@@ -691,14 +708,23 @@ class Utilities
 
         $result = [ 'success' => 1
             ,'course' => $hash
+            ,'is_course' => 0
+            ,'is_department' => 0
+            ,'is_faculty' => 0
             ,'code' => $hash
             ,'hash' => $in_hash
-            ,'survey_response' => null
-            ,'survey_access_device' =>  null
-            ,'survey_access_type' => null
-            ,'survey_activities' => null
-            ,'survey_engagement_conditions' => null
-            ,'survey_engagement_hours' => null
+            ,'survey_response' => []
+            ,'survey_access_device' => []
+            ,'survey_access_type' => []
+            ,'survey_activities' => []
+            ,'survey_engagement_conditions' => []
+            ,'survey_engagement_hours' => []
+            ,'tutor_available' => []
+            ,'tutor_access_device' => []
+            ,'tutor_access_type' => []
+            ,'tutor_activities' => []
+            ,'tutor_engagement_conditions' => []
+            ,'tutor_hours' => []
             ,'created_at' =>  $date->format('Y-m-d H:i:s')
             ,'updated_at' => ''
             ,'err_msg' => 'The reference was not found, please contact help@vula.uct.ac.za.'
@@ -706,6 +732,7 @@ class Utilities
 
         $var = [];
         $where = '';
+        $where_tutor = '';
 
         if (strtoupper($hash) == "TEST") {
             // everything
@@ -716,15 +743,19 @@ class Utilities
                 // this is a course :)
                 $var = [':courseCode' => strtoupper($hash)];
                 $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode = :courseCode)';
+                $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.courseCode = :courseCode)';
 
                 $result['course'] = strtoupper($hash);
                 $result['code'] = strtoupper($hash);
+                $result['is_course'] = 1;                
 
             } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
                 // faculty
                 $var = [':faculty' => strtoupper($hash)];
                 $where = 'where `cohort`.facultyCode = :faculty';
+                $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.faculty = :faculty)';
 
+                $result['is_faculty'] = 1;
                 try {
                     $query = "SELECT * FROM timetable.uct_faculty `faculty` where `faculty`.`code` = :faculty";
 
@@ -748,19 +779,22 @@ class Utilities
                 if ($data['success']) {
                     $var = [':dept' => "$hash%"];
                     $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode like :dept)';
+                    $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.dept = :dept)';
 
                     $data = $data['result'][0];
                     $result['course'] = trim($data['name']);
                     $result['code'] = strtoupper($hash);
+                    $result['is_department'] = 1;
                 } else {
                     $result = [ 'success' => 0, 'err' => "Invalid reference."];
                 }
             }
         }
 
-        $result['where'] = $where;
         $result['var'] = $var;
-
+        $result['where'] = $where;
+        $result['where_tutor'] = $where_tutor;
+        
         // updated_at
         try {
             $query = "SELECT max(`results`.updated_at) as d 
@@ -780,180 +814,177 @@ class Utilities
         }
 
         // cohort_response
-        try {
-            $query = "SELECT count(*) as cnt, `cohort`.level as lvl
-                from studentsurvey.cohort `cohort`
-                    $where
-                group by `cohort`.level";
-
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute($var);
-            if ($stmt->rowCount() === 0) {
-                $result['success'] = 0;
-                $result['err'] = 'cohort_response';
-            }
-
-            $result['cohort_response'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }
+        $result['cohort_response'] = $this->getSurveyResultsExec($var,
+                "SELECT count(*) as cnt, `cohort`.level as lvl
+                    FROM studentsurvey.cohort `cohort`
+                        $where
+                    group by `cohort`.level");
 
         // survey_response
-        try {
-            $query = "SELECT count(*) as cnt, `cohort`.level as lvl
-                FROM studentsurvey.results_valid `results`
-                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                    $where
-                group by `cohort`.level";
-
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute($var);
-            if ($stmt->rowCount() === 0) {
-                $result['success'] = 0;
-                $result['err'] = 'survey_response';
-            }
-
-            $result['survey_response'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }
+        $result['survey_response'] = $this->getSurveyResultsExec($var,
+                "SELECT count(*) as cnt, `cohort`.level as lvl
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                        $where
+                    group by `cohort`.level");
 
         // survey_access_device
-        try {
-            $query = "SELECT 
-                sum(`results`.Q3 REGEXP 'Laptop') as Laptop,
-                sum(`results`.Q3 REGEXP 'Desktop computer') as Desktop,
-                sum(`results`.Q3 REGEXP 'Smartphone') as Smartphone,
-                sum(`results`.Q3 REGEXP 'Tablet') as Tablet,
-                sum(`results`.Q3 REGEXP \"I don't have access to any device\") as Nothing,
-                count(*) as cnt,
-                `results`.Q3
-                FROM studentsurvey.results_valid `results`
-                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                $where
-                group by `results`.Q3
-                order by `results`.Q3";
-
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute($var);
-            if ($stmt->rowCount() === 0) {
-                $result['success'] = 0;
-                $result['err'] = 'survey_access_device';
-            }
-
-            $result['survey_access_device'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }
+        $result['survey_access_device'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q3 REGEXP 'Laptop') as Laptop,
+                        sum(`results`.Q3 REGEXP 'Desktop computer') as Desktop,
+                        sum(`results`.Q3 REGEXP 'Smartphone') as Smartphone,
+                        sum(`results`.Q3 REGEXP 'Tablet') as Tablet,
+                        sum(`results`.Q3 REGEXP \"I don't have access to any device\") as Nothing,
+                        count(*) as cnt,
+                        `results`.Q3
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q3
+                    order by `results`.Q3");
 
         //survey_access_type
-        try {
-            $query = "SELECT 
-                sum(`results`.Q5 REGEXP 'Mobile data') as Mobile,
-                sum(`results`.Q5 REGEXP 'Wifi') as Wifi,
-                sum(`results`.Q5 REGEXP 'Other') as Other,
-                sum(`results`.Q5 REGEXP 'No access') as Nothing,
-                count(*) as cnt,
-                `results`.Q5
-                FROM studentsurvey.results_valid `results`
-                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                $where
-                group by `results`.Q5
-                order by `results`.Q5";
-
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute($var);
-            if ($stmt->rowCount() === 0) {
-                $result['success'] = 0;
-                $result['err'] = 'survey_access_type';
-            }
-
-            $result['survey_access_type'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }
+        $result['survey_access_type'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q5 REGEXP 'Mobile data') as Mobile,
+                        sum(`results`.Q5 REGEXP 'Wifi') as Wifi,
+                        sum(`results`.Q5 REGEXP 'Other') as Other,
+                        sum(`results`.Q5 REGEXP 'No access') as Nothing,
+                        count(*) as cnt,
+                        `results`.Q5
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q5
+                    order by `results`.Q5");
 
         //survey_activities
-        try {
-            $query = "SELECT 
-                sum(`results`.Q8 REGEXP \"Login to Vula, read announcements, join a chatroom\") as login_vula,
-                sum(`results`.Q8 REGEXP \"Download a reading, notes or presentation from Vula\") as download,
-                sum(`results`.Q8 REGEXP \"Search for and download learning or research materials online or through UCT Library\") as search,
-                sum(`results`.Q8 REGEXP \"Download a lecture video\") as download_500,
-                sum(`results`.Q8 REGEXP \"Play a lecture video online\") as stream,
-                sum(`results`.Q8 REGEXP \"Voice call\") as voice,
-                sum(`results`.Q8 REGEXP \"Live video call or meeting\") as video,
-                sum(`results`.Q8 REGEXP \"I don't know\") as other,
-                sum(`results`.Q8 = \"\") as n,
-                count(*) as cnt,
-                `results`.Q8
-                FROM studentsurvey.results_valid `results`
-                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                $where
-                group by `results`.Q8
-                order by `results`.Q8";
-
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute($var);
-            if ($stmt->rowCount() === 0) {
-                $result['success'] = 0;
-                $result['err'] = 'survey_activities';
-            }
-
-            $result['survey_activities'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }
+        $result['survey_activities'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q8 REGEXP \"Login to Vula, read announcements, join a chatroom\") as login_vula,
+                        sum(`results`.Q8 REGEXP \"Download a reading, notes or presentation from Vula\") as download,
+                        sum(`results`.Q8 REGEXP \"Search for and download learning or research materials online or through UCT Library\") as search,
+                        sum(`results`.Q8 REGEXP \"Download a lecture video\") as download_500,
+                        sum(`results`.Q8 REGEXP \"Play a lecture video online\") as stream,
+                        sum(`results`.Q8 REGEXP \"Voice call\") as voice,
+                        sum(`results`.Q8 REGEXP \"Live video call or meeting\") as video,
+                        sum(`results`.Q8 REGEXP \"I don't know\") as other,
+                        sum(`results`.Q8 = \"\") as n,
+                        count(*) as cnt,
+                        `results`.Q8
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q8
+                    order by `results`.Q8");
 
         //survey_engagement_conditions
-        try {
-            $query = "SELECT 
-                sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer that I can use whenever I need to\") as own_laptop_desktop,
-                sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer but share it with others so it's not always available\") as share_laptop_desktop,
-                sum(`results`.Q4 REGEXP \"I share someone else's laptop or desktop computer, so it's not always available\") as borrow_laptop_desktop,
-                sum(`results`.Q4 REGEXP \"I don't have a laptop or desktop computer that I can use\") as Nothing,
-                count(*) as cnt,
-                `results`.Q4
-                FROM studentsurvey.results_valid `results`
-                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                $where
-                group by `results`.Q4
-                order by `results`.Q4";
-
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute($var);
-            if ($stmt->rowCount() === 0) {
-                $result['success'] = 0;
-                $result['err'] = 'survey_engagement_conditions';
-            }
-
-            $result['survey_engagement_conditions'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }
+        $result['survey_engagement_conditions'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer that I can use whenever I need to\") as own_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer but share it with others so it's not always available\") as share_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I share someone else's laptop or desktop computer, so it's not always available\") as borrow_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I don't have a laptop or desktop computer that I can use\") as Nothing,
+                        count(*) as cnt,
+                        `results`.Q4
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q4
+                    order by `results`.Q4");
 
         //survey_engagement_hours
-        try {
-            $query = "SELECT 
-                count(`results`.Q7) as cnt,
-                `results`.Q7
-                FROM studentsurvey.results_valid `results`
-                    left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                $where
-                group by `results`.Q7
-                order by `results`.Q7";
+        $result['survey_engagement_hours'] = $this->getSurveyResultsExec($var,
+                "SELECT count(`results`.Q7) as cnt, `results`.Q7 as Q
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q7
+                    order by `results`.Q7");        
 
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute($var);
-            if ($stmt->rowCount() === 0) {
-                    $result['success'] = 0;
-                    $result['err'] = 'survey_engagement_hours';
-            }
+        //tutor_available
+        $result['tutor_available'] = $this->getSurveyResultsExec($var,
+                "SELECT count(*) as cnt, `cohort`.level as lvl
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                        $where_tutor
+                    group by `cohort`.level");
 
-            $result['survey_engagement_hours'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }        
+        //tutor_access_device
+        $result['tutor_access_device'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q3 REGEXP 'Laptop') as Laptop,
+                        sum(`results`.Q3 REGEXP 'Desktop computer') as Desktop,
+                        sum(`results`.Q3 REGEXP 'Smartphone') as Smartphone,
+                        sum(`results`.Q3 REGEXP 'Tablet') as Tablet,
+                        sum(`results`.Q3 REGEXP \"I don't have access to any device\") as Nothing,
+                        count(*) as cnt,
+                        `results`.Q3
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q3
+                    order by `results`.Q3");    
+
+        //tutor_access_type
+        $result['tutor_access_type'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q5 REGEXP 'Mobile data') as Mobile,
+                        sum(`results`.Q5 REGEXP 'Wifi') as Wifi,
+                        sum(`results`.Q5 REGEXP 'Other') as Other,
+                        sum(`results`.Q5 REGEXP 'No access') as Nothing,
+                        count(*) as cnt,
+                        `results`.Q5
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q5
+                    order by `results`.Q5");
+
+        //tutor_activities
+        $result['tutor_activities'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q8 REGEXP \"Login to Vula, read announcements, join a chatroom\") as login_vula,
+                        sum(`results`.Q8 REGEXP \"Download a reading, notes or presentation from Vula\") as download,
+                        sum(`results`.Q8 REGEXP \"Search for and download learning or research materials online or through UCT Library\") as search,
+                        sum(`results`.Q8 REGEXP \"Download a lecture video\") as download_500,
+                        sum(`results`.Q8 REGEXP \"Play a lecture video online\") as stream,
+                        sum(`results`.Q8 REGEXP \"Voice call\") as voice,
+                        sum(`results`.Q8 REGEXP \"Live video call or meeting\") as video,
+                        sum(`results`.Q8 REGEXP \"I don't know\") as other,
+                        sum(`results`.Q8 = \"\") as n,
+                        count(*) as cnt,
+                        `results`.Q8
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q8
+                    order by `results`.Q8");
+
+        //tutor_engagement_conditions
+        $result['tutor_engagement_conditions'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer that I can use whenever I need to\") as own_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer but share it with others so it's not always available\") as share_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I share someone else's laptop or desktop computer, so it's not always available\") as borrow_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I don't have a laptop or desktop computer that I can use\") as Nothing,
+                        count(*) as cnt,
+                        `results`.Q4
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q4
+                    order by `results`.Q4");
+
+        //tutor_hours
+        $result['tutor_hours'] = $this->getSurveyResultsExec($var,
+                "SELECT count(`results`.Q12) as cnt, `results`.Q12 as Q
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q12
+                    order by `results`.Q12");    
 
         return $result;
     }
@@ -1005,8 +1036,10 @@ class Utilities
                         ifnull(`results`.Q6,'') as Q6,  
                         ifnull(`results`.Q7,'') as Q7,
                         ifnull(`results`.Q8,'') as Q8
+                        ifnull(`country`.country,'') as country
                     from studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
+                        left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
                         $where
                         order by `cohort`.EID;";
 

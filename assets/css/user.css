@@ -815,6 +815,7 @@ div.container.post .nav-tabs a.nav-link {
   color: #444;
   background-color: #fff;
   opacity: 0.75;
+  border-bottom-color: #dee2e6;
 }
 
 div.container.post .nav-tabs a.nav-link:hover,
@@ -826,6 +827,7 @@ div.container.post .nav-tabs a.nav-link:active {
 div.container.post .nav-tabs a.nav-link.active {
   color: #222;
   opacity: 1.0;
+  border-bottom-color: #fff;
 }
 
 .main-tbl {
@@ -1359,7 +1361,7 @@ aside li > a:active {
 .graph_container {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   grid-column-gap: 6px;
   grid-row-gap: 6px;
 }
@@ -1436,6 +1438,7 @@ h3#result_title {
   grid-template-rows: 1fr;
   grid-column-gap: 0px;
   grid-row-gap: 0px;
+  margin: 14px 0px;
 }
 
 .header_grid label {
@@ -1498,6 +1501,27 @@ h3#result_title {
   font-size: 2rem;
   text-align: center;
   align-self: center;
+}
+
+/******************************************/
+
+#tabpanel.tutors .students,
+#tabpanel.students .tutors,
+#tabpanel.tutors .locations,
+#tabpanel.students .locations,
+#tabpanel.locations .tutors,
+#tabpanel.locations .students,
+#tabpanel.locations .students_tutors {
+    display: none;
+}
+
+#resultTabs {
+    justify-content: end;
+    margin-right: 10px
+}
+
+#resultTabs li > a {
+    text-align: center;
 }
 
 /******************************************/
