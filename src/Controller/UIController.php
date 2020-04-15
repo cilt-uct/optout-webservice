@@ -1169,6 +1169,7 @@ class UIController extends Controller
 
         $data['result'] = $utils->getSurveyResults($hash);
         $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey/'. $hash .'?t='. time();
+        $data['out_link_t'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey_t/'. $hash .'?t='. time();
 
         // return new Response(json_encode($data), 201);
         if (!$data['result']['success']) {
