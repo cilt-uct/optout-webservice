@@ -7,62 +7,97 @@
             <div class="row post-body">
                 <div class="col-md-12 post-title">
 
-                    <h3 id="result_title">Student Access Survey: <span style="color: #5caad2;">{{result.course}}</span></h3>
-                    <p class="author">
-                        <span class="text-muted">{{result.created_at|date("F jS \\a\\t g:ia")}} <small>(data last refreshed at {{result.updated_at|date("F jS \\a\\t g:ia")}})</small></span>
-                    </p>
-                  
-                    <div class="header_grid">
-                        <div class="div1" style="padding-top: 10px;">
-                            <label>Important:</label>
-                            <a href="https://docs.google.com/document/d/17G2Vy1SJO2-rvF0Y6RhAKp3trcm9_zztNOeUniQoGts/edit?usp=sharing" target="_blank" 
-                                title="UCT Student Access Survey: Interpreting the survey">Interpreting the survey</a>
+                    <div class="row no-gutters" style="border-bottom: 1px solid #dee2e6;">
+                        <div class="col-sm-8" style="padding-top: 10px;padding-left: 34px;">
+                            <h3 id="result_title">Student Access Survey: <span style="color: #5caad2;">{{result.course}}</span></h3>
+                            <p class="author" style="margin-bottom: 0.5rem;">
+                                <span class="text-muted">{{result.created_at|date("F jS \\a\\t g:ia")}} <small>(data last refreshed at {{result.updated_at|date("F jS \\a\\t g:ia")}})</small></span>
+                            </p>
+                        </div>
+                        <div class="col-sm-4 align-self-end">
+                            <ul class="nav nav-tabs" id="resultTabs" role="tablist">
+                                <li class="nav-item">
+                                  <a class="nav-link active" id="students-tab" data-toggle="tab" href="#students" role="tab" rel="students" aria-controls="students" aria-selected="true">All Students</a>
+                                </li>
+                                <li class="nav-item">
+                                  <a class="nav-link" id="tutors-tab" data-toggle="tab" href="#tutors" role="tab" rel="tutors" aria-controls="tutors" aria-selected="false">Tutors</a>
+                                </li>
+                                <!--li class="nav-item">
+                                  <a class="nav-link" id="locations-tab" data-toggle="tab" href="#locations" role="tab" rel="locations" aria-controls="locations" aria-selected="false">Locations</a>
+                                </li-->
+                            </ul>
 
-                            <label>Questions?</label>
-                            <a href="mailto:help@vula.uct.ac.za?Subject=Student Access Survey course results query ({{result.course}})" 
-                                title="Help: Student Access Survey course results query ({{result.course}}">help@vula.uct.ac.za</a>
-                            
-                            <label>Download results:</label>
-                            <a href="{{out_link}}" target="_blank"> <i class="fa fa-file-csv"></i> CSV File </a>    
-                        </div>
-                     
-                        <div class="div2" id="survey_response"></div>
-                        <div class="div3">
-                            <div class="div1" id="survey_per"></div>
-                            <div class="div2 text-muted">of</div>
-                            <div class="div3" id="survey_students"></div>
-                        </div>
-                        <div class="div4">
-                            <img src="{{ asset('public/build/images/DASS_logo_Round_Colour.png') }}" alt="DASS">
                         </div>
                     </div>
-                                        
-                    <div class="graph_container">
-                        <div class="div1 outline">
-                            <h5>Access to devices</h5>
-                            <div id="chart_access_device"></div>
+
+                    <div id="tabpanel" class="students">
+                        <div class="header_grid">
+                            <div class="div1" style="padding-top: 10px;">
+                                <label>Important:</label>
+                                <a href="https://docs.google.com/document/d/17G2Vy1SJO2-rvF0Y6RhAKp3trcm9_zztNOeUniQoGts/edit?usp=sharing" target="_blank" title="UCT Student Access Survey: Interpreting the survey">Interpreting the survey</a>
+
+                                <label>Questions?</label>
+                                <a href="mailto:help@vula.uct.ac.za?Subject=Student Access Survey course results query (Dept. of Anaesthesia)" title="Help: Student Access Survey course results query (Dept. of Anaesthesia">help@vula.uct.ac.za</a>
+                                
+                                <label>Download results:</label>
+                                <a href="{{out_link}}" target="_blank" class="students"> <i class="fa fa-file-csv"></i> CSV File </a>
+                                <a href="{{out_link_t}}" target="_blank" class="tutors"> <i class="fa fa-file-csv"></i> Tutors CSV File</a>
+                            </div>
+                        
+                            <div class="div2 students_locations" id="survey_response"></div>
+                            <div class="div2 tutors">
+                                <div id="tutors_available"></div>
+                                <div id="tutors_unavailable"></div>
+                                <div id="tutors_unsure"></div>
+                            </div>
+                            <div class="div3 students_locations">
+                                <div class="div1" id="survey_per"></div>
+                                <div class="div2 text-muted">of</div>
+                                <div class="div3" id="survey_students"></div>
+                            </div>                           
+                            <div class="div4">
+                                <img src="{{ asset('public/build/images/DASS_logo_Round_Colour.png') }}" alt="DASS">
+                            </div>
                         </div>
-                        <div class="div2 outline">
-                            <h5>Access to internet</h5>
-                            <div id="chart_access_internet"></div>
+                                            
+                        <div class="graph_container students_tutors">
+                            <div class="div1 outline">
+                                <h5>Access to devices</h5>
+                                <div id="chart_access_device" class="students"></div>
+                                <div id="chart_access_device_tutor" class="tutors"></div>
+                            </div>
+                            <div class="div2 outline">
+                                <h5>Access to internet</h5>
+                                <div id="chart_access_internet" class="students"></div>
+                                <div id="chart_access_internet_tutor" class="tutors"></div>
+                            </div>
+                            <div class="div3 outline">
+                                <h5>Type of access to internet</h5>
+                                <div id="chart_access_type" class="students"></div>
+                                <div id="chart_access_type_tutor" class="tutors"></div>
+                            </div>
+                            <div class="div4 outline">
+                                <h5>Conditions of access to laptop or desktop computer</h5>
+                                <div id="chart_engagement_access" class="students"></div>
+                                <div id="chart_engagement_access_tutor" class="tutors"></div>
+                            </div>
+                            <div class="div5 outline">
+                                <h5 class="students">Hours per day I am able to study online (after lockdown ends)</h5>
+                                <h5 class="tutors">Hours per day I am able to tutor online (after lockdown ends)</h5>
+                                <div id="chart_engagement_hours" class="students"></div>
+                                <div id="chart_engagement_hours_tutor" class="tutors"></div>
+                            </div>
+                            <div class="div6 outline">
+                                <h5>Things I can do online ignoring data costs or usage caps (after lockdown ends)</h5>
+                                <div id="chart_activities" class="students"></div>
+                                <div id="chart_activities_tutor" class="tutors"></div>
+                            </div>
                         </div>
-                        <div class="div3 outline">
-                            <h5>Type of access to internet</h5>
-                            <div id="chart_access_type"></div>
+
+                        <div class="location_graph_container locations">
+                            Locations
                         </div>
-                        <div class="div4 outline">
-                            <h5>Conditions of access to laptop or desktop computer</h5>
-                            <div id="chart_engagement_acces"></div>
-                        </div>
-                        <div class="div5 outline">
-                            <h5>Hours per day I am able to study online (after lockdown ends)</h5>
-                            <div id="chart_engagement_hours"></div>
-                        </div>
-                        <div class="div6 outline">
-                            <h5>Things I can do online ignoring data costs or usage caps (after lockdown ends)</h5>
-                            <div id="chart_activities"></div>
-                        </div>
-                    </div>  
+                    </div>
                 </div>
             </div>
             {% else %}
@@ -127,9 +162,28 @@
         var survey_activities = {{result.survey_activities|json_encode|raw}};
         var survey_engagement_conditions = {{result.survey_engagement_conditions|json_encode|raw}};
         var survey_engagement_hours = {{result.survey_engagement_hours|json_encode|raw}};
+
+        var tutor_available = {{result.tutor_available|json_encode|raw}};
+        var tutor_access_device = {{result.tutor_access_device|json_encode|raw}};
+        var tutor_access_type = {{result.tutor_access_type|json_encode|raw}};
+        var tutor_activities = {{result.tutor_activities|json_encode|raw}};
+        var tutor_engagement_conditions = {{result.tutor_engagement_conditions|json_encode|raw}};
+        var tutor_hours = {{result.tutor_hours|json_encode|raw}};
    
         // Global chart settings
-        var chart_colors = { "saturation": 0.4 };
+        var color_list = {
+            'chart_access_device': ["#5DB0D3", "#5DB0D3", "#5DB0D3", "#B7241B"],
+            'chart_access_type': ["#5DB0D3", "#6894DC", "#6871DC", "#B7241B"],
+            'chart_engagement_hours': ["#5DB0D3"],
+            'chart_activities': ["#5DB0D3"],
+            'chart_engagement_access': ["#5DB0D3", "#B7241B", "#5DB0D3", "#5DB0D3"],
+
+            'chart_engagement_access_tutor':  ["#055A9F", "#842A36", "#055A9F", "#055A9F"],
+            'chart_access_device_tutor': ["#055A9F", "#055A9F", "#055A9F", "#842A36"],
+            'chart_access_type_tutor': ["#055A9F", "#737993", "#c6c6c6", "#842A36"],
+            'chart_engagement_hours_tutor': ["#055A9F"],
+            'chart_activities_tutor': ["#055A9F"],
+        };
 
         function getParseValue(id, arr, key, ref) {
             var o = getObj(id, arr, key);
@@ -142,26 +196,20 @@
             return 0;
         }
 
-        function drawAccessDevices() {
-            var total = survey_access_device.sum("cnt"),
-                t_laptop_desktop = survey_access_device.filter(function(e){ return (e.Q3.indexOf("Desktop computer") >= 0) || (e.Q3.indexOf("Laptop") >= 0); }).sum("cnt");
+        function drawAccessDevices(arr, id) {
+            var total = arr.sum("cnt"),
+                t_laptop_desktop = arr.filter(function(e){ return (e.Q3.indexOf("Desktop computer") >= 0) || (e.Q3.indexOf("Laptop") >= 0); }).sum("cnt");
             
             // create the chart and set the data
-            var chart = am4core.create("chart_access_device", am4charts.XYChart);
+            var chart = am4core.create(id, am4charts.XYChart);
             chart.data = [
                 { "type" : "Laptop/Desktop", "per" : ((t_laptop_desktop / total) * 100).toFixed(1), "val": t_laptop_desktop},
-                { "type" : "Smartphone", "per" :  ((survey_access_device.sum("Smartphone") / total) * 100).toFixed(1), "val": survey_access_device},
-                { "type" : "Tablet", "per" :  ((survey_access_device.sum("Tablet") / total) * 100).toFixed(1), "val": survey_access_device},
-                { "type" : "No Device", "per" :  ((survey_access_device.sum("Nothing") / total) * 100).toFixed(1), "val": survey_access_device},
+                { "type" : "Smartphone", "per" :  ((arr.sum("Smartphone") / total) * 100).toFixed(1), "val": arr.sum("Smartphone")},
+                { "type" : "Tablet", "per" :  ((arr.sum("Tablet") / total) * 100).toFixed(1), "val": arr.sum("Tablet")},
+                // { "type" : "No Device", "per" :  ((arr.sum("Nothing") / total) * 100).toFixed(1), "val": arr.sum("Nothing")},
+                { "type" : "No Device", "per" :  ((arr.sum("Smartphone") / total) * 100).toFixed(1), "val": arr.sum("Nothing")},
             ];
-            chart.colors.list = [
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC"),
-                am4core.color("#B7241B"),                
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC")
-            ];           
+            chart.colors.list = color_list[id].map((i) => am4core.color(i));
 
             var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
@@ -179,8 +227,6 @@
                 series1.name = "Device";
                 series1.dataFields.categoryX = "type";
                 series1.dataFields.valueY = "per";
-                //series1.tooltipText = "{categoryX}: {valueY}";
-                //series1.strokeWidth = 2;
 
             // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
             series1.columns.template.adapter.add("fill", function(fill, target) {
@@ -199,9 +245,9 @@
                 valueLabel.label.truncate = false;
         }
 
-        function drawAccessToInternet() {
+        function drawAccessToInternet(arr, id) {
             // Create chart instance
-            var chart = am4core.create("chart_access_internet", am4charts.PieChart);
+            var chart = am4core.create(id, am4charts.PieChart);
             chart.paddingRight = 60;
             chart.paddingLeft = 60;
             chart.paddingTop = 0;
@@ -244,8 +290,8 @@
             hoverShadow.opacity = 0.7;
             hoverShadow.blur = 5;
 
-            var total = survey_access_type.sum('cnt'),
-                no_internet = survey_access_type.filter(function(i){ return (i.Q5.indexOf("No access to Internet") >= 0); }).sum("cnt")
+            var total = arr.sum('cnt'),
+                no_internet = arr.filter(function(i){ return (i.Q5.indexOf("No access to Internet") >= 0); }).sum("cnt")
                 some = total - no_internet;
 
             chart.data = [{
@@ -259,9 +305,9 @@
             }];
         }
 
-        function drawAccessType() {
+        function drawAccessType(arr, id) {
             // Create chart instance
-            var chart = am4core.create("chart_access_type", am4charts.PieChart);
+            var chart = am4core.create(id, am4charts.PieChart);
             chart.paddingRight = 60;
             chart.paddingLeft = 60;
             chart.paddingTop = 0;
@@ -271,12 +317,7 @@
             var pieSeries = chart.series.push(new am4charts.PieSeries());
             pieSeries.dataFields.value = "cnt";
             pieSeries.dataFields.category = "has";
-            pieSeries.colors.list = [
-                am4core.color("#68B7DC"),
-                am4core.color("#6894DC"),
-                am4core.color("#6871DC"),
-                am4core.color("#B7241B")
-            ];
+            pieSeries.colors.list = color_list[id].map((i) => am4core.color(i));
 
             // Let's cut a hole in our Pie chart the size of 30% the radius
             chart.innerRadius = am4core.percent(40);
@@ -315,10 +356,10 @@
                 mobile_only = 'Mobile data (e.g. 3G, 4G, LTE) through a smartphone, dongle or mobile wifi router',
                 wifi_mobile = 'Wifi where I live (connected to home fibre, ADSL or a building network),Mobile data (e.g. 3G, 4G, LTE) through a smartphone, dongle or mobile wifi router';
 
-            var t_wifi_only = getParseValue(wifi_only,survey_access_type,'Q5','Wifi'),
-                t_mobile_only = getParseValue(mobile_only,survey_access_type,'Q5','Mobile'),
-                t_wifi_mobile = getParseValue(wifi_mobile,survey_access_type,'Q5','Wifi'),
-                t_other = survey_access_type.filter(function(i){ return (i.Q5.indexOf("Other") >=0) &&  (i.Q5.indexOf("No access to Internet") == -1); }).sum("Other"),
+            var t_wifi_only = getParseValue(wifi_only,arr,'Q5','Wifi'),
+                t_mobile_only = getParseValue(mobile_only,arr,'Q5','Mobile'),
+                t_wifi_mobile = getParseValue(wifi_mobile,arr,'Q5','Wifi'),
+                t_other = arr.filter(function(i){ return (i.Q5.indexOf("Other") >=0) &&  (i.Q5.indexOf("No access to Internet") == -1); }).sum("Other"),
                 total = t_wifi_only + t_mobile_only + t_wifi_mobile + t_other;
                     
             chart.data = [{
@@ -340,21 +381,22 @@
             }];
         }
 
-        function drawEngagementHours() {
-            var total = survey_engagement_hours.sum("cnt");
-            survey_engagement_hours.map(function(e){
-                e.Q7 = (e.Q7 == "0" ? "< 1" : e.Q7);
-                e.Q7 = (e.Q7 == "10" ? "+ 10" : e.Q7);
+        function drawEngagementHours(arr, id) {
+            var total = arr.sum("cnt");
+            arr.map(function(e){
+                e.Q = (e.Q == "0" ? "< 1" : e.Q);
+                e.Q = (e.Q == "10" ? "+ 10" : e.Q);
                 e.cnt = parseInt(e.cnt, 10);
                 e.per =  (total > 0 ? ((e.cnt / total) * 100).toFixed(1) : 0);
             });
             
             // create the chart and set the data
-            var chart = am4core.create("chart_engagement_hours", am4charts.XYChart);
-            chart.data = survey_engagement_hours;
+            var chart = am4core.create(id, am4charts.XYChart);
+            chart.data = arr;
+            chart.colors.list = color_list[id].map((i) => am4core.color(i));
 
             var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
-            categoryAxis.dataFields.category = "Q7";
+            categoryAxis.dataFields.category = "Q";
             categoryAxis.renderer.grid.template.location = 0;
             categoryAxis.renderer.minGridDistance = 30;
 
@@ -363,7 +405,7 @@
 
             var series1 = chart.series.push(new am4charts.ColumnSeries());
                 series1.name = "Hours";
-                series1.dataFields.categoryX = "Q7";
+                series1.dataFields.categoryX = "Q";
                 series1.dataFields.valueY = "cnt";
                 series1.dataFields.valuePer = "per";
 
@@ -376,25 +418,19 @@
                 valueLabel.label.truncate = false;
         }
 
-        function drawEngagement() {
-            var total = survey_engagement_conditions.sum('cnt');
+        function drawEngagement(arr, id) {
+            var total = arr.sum('cnt');
             
             // create the chart and set the data
-            var chart = am4core.create("chart_engagement_acces", am4charts.XYChart);
+            var chart = am4core.create(id, am4charts.XYChart);
             chart.data = [
-                { "type" : "Own Laptop/Desktop", "per" : (total > 0 ? ((survey_engagement_conditions.sum("own_laptop_desktop") / total) * 100).toFixed(1) : 0)},
-                { "type" : "I don't have any", "per" : (total > 0 ? ((survey_engagement_conditions.sum("Nothing") / total) * 100).toFixed(1) : 0)},
-                { "type" : "I share mine with others", "per" : (total > 0 ? ((survey_engagement_conditions.sum("share_laptop_desktop") / total) * 100).toFixed(1) : 0)},
-                { "type" : "I borrow from others", "per" : (total > 0 ? ((survey_engagement_conditions.sum("borrow_laptop_desktop") / total) * 100).toFixed(1) : 0)}
+                { "type" : "Own Laptop/Desktop", "per" : (total > 0 ? ((arr.sum("own_laptop_desktop") / total) * 100).toFixed(1) : 0)},
+                { "type" : "I don't have any", "per" : (total > 0 ? ((arr.sum("Nothing") / total) * 100).toFixed(1) : 0)},
+                { "type" : "I share mine with others", "per" : (total > 0 ? ((arr.sum("share_laptop_desktop") / total) * 100).toFixed(1) : 0)},
+                { "type" : "I borrow from others", "per" : (total > 0 ? ((arr.sum("borrow_laptop_desktop") / total) * 100).toFixed(1) : 0)}
             ];
-            chart.colors.list = [
-                am4core.color("#67B7DC"),
-                am4core.color("#B7241B"),
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC")
-            ];
+            chart.colors.list = color_list[id].map((i) => am4core.color(i));
+
             var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
             categoryAxis.renderer.grid.template.location = 0;
@@ -429,40 +465,40 @@
                 valueLabel.label.truncate = false;
         }
 
-        function drawActivities() {
-            var total = survey_activities.filter(function(e){ return e.Q8 != ""; }).sum('cnt'),
+        function drawActivities(arr, id) {
+            var total = arr.filter(function(e){ return e.Q8 != ""; }).sum('cnt'),
                 data_array =  [
                     { 
                         "type" : "Login to Vula, read announcements, join a chatroom", 
-                        "per" : (total > 0 ? ((survey_activities.sum("login_vula") / total) * 100).toFixed(1) : 0)
+                        "per" : (total > 0 ? ((arr.sum("login_vula") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Download a reading, notes or presentation from Vula (e.g. PDFs, Powerpoints, up to 10MB)", 
-                        "per" : (total > 0 ? ((survey_activities.sum("download") / total) * 100).toFixed(1) : 0)
+                        "per" : (total > 0 ? ((arr.sum("download") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Search for and download learning or research materials online or through UCT Library", 
-                        "per" : (total > 0 ? ((survey_activities.sum("search") / total) * 100).toFixed(1) : 0)
+                        "per" : (total > 0 ? ((arr.sum("search") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Download a lecture video (up to 500MB)", 
-                        "per" : (total > 0 ? ((survey_activities.sum("download_500") / total) * 100).toFixed(1) : 0)
+                        "per" : (total > 0 ? ((arr.sum("download_500") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Play a lecture video online (without buffering)", 
-                        "per" : (total > 0 ? ((survey_activities.sum("stream") / total) * 100).toFixed(1) : 0)
+                        "per" : (total > 0 ? ((arr.sum("stream") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Voice call (e.g. Whatsapp voice call, Skype)", 
-                        "per" : (total > 0 ? ((survey_activities.sum("voice") / total) * 100).toFixed(1) : 0)
+                        "per" : (total > 0 ? ((arr.sum("voice") / total) * 100).toFixed(1) : 0)
                     }                                                                      
                     ,{ 
                         "type" : "Live video call or meeting (e.g. WhatsApp video, Skype, Zoom, Teams, Adobe Connect)", 
-                        "per" : (total > 0 ? ((survey_activities.sum("video") / total) * 100).toFixed(1) : 0)
+                        "per" : (total > 0 ? ((arr.sum("video") / total) * 100).toFixed(1) : 0)
                     } 
                     // ,{ 
                     //     "type" : "I don't know", 
-                    //     "per" : (total > 0 ? ((survey_activities.sum("other") / total) * 100).toFixed(1) : 0)
+                    //     "per" : (total > 0 ? ((arr.sum("other") / total) * 100).toFixed(1) : 0)
                     // } 
                 ];
             // sort these by highest % (top) to lowest % (bottom)
@@ -470,10 +506,11 @@
             data_array.sort(function (a, b) { return (a.per < b.per ? 1 : -1); });
 
             // create the chart and set the data
-            var chart = am4core.create("chart_activities", am4charts.XYChart);
+            var chart = am4core.create(id, am4charts.XYChart);
             chart.minHeight = 240;
             chart.data = data_array;
-
+            chart.colors.list = color_list[id].map((i) => am4core.color(i));
+            
             var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
             categoryAxis.renderer.inversed = true;
@@ -505,25 +542,53 @@
 
         $(function() {
 
+            $('#resultTabs').on('click', 'a', function(event){
+                event.preventDefault();
+                var e = $('#tabpanel'),
+                    to = $(this).attr('rel');
+                if (e.hasClass(to)) {
+                    console.log("do nothing");
+                } else {
+                    e.attr('class', to);
+                    switch(to) {
+                        case 'students':
+                            break;
+                        case 'tutors':
+                            break;
+                        case 'locations':
+                            break;
+                    }
+                }
+            });
             am4core.ready(function() {
                 // Themes begin
                 am4core.useTheme(am4themes_animated);
                 // Themes end
 
-                drawAccessDevices();
-                drawAccessToInternet();
-                drawAccessType();
+                drawAccessDevices(survey_access_device, "chart_access_device");
+                drawAccessDevices(tutor_access_device, "chart_access_device_tutor");
 
-                drawEngagementHours();
-                drawEngagement();
+                drawAccessToInternet(survey_access_type, "chart_access_internet");
+                drawAccessToInternet(tutor_access_type, "chart_access_internet_tutor");
 
-                drawActivities();
+                drawAccessType(survey_access_type, "chart_access_type");
+                drawAccessType(tutor_access_type, "chart_access_type_tutor");
+
+                drawEngagementHours(survey_engagement_hours, "chart_engagement_hours");
+                drawEngagementHours(tutor_hours, "chart_engagement_hours_tutor");
+                
+                drawEngagement(survey_engagement_conditions, "chart_engagement_access");
+                drawEngagement(tutor_engagement_conditions, "chart_engagement_access_tutor");
+
+                drawActivities(survey_activities, "chart_activities");
+                drawActivities(tutor_activities, "chart_activities_tutor");
             }); // end am4core.ready()
 
             cohort_response.map(function(e){ e.cnt = parseInt(e.cnt,10); });
             survey_response.map(function(e){ e.cnt = parseInt(e.cnt,10); });
 
             var total = survey_response.sum("cnt"),
+                tutor_total = tutor_available.sum("cnt"),
                 o_cohort_under = getObj('Undergraduate',cohort_response,'lvl'),
                 o_cohort_post = getObj('Postgraduate',cohort_response,'lvl'),
                 o_survey_under = getObj('Undergraduate',survey_response,'lvl'),
@@ -545,6 +610,10 @@
             $("#survey_response").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(total), 'txt': 'Responses' }));
             $("#survey_per").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(per) +'%', 'txt': 'Response Rate' }));
             $("#survey_students").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(cohort_total), 'txt': 'Students' }));
+
+            $("#tutors_available").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('1',tutor_available,'Q','cnt')), 'txt': 'Available' }));
+            $("#tutors_unavailable").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('0',tutor_available,'Q','cnt')), 'txt': 'Not Available' }));
+            $("#tutors_unsure").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('2',tutor_available,'Q','cnt')), 'txt': 'Unsure' }));
         });
     </script>
     {{ source('results_template.html') }}
