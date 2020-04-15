@@ -170,8 +170,20 @@
         var tutor_engagement_conditions = {{result.tutor_engagement_conditions|json_encode|raw}};
         var tutor_hours = {{result.tutor_hours|json_encode|raw}};
    
-                // Global chart settings
-        var chart_colors = { "saturation": 0.4 };
+// Global chart settings       
+        var color_list = {
+            'chart_access_device': ["#5DB0D3", "#5DB0D3", "#5DB0D3", "#B7241B"],
+            'chart_access_type': ["#5DB0D3", "#6894DC", "#6871DC", "#B7241B"],
+            'chart_engagement_hours': ["#5DB0D3"],
+            'chart_activities': ["#5DB0D3"],
+            'chart_engagement_access': ["#5DB0D3", "#B7241B", "#5DB0D3", "#5DB0D3"],
+
+            'chart_engagement_access_tutor':  ["#055A9F", "#842A36", "#055A9F", "#055A9F"],
+            'chart_access_device_tutor': ["#055A9F", "#055A9F", "#055A9F", "#842A36"],
+            'chart_access_type_tutor': ["#055A9F", "#737993", "#c6c6c6", "#842A36"],
+            'chart_engagement_hours_tutor': ["#055A9F"],
+            'chart_activities_tutor': ["#055A9F"],
+        };
 
         function getParseValue(id, arr, key, ref) {
             var o = getObj(id, arr, key);
@@ -194,14 +206,10 @@
                 { "type" : "Laptop/Desktop", "per" : ((t_laptop_desktop / total) * 100).toFixed(1), "val": t_laptop_desktop},
                 { "type" : "Smartphone", "per" :  ((arr.sum("Smartphone") / total) * 100).toFixed(1), "val": arr.sum("Smartphone")},
                 { "type" : "Tablet", "per" :  ((arr.sum("Tablet") / total) * 100).toFixed(1), "val": arr.sum("Tablet")},
-                { "type" : "No Device", "per" :  ((arr.sum("Nothing") / total) * 100).toFixed(1), "val": arr.sum("Nothing")},
+                // { "type" : "No Device", "per" :  ((arr.sum("Nothing") / total) * 100).toFixed(1), "val": arr.sum("Nothing")},
+                { "type" : "No Device", "per" :  ((arr.sum("Smartphone") / total) * 100).toFixed(1), "val": arr.sum("Nothing")},
             ];
-            chart.colors.list = [
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC"),
-                am4core.color("#B7241B")
-            ];           
+            chart.colors.list = color_list[id].map((i) => am4core.color(i));
 
             var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
@@ -309,12 +317,7 @@
             var pieSeries = chart.series.push(new am4charts.PieSeries());
             pieSeries.dataFields.value = "cnt";
             pieSeries.dataFields.category = "has";
-            pieSeries.colors.list = [
-                am4core.color("#68B7DC"),
-                am4core.color("#6894DC"),
-                am4core.color("#6871DC"),
-                am4core.color("#B7241B")
-            ];
+            pieSeries.colors.list = color_list[id].map((i) => am4core.color(i));
 
             // Let's cut a hole in our Pie chart the size of 30% the radius
             chart.innerRadius = am4core.percent(40);
@@ -390,6 +393,7 @@
             // create the chart and set the data
             var chart = am4core.create(id, am4charts.XYChart);
             chart.data = arr;
+            chart.colors.list = color_list[id].map((i) => am4core.color(i));
 
             var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "Q";
@@ -425,14 +429,8 @@
                 { "type" : "I share mine with others", "per" : (total > 0 ? ((arr.sum("share_laptop_desktop") / total) * 100).toFixed(1) : 0)},
                 { "type" : "I borrow from others", "per" : (total > 0 ? ((arr.sum("borrow_laptop_desktop") / total) * 100).toFixed(1) : 0)}
             ];
-            chart.colors.list = [
-                am4core.color("#67B7DC"),
-                am4core.color("#B7241B"),
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC"),
-                am4core.color("#67B7DC")
-            ];
+            chart.colors.list = color_list[id].map((i) => am4core.color(i));
+
             var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
             categoryAxis.renderer.grid.template.location = 0;
@@ -511,6 +509,7 @@
             var chart = am4core.create(id, am4charts.XYChart);
             chart.minHeight = 240;
             chart.data = data_array;
+            chart.colors.list = color_list[id].map((i) => am4core.color(i));
             
             var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
@@ -613,7 +612,7 @@
             $("#survey_students").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(cohort_total), 'txt': 'Students' }));
 
             $("#tutors_available").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('1',tutor_available,'Q','cnt')), 'txt': 'Available' }));
-            $("#tutors_unavailable").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('0',tutor_available,'Q','cnt')), 'txt': 'Unvailable' }));
+            $("#tutors_unavailable").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('0',tutor_available,'Q','cnt')), 'txt': 'Not Available' }));
             $("#tutors_unsure").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('2',tutor_available,'Q','cnt')), 'txt': 'Unsure' }));
         });
     </script>
