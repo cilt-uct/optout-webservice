@@ -586,6 +586,7 @@
             survey_response.map(function(e){ e.cnt = parseInt(e.cnt,10); });
 
             var total = survey_response.sum("cnt"),
+                tutor_total = tutor_available.sum("cnt"),
                 o_cohort_under = getObj('Undergraduate',cohort_response,'lvl'),
                 o_cohort_post = getObj('Postgraduate',cohort_response,'lvl'),
                 o_survey_under = getObj('Undergraduate',survey_response,'lvl'),
@@ -608,7 +609,7 @@
             $("#survey_per").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(per) +'%', 'txt': 'Response Rate' }));
             $("#survey_students").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(cohort_total), 'txt': 'Students' }));
 
-            $("#tutors_available").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(total), 'txt': 'Available' }));
+            $("#tutors_available").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(tutor_total), 'txt': 'Available' }));
         });
     </script>
     {{ source('results_template.html') }}

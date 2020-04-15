@@ -1509,6 +1509,7 @@ h3#result_title {
 #tabpanel.students .tutors,
 #tabpanel.tutors .locations,
 #tabpanel.students .locations,
+#tabpanel.tutors .students_locations,
 #tabpanel.locations .tutors,
 #tabpanel.locations .students,
 #tabpanel.locations .students_tutors {
