@@ -737,6 +737,7 @@ class Utilities
         if (strtoupper($hash) == "TEST") {
             // everything
             $result['course'] = "ALL Results";
+            $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor`)';
         } else {
 
             if (preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
@@ -905,11 +906,12 @@ class Utilities
 
         //tutor_available
         $result['tutor_available'] = $this->getSurveyResultsExec($var,
-                "SELECT count(*) as cnt, `cohort`.level as lvl
+                "SELECT count(`results`.Q11) as cnt, `results`.Q11 as Q
                     FROM studentsurvey.results_valid `results`
                         left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
-                        $where_tutor
-                    group by `cohort`.level");
+                    $where_tutor
+                    group by `results`.Q11
+                    order by `results`.Q11");
 
         //tutor_access_device
         $result['tutor_access_device'] = $this->getSurveyResultsExec($var,
@@ -989,10 +991,12 @@ class Utilities
         return $result;
     }
 
-    public function getRawSurveyResults($in_hash) {
+    public function getRawSurveyResults($in_hash, $is_tutor) {
 
         $var = [];
         $where = '';
+        $where_tutor = '';
+        $tutor_columns = '';
         $hash = $this->decryptHash($in_hash);
         $result = [ 'success' => 1
             ,'result' => null
@@ -1002,31 +1006,42 @@ class Utilities
 
         if (strtoupper($hash) == "TEST") {
             // everything
+            $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor`)';
         } else {
 
             if (preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
                 // this is a course :)
                 $var = [':courseCode' => strtoupper($hash)];
                 $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode = :courseCode)';
+                $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.courseCode = :courseCode)';
             } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
                 // faculty
                 $var = [':faculty' => strtoupper($hash)];
                 $where = 'where `cohort`.facultyCode = :faculty';
+                $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.faculty = :faculty)';
             } else {
                 // so probably a Department
                 $data = $this->getHOD($hash);
                 if ($data['success']) {
                     $var = [':dept' => "$hash%"];
                     $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode like :dept)';
+                    $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.dept = :dept)';
                 } else {
                     $result = [ 'success' => 0, 'err' => "Invalid reference."];
                 }
             }
         }
 
-        //survey_engagement_hours
-        try {
-            $query = "select 
+        if ($is_tutor) {
+            $tutor_columns = "ifnull(`results`.Q9,'') as Q9, 
+                            ifnull(`results`.Q10,'') as Q10, 
+                            ifnull(`results`.Q11,'') as Q11,
+                            ifnull(`results`.Q12,'') as Q12,";
+            $where = $where_tutor;
+        }
+
+        $result['result'] = $this->getSurveyResultsExec($var,
+                "SELECT 
                         `cohort`.EID as StudentNumber, `cohort`.level, `cohort`.programCode, `cohort`.facultyCode, `cohort`.careerCode, 
                         ifnull(`results`.recordedDate,'') as recordedDate, 
                         ifnull(`results`.Q2,'') as Q2 , 
@@ -1035,27 +1050,14 @@ class Utilities
                         ifnull(`results`.Q5,'') as Q5,
                         ifnull(`results`.Q6,'') as Q6,  
                         ifnull(`results`.Q7,'') as Q7,
-                        ifnull(`results`.Q8,'') as Q8
+                        ifnull(`results`.Q8,'') as Q8,
+                        $tutor_columns
                         ifnull(`country`.country,'') as country
-                    from studentsurvey.cohort `cohort` 
+                    FROM studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
-                        $where
-                        order by `cohort`.EID;";
-
-            $stmt = $this->dbh->prepare($query);
-            $stmt->execute($var);
-            if ($stmt->rowCount() === 0) {
-                $result = [
-                    'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
-            }
-
-            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $result = [ 'success' => 0, 'err' => $e->getMessage()];
-        }        
-
+                    $where
+                    order by `cohort`.EID;");
         return $result;
     }
 

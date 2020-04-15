@@ -41,17 +41,20 @@
                                 
                                 <label>Download results:</label>
                                 <a href="{{out_link}}" target="_blank" class="students"> <i class="fa fa-file-csv"></i> CSV File </a>
-                                <a href="{{out_link_t}}" target="_blank" class="tutuors"> <i class="fa fa-file-csv"></i> Tutors CSV File</a>
+                                <a href="{{out_link_t}}" target="_blank" class="tutors"> <i class="fa fa-file-csv"></i> Tutors CSV File</a>
                             </div>
                         
                             <div class="div2 students_locations" id="survey_response"></div>
-                            <div class="div2 tutors" id="tutors_available"></div>
+                            <div class="div2 tutors">
+                                <div id="tutors_available"></div>
+                                <div id="tutors_unavailable"></div>
+                                <div id="tutors_unsure"></div>
+                            </div>
                             <div class="div3 students_locations">
                                 <div class="div1" id="survey_per"></div>
                                 <div class="div2 text-muted">of</div>
                                 <div class="div3" id="survey_students"></div>
-                            </div>
-                            <div class="div3 tutors">&nbsp;</div>                            
+                            </div>                           
                             <div class="div4">
                                 <img src="{{ asset('public/build/images/DASS_logo_Round_Colour.png') }}" alt="DASS">
                             </div>
@@ -609,7 +612,9 @@
             $("#survey_per").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(per) +'%', 'txt': 'Response Rate' }));
             $("#survey_students").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(cohort_total), 'txt': 'Students' }));
 
-            $("#tutors_available").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(tutor_total), 'txt': 'Available' }));
+            $("#tutors_available").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('1',tutor_available,'Q','cnt')), 'txt': 'Available' }));
+            $("#tutors_unavailable").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('0',tutor_available,'Q','cnt')), 'txt': 'Unvailable' }));
+            $("#tutors_unsure").html(tmpl('tmpl-graph-text', {'cls': 'text', 'no': formatNumber(getParseValue('2',tutor_available,'Q','cnt')), 'txt': 'Unsure' }));
         });
     </script>
     {{ source('results_template.html') }}

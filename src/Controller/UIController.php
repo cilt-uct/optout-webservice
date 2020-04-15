@@ -1015,12 +1015,26 @@ class UIController extends Controller
         fclose($outputBuffer);
     }
 
+
+    /**
+     * View the survey page according to the hash it receives
+     *
+     * @Route("/downloadsurvey_t/{hash}")
+     */
+    public function surveyDownloadFromHashForTutors($hash, Request $request) {
+        return $this->doSurveyDownload($hash, $request, true);
+    }
+
     /**
      * View the survey page according to the hash it receives
      *
      * @Route("/downloadsurvey/{hash}")
      */
     public function surveyDownloadFromHash($hash, Request $request) {
+        return $this->doSurveyDownload($hash, $request, false);
+    }
+
+    public function doSurveyDownload($hash, Request $request, $is_tutor = false) {
         $authenticated = ['a' => false, 'z' => 'none'];
 
         switch ($request->getMethod()) {
@@ -1071,7 +1085,7 @@ class UIController extends Controller
         $now->setTimezone(new \DateTimeZone('Africa/Johannesburg'));
 
         $utils = new Utilities();
-        $data = $utils->getRawSurveyResults($hash);
+        $data = $utils->getRawSurveyResults($hash, $is_tutor);
         
         if (!$data['success']) {
             return $this->render('results_error.html.twig', ['err' => $data['result']['err']]);
@@ -1083,7 +1097,8 @@ class UIController extends Controller
         // Set headers
         $response->headers->set('Cache-Control', 'private');
         $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
-        $response->headers->set('Content-Disposition', 'attachment; filename="UCT Survey Results '. $data['code'] .' '. $now->format('Y-m-d_H-i'). '.csv"');
+        $response->headers->set('Content-Disposition', 
+                'attachment; filename="UCT Survey Results '. $data['code'] . ($is_tutor ? ' Tutors' : '') .' '. $now->format('Y-m-d_H-i'). '.csv"');
         //$response->headers->set('Content-length', length($this->outputCSV($data['result'])));
 
         // Send headers before outputting anything
