@@ -502,7 +502,7 @@
                     // } 
                 ];
             // sort these by highest % (top) to lowest % (bottom)
-            data_array.map(function(i) { return {"type": i.type, "per": parseFloat(i.per)}; });
+            data_array = data_array.map(function(i) { return {"type": i.type, "per": parseFloat(i.per)}; });
             data_array.sort(function (a, b) { return (a.per < b.per ? 1 : -1); });
 
             // create the chart and set the data
