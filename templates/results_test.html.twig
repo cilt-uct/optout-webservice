@@ -37,7 +37,7 @@
                                 <a href="https://docs.google.com/document/d/17G2Vy1SJO2-rvF0Y6RhAKp3trcm9_zztNOeUniQoGts/edit?usp=sharing" target="_blank" title="UCT Student Access Survey: Interpreting the survey">Interpreting the survey</a>
 
                                 <label>Questions?</label>
-                                <a href="mailto:help@vula.uct.ac.za?Subject=Student Access Survey course results query (Dept. of Anaesthesia)" title="Help: Student Access Survey course results query (Dept. of Anaesthesia">help@vula.uct.ac.za</a>
+                                <a href="mailto:help@vula.uct.ac.za?Subject=Student Access Survey course results query ({{result.course}})" title="Help: Student Access Survey course results query ({{result.course}})">help@vula.uct.ac.za</a>
                                 
                                 <label>Download results:</label>
                                 <a href="{{out_link}}" target="_blank" class="students"> <i class="fa fa-file-csv"></i> CSV File </a>
@@ -163,6 +163,8 @@
         var survey_engagement_conditions = {{result.survey_engagement_conditions|json_encode|raw}};
         var survey_engagement_hours = {{result.survey_engagement_hours|json_encode|raw}};
 
+        var survey_countries = {{result.survey_countries|json_encode|raw}};
+
         var tutor_available = {{result.tutor_available|json_encode|raw}};
         var tutor_access_device = {{result.tutor_access_device|json_encode|raw}};
         var tutor_access_type = {{result.tutor_access_type|json_encode|raw}};
@@ -206,8 +208,7 @@
                 { "type" : "Laptop/Desktop", "per" : ((t_laptop_desktop / total) * 100).toFixed(1), "val": t_laptop_desktop},
                 { "type" : "Smartphone", "per" :  ((arr.sum("Smartphone") / total) * 100).toFixed(1), "val": arr.sum("Smartphone")},
                 { "type" : "Tablet", "per" :  ((arr.sum("Tablet") / total) * 100).toFixed(1), "val": arr.sum("Tablet")},
-                // { "type" : "No Device", "per" :  ((arr.sum("Nothing") / total) * 100).toFixed(1), "val": arr.sum("Nothing")},
-                { "type" : "No Device", "per" :  ((arr.sum("Smartphone") / total) * 100).toFixed(1), "val": arr.sum("Nothing")},
+                { "type" : "No Device", "per" :  ((arr.sum("Nothing") / total) * 100).toFixed(1), "val": arr.sum("Nothing")},
             ];
             chart.colors.list = color_list[id].map((i) => am4core.color(i));
 

@@ -719,6 +719,7 @@ class Utilities
             ,'survey_activities' => []
             ,'survey_engagement_conditions' => []
             ,'survey_engagement_hours' => []
+            ,'survey_countries' => []
             ,'tutor_available' => []
             ,'tutor_access_device' => []
             ,'tutor_access_type' => []
@@ -903,6 +904,17 @@ class Utilities
                     $where
                     group by `results`.Q7
                     order by `results`.Q7");        
+
+        //survey_countries
+        $result['survey_countries'] = $this->getSurveyResultsExec($var,
+                "SELECT count(*) as cnt, `country`.country
+                    FROM studentsurvey.cohort `cohort` 
+                        left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
+                        left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
+                    $where
+                    group by `country`.country
+                    having `country`.country is not null
+                    order by cnt desc"); 
 
         //tutor_available
         $result['tutor_available'] = $this->getSurveyResultsExec($var,
