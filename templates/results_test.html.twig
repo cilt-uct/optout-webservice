@@ -22,9 +22,9 @@
                                 <li class="nav-item">
                                   <a class="nav-link" id="tutors-tab" data-toggle="tab" href="#tutors" role="tab" rel="tutors" aria-controls="tutors" aria-selected="false">Tutors</a>
                                 </li>
-                                <!--li class="nav-item">
+                                <li class="nav-item">
                                   <a class="nav-link" id="locations-tab" data-toggle="tab" href="#locations" role="tab" rel="locations" aria-controls="locations" aria-selected="false">Locations</a>
-                                </li-->
+                                </li>
                             </ul>
 
                         </div>
@@ -40,7 +40,7 @@
                                 <a href="mailto:help@vula.uct.ac.za?Subject=Student Access Survey course results query ({{result.course}})" title="Help: Student Access Survey course results query ({{result.course}})">help@vula.uct.ac.za</a>
                                 
                                 <label>Download results:</label>
-                                <a href="{{out_link}}" target="_blank" class="students"> <i class="fa fa-file-csv"></i> CSV File </a>
+                                <a href="{{out_link}}" target="_blank" class="students_locations"> <i class="fa fa-file-csv"></i> CSV File </a>
                                 <a href="{{out_link_t}}" target="_blank" class="tutors"> <i class="fa fa-file-csv"></i> Tutors CSV File</a>
                             </div>
                         
@@ -95,7 +95,7 @@
                         </div>
 
                         <div class="location_graph_container locations">
-                            Locations
+                            <div id="chart_student_locations"></div>
                         </div>
                     </div>
                 </div>
@@ -141,6 +141,8 @@
     <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/amcharts4/core.js') }}"></script>
     <script src="{{ asset('assets/amcharts4/charts.js') }}"></script>
+    <script src="{{ asset('assets/amcharts4/maps.js') }}"></script>
+    <script src="{{ asset('assets/amcharts4/geodata/worldLow.js') }}"></script>
     <script src="{{ asset('assets/amcharts4/themes/animated.js') }}"></script>
     <script>
         function getObj(id, arr, key) { key = key || 'id'; var o = null; $.each(arr, function (i, el) { if (el[key] == id) { o=el; return; } }); return o; };
@@ -541,6 +543,77 @@
                 valueLabel.label.truncate = false;
         }
 
+        function drawLocations(arr, id) {
+            var chart = am4core.create(id, am4maps.MapChart);
+
+            try {
+                chart.geodata = am4geodata_worldLow;
+            }
+            catch (e) {
+                chart.raiseCriticalError(new Error("Map geodata could not be loaded. Please download the latest <a href=\"https://www.amcharts.com/download/download-v4/\">amcharts geodata</a> and extract its contents into the same directory as your amCharts files."));
+            }
+
+            chart.projection = new am4maps.projections.Miller();
+
+            var title = chart.chartContainer.createChild(am4core.Label);
+            title.text = "All Students by Country";
+            title.fontSize = 20;
+            title.fontWeight = "bold";
+            title.padding(20,20,20,20);
+            title.marginTop = am4core.percent(10);
+            title.align = "center";
+            title.background.fill = am4core.color("rgba(255, 255, 255, 0.8)");
+
+            var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
+
+            var polygonTemplate = polygonSeries.mapPolygons.template;
+            polygonTemplate.tooltipText = "{name}: {value.value}";
+            polygonSeries.useGeodata = true;
+            polygonSeries.heatRules.push({ 
+                property: "fill", 
+                target: polygonSeries.mapPolygons.template, 
+                min: am4core.color("#EBF0FF"), 
+                max: am4core.color("#0B3281") 
+            });
+
+            // add heat legend
+            var heatLegend = chart.chartContainer.createChild(am4maps.HeatLegend);
+            heatLegend.valign = "bottom";
+            heatLegend.series = polygonSeries;
+            heatLegend.width = am4core.percent(100);
+            heatLegend.orientation = "horizontal";
+            heatLegend.padding(30, 30, 30, 30);
+            heatLegend.valueAxis.renderer.labels.template.fontSize = 10;
+            heatLegend.valueAxis.renderer.minGridDistance = 40;
+
+            polygonSeries.mapPolygons.template.events.on("over", function (event) {
+                handleHover(event.target);
+            })
+
+            polygonSeries.mapPolygons.template.events.on("hit", function (event) {
+                handleHover(event.target);
+            })
+
+            function handleHover(mapPolygon) {
+            if (!isNaN(mapPolygon.dataItem.value)) {
+                heatLegend.valueAxis.showTooltipAt(mapPolygon.dataItem.value)
+            }
+            else {
+                heatLegend.valueAxis.hideTooltip();
+            }
+            }
+
+            polygonSeries.mapPolygons.template.events.on("out", function (event) {
+            heatLegend.valueAxis.hideTooltip();
+            })
+
+            // life expectancy data
+            polygonSeries.data = arr;
+
+            // excludes Antarctica
+            polygonSeries.exclude = ["AQ"];
+        }
+
         $(function() {
 
             $('#resultTabs').on('click', 'a', function(event){
@@ -583,6 +656,8 @@
 
                 drawActivities(survey_activities, "chart_activities");
                 drawActivities(tutor_activities, "chart_activities_tutor");
+
+                drawLocations(survey_countries, "chart_student_locations");
             }); // end am4core.ready()
 
             cohort_response.map(function(e){ e.cnt = parseInt(e.cnt,10); });

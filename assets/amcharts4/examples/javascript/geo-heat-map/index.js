@@ -2,7 +2,6 @@ am4core.useTheme(am4themes_animated);
 
 var chart = am4core.create("chartdiv", am4maps.MapChart);
 
-
 try {
     chart.geodata = am4geodata_worldLow;
 }
@@ -10,21 +9,27 @@ catch (e) {
     chart.raiseCriticalError(new Error("Map geodata could not be loaded. Please download the latest <a href=\"https://www.amcharts.com/download/download-v4/\">amcharts geodata</a> and extract its contents into the same directory as your amCharts files."));
 }
 
-
 chart.projection = new am4maps.projections.Miller();
 
 var title = chart.chartContainer.createChild(am4core.Label);
-title.text = "Life expectancy in the World";
+title.text = "World: By Country";
 title.fontSize = 20;
-title.paddingTop = 30;
+title.fontWeight = "bold";
+title.padding(20,20,20,20);
+title.marginTop = am4core.percent(10);
 title.align = "center";
+title.background.fill = am4core.color("rgba(255, 255, 255, 0.8)");
 
 var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
 var polygonTemplate = polygonSeries.mapPolygons.template;
 polygonTemplate.tooltipText = "{name}: {value.value}";
 polygonSeries.useGeodata = true;
-polygonSeries.heatRules.push({ property: "fill", target: polygonSeries.mapPolygons.template, min: am4core.color("#ffffff"), max: am4core.color("#AAAA00") });
-
+polygonSeries.heatRules.push({ 
+  property: "fill", 
+  target: polygonSeries.mapPolygons.template, 
+  min: am4core.color("#EBF0FF"), 
+  max: am4core.color("#0B3281") 
+});
 
 // add heat legend
 var heatLegend = chart.chartContainer.createChild(am4maps.HeatLegend);
@@ -57,9 +62,7 @@ polygonSeries.mapPolygons.template.events.on("out", function (event) {
   heatLegend.valueAxis.hideTooltip();
 })
 
-
 // life expectancy data
-
 polygonSeries.data = [{ id: "AF", value: 60.524 },
 { id: "AL", value: 77.185 },
 { id: "DZ", value: 70.874 },

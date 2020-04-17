@@ -907,14 +907,14 @@ class Utilities
 
         //survey_countries
         $result['survey_countries'] = $this->getSurveyResultsExec($var,
-                "SELECT count(*) as cnt, `country`.country
+                "SELECT count(*) as `value`, upper(`country`.country) as `id`
                     FROM studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
                     $where
                     group by `country`.country
-                    having `country`.country is not null
-                    order by cnt desc"); 
+                    having `id` is not null
+                    order by `value` desc"); 
 
         //tutor_available
         $result['tutor_available'] = $this->getSurveyResultsExec($var,
