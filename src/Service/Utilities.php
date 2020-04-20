@@ -1064,10 +1064,13 @@ class Utilities
                         ifnull(`results`.Q7,'') as Q7,
                         ifnull(`results`.Q8,'') as Q8,
                         $tutor_columns
-                        ifnull(`country`.country,'') as country
+                        ifnull(`country`.country,'') as Country,
+                        ifnull(if(`orientation`.answer = 1, \"ok\", if(`orientation`.answer = 0, \"unsure\",\"\")),'') as OrientationResponse,
+                        ifnull(`orientation`.updated,'') as OrientationUpdated 
                     FROM studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
+                        left join studentsurvey.view_orientation `orientation` on `orientation`.EID = `cohort`.EID
                     $where
                     order by `cohort`.EID;");
         return $result;
