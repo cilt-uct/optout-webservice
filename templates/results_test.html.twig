@@ -179,14 +179,14 @@
             'chart_access_device': ["#5DB0D3", "#5DB0D3", "#5DB0D3", "#B7241B"],
             'chart_access_type': ["#5DB0D3", "#6894DC", "#6871DC", "#B7241B"],
             'chart_engagement_hours': ["#5DB0D3"],
-            'chart_activities': ["#5DB0D3"],
+            'chart_activities': ["#5DB0D3","#5DB0D3","#5DB0D3","#5DB0D3","#5DB0D3","#5DB0D3","#5DB0D3","#B7241B"],
             'chart_engagement_access': ["#5DB0D3", "#B7241B", "#5DB0D3", "#5DB0D3"],
 
-            'chart_engagement_access_tutor':  ["#055A9F", "#842A36", "#055A9F", "#055A9F"],
             'chart_access_device_tutor': ["#055A9F", "#055A9F", "#055A9F", "#842A36"],
             'chart_access_type_tutor': ["#055A9F", "#737993", "#c6c6c6", "#842A36"],
             'chart_engagement_hours_tutor': ["#055A9F"],
-            'chart_activities_tutor': ["#055A9F"],
+            'chart_activities_tutor': ["#055A9F","#055A9F","#055A9F","#055A9F","#055A9F","#055A9F","#055A9F","#842A36"],
+            'chart_engagement_access_tutor':  ["#055A9F", "#842A36", "#055A9F", "#055A9F"],
         };
 
         function getParseValue(id, arr, key, ref) {
@@ -469,7 +469,8 @@
         }
 
         function drawActivities(arr, id) {
-            var total = arr.filter(function(e){ return e.Q8 != ""; }).sum('cnt'),
+            // var total = arr.filter(function(e){ return e.Q8 != ""; }).sum('cnt'),
+            var total = arr.sum('cnt'),
                 data_array =  [
                     { 
                         "type" : "Login to Vula, read announcements, join a chatroom", 
@@ -499,10 +500,10 @@
                         "type" : "Live video call or meeting (e.g. WhatsApp video, Skype, Zoom, Teams, Adobe Connect)", 
                         "per" : (total > 0 ? ((arr.sum("video") / total) * 100).toFixed(1) : 0)
                     } 
-                    // ,{ 
-                    //     "type" : "I don't know", 
-                    //     "per" : (total > 0 ? ((arr.sum("other") / total) * 100).toFixed(1) : 0)
-                    // } 
+                    ,{ 
+                        "type" : "(no response)", 
+                        "per" : (total > 0 ? ((arr.sum("n") / total) * 100).toFixed(1) : 0)
+                    } 
                 ];
             // sort these by highest % (top) to lowest % (bottom)
             data_array = data_array.map(function(i) { return {"type": i.type, "per": parseFloat(i.per)}; });
@@ -521,7 +522,6 @@
             categoryAxis.renderer.minGridDistance = 20;
             categoryAxis.renderer.fontSize = 10;
             
-
             var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
                 // valueAxis.renderer.opposite = true;
                 valueAxis.min = 0;
@@ -532,6 +532,14 @@
             var series1 = chart.series.push(new am4charts.ColumnSeries());
                 series1.dataFields.valueX = "per";
                 series1.dataFields.categoryY = "type";
+
+            // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
+            series1.columns.template.adapter.add("fill", function(fill, target) {
+                return chart.colors.getIndex(target.dataItem.index);
+            });
+            series1.columns.template.adapter.add("stroke", function(fill, target) {
+                return chart.colors.getIndex(target.dataItem.index);
+            });
 
             // Add label
             var valueLabel = series1.bullets.push(new am4charts.LabelBullet());
