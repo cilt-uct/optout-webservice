@@ -213,6 +213,7 @@
                 { "type" : "No Device", "per" :  ((arr.sum("Nothing") / total) * 100).toFixed(1), "val": arr.sum("Nothing")},
             ];
             chart.colors.list = color_list[id].map((i) => am4core.color(i));
+            chart.maskBullets = false;
 
             var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
@@ -230,6 +231,8 @@
                 series1.name = "Device";
                 series1.dataFields.categoryX = "type";
                 series1.dataFields.valueY = "per";
+                series1.dataFields.valueV = "val";
+                series1.columns.template.tooltipText = "{valueY} % ({valueV})";
 
             // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
             series1.columns.template.adapter.add("fill", function(fill, target) {
@@ -251,10 +254,11 @@
         function drawAccessToInternet(arr, id) {
             // Create chart instance
             var chart = am4core.create(id, am4charts.PieChart);
-            chart.paddingRight = 60;
-            chart.paddingLeft = 60;
+            chart.paddingRight = 75;
+            chart.paddingLeft = 75;
             chart.paddingTop = 0;
             chart.paddingBottom = 0;
+            chart.maskBullets = false;
 
             // Add and configure Series
             var pieSeries = chart.series.push(new am4charts.PieSeries());
@@ -264,6 +268,14 @@
                 am4core.color("#265500"),
                 am4core.color("#B7241B")
             ];
+
+            pieSeries.labels.template.fontSize = 12;
+            
+            // // wrapped labels
+            // pieSeries.alignLabels = false;
+            // pieSeries.labels.template.bent = true;
+            // pieSeries.labels.template.radius = 10;
+            // pieSeries.labels.template.padding(0,0,0,0);
 
             // Let's cut a hole in our Pie chart the size of 30% the radius
             chart.innerRadius = am4core.percent(40);
@@ -311,16 +323,24 @@
         function drawAccessType(arr, id) {
             // Create chart instance
             var chart = am4core.create(id, am4charts.PieChart);
-            chart.paddingRight = 60;
-            chart.paddingLeft = 60;
+            chart.paddingRight = 75;
+            chart.paddingLeft = 75;
             chart.paddingTop = 0;
             chart.paddingBottom = 0;
+            chart.maskBullets = false;
 
             // Add and configure Series
             var pieSeries = chart.series.push(new am4charts.PieSeries());
             pieSeries.dataFields.value = "cnt";
             pieSeries.dataFields.category = "has";
             pieSeries.colors.list = color_list[id].map((i) => am4core.color(i));
+
+            // wrapped labels
+            pieSeries.alignLabels = false;
+            pieSeries.labels.template.fontSize = 12;
+            pieSeries.labels.template.bent = true;
+            pieSeries.labels.template.radius = 10;
+            pieSeries.labels.template.padding(0,0,0,0);
 
             // Let's cut a hole in our Pie chart the size of 30% the radius
             chart.innerRadius = am4core.percent(40);
@@ -397,6 +417,7 @@
             var chart = am4core.create(id, am4charts.XYChart);
             chart.data = arr;
             chart.colors.list = color_list[id].map((i) => am4core.color(i));
+            chart.maskBullets = false;
 
             var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "Q";
@@ -410,12 +431,13 @@
                 series1.name = "Hours";
                 series1.dataFields.categoryX = "Q";
                 series1.dataFields.valueY = "cnt";
-                series1.dataFields.valuePer = "per";
+                series1.dataFields.valueV = "per";
+                series1.columns.template.tooltipText = "{valueV} % ({valueY})";
 
             // Add label
             var valueLabel = series1.bullets.push(new am4charts.LabelBullet());
                 valueLabel.scale = 0.8;    
-                valueLabel.label.text = "{valuePer}%";
+                valueLabel.label.text = "{valueV}%";
                 valueLabel.label.dy = -10;
                 valueLabel.label.hideOversized = false;
                 valueLabel.label.truncate = false;
@@ -427,12 +449,21 @@
             // create the chart and set the data
             var chart = am4core.create(id, am4charts.XYChart);
             chart.data = [
-                { "type" : "Own Laptop/Desktop", "per" : (total > 0 ? ((arr.sum("own_laptop_desktop") / total) * 100).toFixed(1) : 0)},
-                { "type" : "I don't have any", "per" : (total > 0 ? ((arr.sum("Nothing") / total) * 100).toFixed(1) : 0)},
-                { "type" : "I share mine with others", "per" : (total > 0 ? ((arr.sum("share_laptop_desktop") / total) * 100).toFixed(1) : 0)},
-                { "type" : "I borrow from others", "per" : (total > 0 ? ((arr.sum("borrow_laptop_desktop") / total) * 100).toFixed(1) : 0)}
+                { "type" : "Own Laptop/Desktop", 
+                    "per" : (total > 0 ? ((arr.sum("own_laptop_desktop") / total) * 100).toFixed(1) : 0), 
+                    "val" : arr.sum("own_laptop_desktop")},
+                { "type" : "I don't have any", 
+                    "per" : (total > 0 ? ((arr.sum("Nothing") / total) * 100).toFixed(1) : 0), 
+                    "val" : arr.sum("Nothing")},
+                { "type" : "I share mine with others", 
+                    "per" : (total > 0 ? ((arr.sum("share_laptop_desktop") / total) * 100).toFixed(1) : 0), 
+                    "val" : arr.sum("share_laptop_desktop")},
+                { "type" : "I borrow from others", 
+                    "per" : (total > 0 ? ((arr.sum("borrow_laptop_desktop") / total) * 100).toFixed(1) : 0), 
+                    "val" : arr.sum("borrow_laptop_desktop")},
             ];
             chart.colors.list = color_list[id].map((i) => am4core.color(i));
+            chart.maskBullets = false;
 
             var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
@@ -450,6 +481,8 @@
                 series1.name = "Device";
                 series1.dataFields.categoryX = "type";
                 series1.dataFields.valueY = "per";
+                series1.dataFields.valueV = "val";
+                series1.columns.template.tooltipText = "{valueY} % ({valueV})";
 
             // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
             series1.columns.template.adapter.add("fill", function(fill, target) {
@@ -473,40 +506,48 @@
             var total = arr.sum('cnt'),
                 data_array =  [
                     { 
-                        "type" : "Login to Vula, read announcements, join a chatroom", 
+                        "type" : "Login to Vula, read announcements, join a chatroom",
+                        "val" : arr.sum("login_vula"),
                         "per" : (total > 0 ? ((arr.sum("login_vula") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
-                        "type" : "Download a reading, notes or presentation from Vula (e.g. PDFs, Powerpoints, up to 10MB)", 
+                        "type" : "Download a reading, notes or presentation from Vula (e.g. PDFs, Powerpoints, up to 10MB)",
+                        "val" : arr.sum("download"), 
                         "per" : (total > 0 ? ((arr.sum("download") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Search for and download learning or research materials online or through UCT Library", 
+                        "val" : arr.sum("search"),
                         "per" : (total > 0 ? ((arr.sum("search") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Download a lecture video (up to 500MB)", 
+                        "val" : arr.sum("download_500"),
                         "per" : (total > 0 ? ((arr.sum("download_500") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Play a lecture video online (without buffering)", 
+                        "val" : arr.sum("stream"),
                         "per" : (total > 0 ? ((arr.sum("stream") / total) * 100).toFixed(1) : 0)
                     }
                     ,{ 
                         "type" : "Voice call (e.g. Whatsapp voice call, Skype)", 
+                        "val" : arr.sum("voice"),
                         "per" : (total > 0 ? ((arr.sum("voice") / total) * 100).toFixed(1) : 0)
                     }                                                                      
                     ,{ 
                         "type" : "Live video call or meeting (e.g. WhatsApp video, Skype, Zoom, Teams, Adobe Connect)", 
+                        "val" : arr.sum("video"),
                         "per" : (total > 0 ? ((arr.sum("video") / total) * 100).toFixed(1) : 0)
                     } 
                     ,{ 
                         "type" : "(no response)", 
+                        "val" : arr.sum("n"),
                         "per" : (total > 0 ? ((arr.sum("n") / total) * 100).toFixed(1) : 0)
                     } 
                 ];
             // sort these by highest % (top) to lowest % (bottom)
-            data_array = data_array.map(function(i) { return {"type": i.type, "per": parseFloat(i.per)}; });
+            data_array = data_array.map(function(i) { return {"type": i.type, "per": parseFloat(i.per), "val": i.val}; });
             data_array.sort(function (a, b) { return (a.per < b.per ? 1 : -1); });
 
             // create the chart and set the data
@@ -514,6 +555,8 @@
             chart.minHeight = 240;
             chart.data = data_array;
             chart.colors.list = color_list[id].map((i) => am4core.color(i));
+            chart.maskBullets = false;
+            chart.paddingRight = 40;
             
             var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
             categoryAxis.dataFields.category = "type";
@@ -530,8 +573,10 @@
                 valueAxis.hide();
 
             var series1 = chart.series.push(new am4charts.ColumnSeries());
-                series1.dataFields.valueX = "per";
                 series1.dataFields.categoryY = "type";
+                series1.dataFields.valueX = "per";
+                series1.dataFields.valueV = "val";
+                series1.columns.template.tooltipText = "{valueX} % ({valueV})";
 
             // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
             series1.columns.template.adapter.add("fill", function(fill, target) {
