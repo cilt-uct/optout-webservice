@@ -1333,7 +1333,8 @@ class Utilities
                     and A.course_code in (SELECT `cls`.courseCode FROM studentsurvey.cohort `cohort`
                                             left join studentsurvey.cohort_class `cls` on `cls`.EID = `cohort`.EID
                                             where `cohort`.careerCode not in ('PDOC','NDGP') 
-                                                and NOT(`cls`.courseCode regexp '(.*)[S]$') and NOT(`cls`.courseCode regexp '^[A-Z]{3}9'));";
+                                                and NOT(`cls`.courseCode regexp '(.*)[S]$') and NOT(`cls`.courseCode regexp '^[A-Z]{3}9'))";
+                    //and A.course_code not in (select `code` from timetable.results_notification_emails);"; // only if they don't already exist
 
             $stmt = $this->dbh->prepare($query);
             $stmt->execute();
@@ -1353,7 +1354,7 @@ class Utilities
             $result = [ 'success' => 0, 'err' => $e->getMessage()];
         }    
 
-        return $data;
+        return $done;
     }
 
     public function addResultEmails($hash, $name, $mail_to, $mail_cc, $code, $type, $state) {
