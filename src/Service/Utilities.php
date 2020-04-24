@@ -1066,11 +1066,15 @@ class Utilities
                         $tutor_columns
                         ifnull(`country`.country,'') as Country,
                         ifnull(if(`orientation`.answer = 1, \"ok\", if(`orientation`.answer = 0, \"unsure\",\"\")),'') as OrientationResponse,
-                        ifnull(`orientation`.updated,'') as OrientationUpdated 
+                        ifnull(`orientation`.updated,'') as OrientationUpdated,
+                        ifnull(`week`.devices,'') as OrientationWeekDevices,
+                        ifnull(`week`.`status`,'RED') as OrientationWeekStatus,
+                        ifnull(`week`.updated,'') as OrientationWeekUpdated
                     FROM studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
                         left join studentsurvey.view_orientation `orientation` on `orientation`.EID = `cohort`.EID
+                        left join studentsurvey.results_orientation_week `week` on `week`.EID = `cohort`.EID
                     $where
                     order by `cohort`.EID;");
         return $result;
