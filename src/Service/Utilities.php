@@ -1072,10 +1072,10 @@ class Utilities
                         ifnull(`week`.updated,'') as OrientationWeekUpdated,
                         ifnull(`w1`.`DEVICES`,'') as Week1_Devices,
                         ifnull(`w1`.`STATUS`,'') as Week1_Status,
-                        ifnull(`w1`.`UPDATED`,'') as Week1_Updated,
-                        -- ifnull(`w2`.`DEVICES`,'') as Week2_Devices,
-                        -- ifnull(`w2`.`STATUS`,'') as Week2_Status,
-                        -- ifnull(`w2`.`UPDATED`,'') as Week2_Updated  
+                        ifnull(`w1`.`UPDATED`,'') as Week1_Updated
+                        -- ,ifnull(`w2`.`DEVICES`,'') as Week2_Devices
+                        -- ,ifnull(`w2`.`STATUS`,'') as Week2_Status
+                        -- ,ifnull(`w2`.`UPDATED`,'') as Week2_Updated  
                     FROM studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
