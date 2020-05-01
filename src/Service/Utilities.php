@@ -1069,12 +1069,20 @@ class Utilities
                         ifnull(`orientation`.updated,'') as OrientationUpdated,
                         ifnull(`week`.devices,'') as OrientationWeekDevices,
                         ifnull(`week`.`status`,'RED') as OrientationWeekStatus,
-                        ifnull(`week`.updated,'') as OrientationWeekUpdated
+                        ifnull(`week`.updated,'') as OrientationWeekUpdated,
+                        ifnull(`w1`.`DEVICES`,'') as Week1_Devices,
+                        ifnull(`w1`.`STATUS`,'') as Week1_Status,
+                        ifnull(`w1`.`UPDATED`,'') as Week1_Updated,
+                        -- ifnull(`w2`.`DEVICES`,'') as Week2_Devices,
+                        -- ifnull(`w2`.`STATUS`,'') as Week2_Status,
+                        -- ifnull(`w2`.`UPDATED`,'') as Week2_Updated  
                     FROM studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
                         left join studentsurvey.view_orientation `orientation` on `orientation`.EID = `cohort`.EID
                         left join studentsurvey.results_orientation_week `week` on `week`.EID = `cohort`.EID
+                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w1` on `w1`.EID = `cohort`.EID and `w1`.`TERM` = 2020 and `w1`.`WEEK` = 17
+                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w2` on `w2`.EID = `cohort`.EID and `w2`.`TERM` = 2020 and `w2`.`WEEK` = 18
                     $where
                     order by `cohort`.EID;");
         return $result;
