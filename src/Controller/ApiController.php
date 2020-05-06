@@ -706,4 +706,36 @@ class ApiController extends Controller
     }
   }
 
+  /**
+   * @Route("/api/v0/dass/")
+   */
+  public function getSurveyResultEmails(Request $request) {
+    $utils = new Utilities();
+
+    // GET /api/v0/series/?order=series,asc&limit=20
+    switch ($request->getMethod()) {
+      case 'GET':
+        try {
+          $order = explode(',', $request->query->get('order') != null ? $request->query->get('order') : "title,asc");
+          $filter = urldecode($request->query->get('filter') != null ? $request->query->get('filter') : "");
+          $page = $request->query->get('page') != null ? $request->query->get('page') : 1;
+          $limit = $request->query->get('limit') != null ? $request->query->get('limit') : 15;
+          $type = $request->query->get('type') != null ? $request->query->get('type') : "all";
+          $state = $request->query->get('state') != null ? $request->query->get('state') : "all";
+          $offset = ($page - 1) * $limit;
+
+          if (count($order) != 2) {
+            $order = ['code','asc'];
+          }
+
+          $response = $utils->getResultEmails($offset, $limit, $order[1], $order[0], $filter, $type, $state);
+          return new Response(json_encode($response), 200, ['Content-Type' => 'application/json']);
+        } catch (\Exception $e) {
+          return new Response($e->getMessage(), 500);
+        }
+    default:
+        return new Response('Method not implemented', 405, ['Content-Type' => 'text/plain']);
+    }
+}
+
 }

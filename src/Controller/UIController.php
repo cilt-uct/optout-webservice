@@ -462,7 +462,6 @@ class UIController extends Controller
         return new Response("ERROR_MAIL_HASH", 500);
     }
 
-
     /**
      * @Route("/subject/{hash}")
      */
@@ -948,4 +947,347 @@ class UIController extends Controller
         return $this->render('series_view.html.twig', $data);
     }
 
+    /**
+     * @Route("/survey/")
+     */
+    public function showSurveyOverview(Request $request) {
+        $authenticated = ['a' => false, 'z' => ['success' => 0, 'err' => 'none']];
+
+        $now = new \DateTime();
+        $utils = new Utilities();
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                        $authenticated['z'] = $utils->getAuthorizedUsers($details[0]['cn']);
+                    } else {
+                        $authenticated['z']['err'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z']['err'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z']['err'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+                if ($session->get('username')) {
+                    $authenticated['z'] = $utils->getAuthorizedUsers($session->get('username'));
+                }
+            break;
+        }
+
+        $data = [
+            'authenticated' => $authenticated
+        ];
+
+        if ($authenticated['z']['success']) {
+            return $this->render('results_overview.html.twig', $data);
+        } else {
+            return $this->render('results_overview_login.html.twig', $authenticated['z']);
+        }
+    }
+
+    public function outputCSV($data, $useKeysForHeaderRow = true) {
+        if ($useKeysForHeaderRow) {
+            array_unshift($data, array_keys(reset($data)));
+        }
+    
+        $outputBuffer = fopen("php://output", 'w');
+        foreach($data as $v) {
+            fputcsv($outputBuffer, $v);
+        }
+        fclose($outputBuffer);
+    }
+
+
+    /**
+     * View the survey page according to the hash it receives
+     *
+     * @Route("/downloadsurvey_t/{hash}")
+     */
+    public function surveyDownloadFromHashForTutors($hash, Request $request) {
+        return $this->doSurveyDownload($hash, $request, true);
+    }
+
+    /**
+     * View the survey page according to the hash it receives
+     *
+     * @Route("/downloadsurvey/{hash}")
+     */
+    public function surveyDownloadFromHash($hash, Request $request) {
+        return $this->doSurveyDownload($hash, $request, false);
+    }
+
+    public function doSurveyDownload($hash, Request $request, $is_tutor = false) {
+        $authenticated = ['a' => false, 'z' => 'none'];
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                    } else {
+                        $authenticated['z'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+            break;
+        }
+
+        $data = [
+            'hash' => $hash, 
+            'authenticated' => $authenticated,
+            'err' => $authenticated['z'],
+            'out_link' => '/optout/survey/'. $hash
+        ];
+
+         // Require logged in user
+        if ($authenticated['a'] === false) {
+            return $this->render('results.html.twig', $data);
+        }  
+
+        $now = new \DateTime();
+        $now->setTimezone(new \DateTimeZone('Africa/Johannesburg'));
+
+        $utils = new Utilities();
+        $data = $utils->getRawSurveyResults($hash, $is_tutor);
+        
+        if (!$data['success']) {
+            return $this->render('results_error.html.twig', ['err' => $data['result']['err']]);
+        }
+
+        // Generate response
+        $response = new Response();
+
+        // Set headers
+        $response->headers->set('Cache-Control', 'private');
+        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        $response->headers->set('Content-Disposition', 
+                'attachment; filename="UCT Survey Results '. $data['code'] . ($is_tutor ? ' Tutors' : '') .' '. $now->format('Y-m-d_H-i'). '.csv"');
+        //$response->headers->set('Content-length', length($this->outputCSV($data['result'])));
+
+        // Send headers before outputting anything
+        $response->sendHeaders();
+
+        $response->setContent($this->outputCSV($data['result']));
+        return $response;
+    }
+
+    /**
+     * View the survey page according to the hash it receives
+     *
+     * @Route("/survey/{hash}")
+     */
+    public function surveyFromHash($hash, Request $request) {
+        $authenticated = ['a' => false, 'z' => 'none'];
+
+        $now = new \DateTime();
+        $utils = new Utilities();
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                    } else {
+                        $authenticated['z'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+            break;
+        }
+        // return new Response(json_encode($data), 201);
+
+        $data = [
+            'hash' => $hash,
+            'result' => ['course' => $hash],
+            'authenticated' => $authenticated,
+            'err' => $authenticated['z'],
+            'out_link' => '/optout/survey/'. $hash
+        ];
+
+        // Require logged in user
+        if ($authenticated['a'] === false) {
+            return $this->render('results.html.twig', $data);
+        } else {
+            $data['err'] = '';
+        }
+
+        $data['result'] = $utils->getSurveyResults($hash);
+        $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey/'. $hash .'?t='. time();
+        $data['out_link_t'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey_t/'. $hash .'?t='. time();
+
+        // return new Response(json_encode($data), 201);
+        if (!$data['result']['success']) {
+            return $this->render('results_error.html.twig', ['err' => $data['result']['err']]);
+        }
+        return $this->render('results.html.twig', $data);
+    }
+
+    /**
+     * View the survey page according to the hash it receives
+     *
+     * @Route("/survey_test/{hash}")
+     */
+    public function surveyFromHashTest($hash, Request $request) {
+        $authenticated = ['a' => false, 'z' => 'none'];
+
+        $now = new \DateTime();
+        $utils = new Utilities();
+
+        switch ($request->getMethod()) {
+            case 'POST':
+                $ldap = new LDAPService();
+                $user = $request->request->get('eid');
+                $password = $request->request->get('pw');
+
+                try {
+                    if ($ldap->authenticate($user, $password)) {
+                        $details = $ldap->match($user);
+                        $session = $request->hasSession() ? $request->getSession() : new Session();
+                        $session->set('username', $details[0]['cn']);
+                        $authenticated['a'] = true;
+                    } else {
+                        $authenticated['z'] = 'Invalid username/password combination';
+                    }
+                } catch (\Exception $e) {
+                    switch ($e->getMessage()) {
+                        case 'no such user':
+                            $authenticated['z'] = 'No such user';
+                        break;
+                        case 'invalid id':
+                            $authenticated['z'] = 'Please use your official UCT staff number';
+                        break;
+                    }
+                }
+            break;
+            default:
+                $session = $request->hasSession() ? $request->getSession() : new Session();
+                $authenticated['a'] = $session->get('username') ? true : false;
+            break;
+        }
+        // return new Response(json_encode($data), 201);
+
+        $data = [
+            'hash' => $hash,
+            'result' => ['course' => $hash],
+            'authenticated' => $authenticated,
+            'err' => $authenticated['z'],
+            'out_link' => '/optout/survey/'. $hash
+        ];
+
+        // Require logged in user
+        if ($authenticated['a'] === false) {
+            return $this->render('results.html.twig', $data);
+        } else {
+            $data['err'] = '';
+        }
+
+        $data['result'] = $utils->getSurveyResults($hash);
+        $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey/'. $hash .'?t='. time();
+        $data['out_link_t'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey_t/'. $hash .'?t='. time();
+
+        // return new Response(json_encode($data), 201);
+        if (!$data['result']['success']) {
+            return $this->render('results_error.html.twig', ['err' => $data['result']['err']]);
+        }
+        return $this->render('results_test.html.twig', $data);
+    }
+
+    /**
+     * @Route("/mail_subject_results/{hash}")
+     */
+    public function getMailSubjectForResults($hash, Request $request) {
+        $utils = new Utilities();
+        $data = $utils->getSurveyForEmail($hash);
+
+        if ($data['success']) {
+
+            $str = "Student Access Survey for ". $data['code']; //." as of ". (new \DateTime($data['updated_at']))->format('jS F Y g:ia');
+            //$en = $utils->encryptHash($hash);
+            //$str = "|". $en .'|'. $utils->decryptHash($en).'|';
+            return new Response($str, 201);
+        } else {
+            return new Response("ERROR_MAIL_HASH", 500);
+        }
+    }
+
+    /**
+     * @Route("/mail_body_results/{hash}")
+     */
+    public function getMailBodyForResults($hash, Request $request) {
+        $utils = new Utilities();
+        $data = $utils->getSurveyForEmail($hash);
+
+        if ($data['success']) {
+
+            return $this->render('results_mail.html.twig', $data);
+        } else {
+            return new Response("ERROR_MAIL_HASH", 500);
+        }
+    }
+
+    /**
+     * @Route("/generate_result_emails/")
+     */
+    public function generateResultEmails(Request $request) {
+        $utils = new Utilities();
+        $data = $utils->generateResultEmails();
+
+        return new Response(json_encode($data), 201);
+    }
 }

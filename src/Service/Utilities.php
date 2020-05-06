@@ -9,6 +9,7 @@ use App\Entity\HashableInterface;
 use App\Entity\Course;
 use App\Entity\Department;
 use App\Entity\Workflow;
+use App\Entity\User;
 use App\Entity\OpencastSeries;
 
 class Utilities
@@ -586,9 +587,826 @@ class Utilities
         // }
     }
 
+    private function getResultEmailsCount($where = "", $arg = "") {
+        $result = 0;
+        $q = $this->dbh->prepare("select count(*) as cnt FROM timetable.results_notification_emails $where");
+        if ($q->execute($arg)) {
+            $f = $q->fetch();
+            $result = $f['cnt'];
+        }
+        return $result;
+    }
+
+    private function getResultEmailsCustomCount($val = "faculty", $where = "", $a = "", $st = "`type`=:v") {
+        $result = 0;
+        $w = $where = ($where == "" ? " where ": $where ." and ") . $st;
+        $a[':v'] = $val;
+        $q = $this->dbh->prepare("select count(*) as cnt FROM timetable.results_notification_emails $where");
+        if ($q->execute($a)) {
+            $f = $q->fetch();
+            $result = $f['cnt'];
+        }
+        return $result;
+    }
+
+    public function getResultEmails($offset = 0, $limit = 15, $sort_dir = 'asc', $sort_field = 'title', $filter = "", $type = "all", $state = "all") {
+
+        $result = [ 'success' => true,
+                    'result' => null,
+                    "offset" => $offset,
+                    "limit" => $limit,
+                    "filter" =>  $filter,
+                    "order" => $sort_field .",". $sort_dir,
+                    "type" => $type,
+                    "state" => $state,
+                    "total" => 0, "count" => 0
+                ];
+        try {
+            $where = '';
+            $arg = [];
+            $query = "SELECT `updated_at`, `name` as mail_name, mail_to, `hash`, `state`, `type`, `code` FROM timetable.results_notification_emails";
+            if ($filter != "") {
+                $where = " where (`code` like :text or `name` like :text or mail_to like :text)";
+                $arg[":text"] = '%'. $filter .'%';
+            }
+
+            $result['cnt_all'] = $this->getResultEmailsCount($where, $arg);
+            $result['cnt_faculty'] = $this->getResultEmailsCustomCount("faculty", $where, $arg, " `type`=:v");
+            $result['cnt_dept'] = $this->getResultEmailsCustomCount("dept", $where, $arg, " `type`=:v");
+            $result['cnt_course'] = $this->getResultEmailsCustomCount("course", $where, $arg, " `type`=:v");
+
+            if ($type != "all") {
+                $where = ($where == "" ? " where ": $where ." and ") ." `type`=:type";
+                $arg[":type"] = $type;
+            }       
+
+            $result['cnt_0'] = $this->getResultEmailsCustomCount("0", $where, $arg, " `state`=:v");
+            $result['cnt_1'] = $this->getResultEmailsCustomCount("1", $where, $arg, " `state`=:v");
+            $result['cnt_2']  = $this->getResultEmailsCustomCount("2", $where, $arg, " `state`=:v");
+            $result['cnt_3'] = $this->getResultEmailsCustomCount("3", $where, $arg, " `state`=:v");
+
+            if ($state != "all") {
+                $where = ($where == "" ? " where ": $where ." and ") ." `state`=:state";
+                $arg[":state"] = $state;
+            }    
+
+            switch ($sort_field) {
+                case 'convener': $sort_field = 'mail_to'; break;
+            }
+
+            $query .= $where . " order by $sort_field $sort_dir LIMIT $limit OFFSET $offset";
+
+            $result['query'] = str_replace("\n","",$query);
+            $result['where'] = $where;
+            $result['arg'] = $arg;
+
+            $stmt = $this->dbh->prepare($query);
+            if ($stmt->execute($arg)) {
+                if ($stmt->rowCount() === 0) {
+                    $result['success'] = false;
+                    $result['err'] = 'Query is empty';
+                }
+
+                $result['total'] = $this->getSeriesCount($where, $arg);
+                $result['count'] = $stmt->rowCount();
+                $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            } else {
+                $result['success'] = false;
+                $result['err'] = $stmt->errorInfo();
+            }
+        } catch (\PDOException $e) {
+            $result['success'] = false;
+            $result['err'] = $e->getMessage();
+        }
+
+        return $result;
+    }
+
+    public function getSurveyResultsExec($args, $query) {
+        $result = [];
+        try {
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($args);
+            if ($stmt->rowCount() === 0) {
+                $result['success'] = 0;
+                $result['err'] = 'cohort_response';
+            }
+
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = $e->getMessage();
+        }
+        return $result;
+    }
+
+    public function getSurveyResults($in_hash) {
+
+        $hash = $this->decryptHash($in_hash);
+
+        $date = new \DateTime('now');
+        $date->setTimezone(new \DateTimeZone('Africa/Johannesburg'));
+
+        $result = [ 'success' => 1
+            ,'course' => $hash
+            ,'is_course' => 0
+            ,'is_department' => 0
+            ,'is_faculty' => 0
+            ,'code' => $hash
+            ,'hash' => $in_hash
+            ,'survey_response' => []
+            ,'survey_access_device' => []
+            ,'survey_access_type' => []
+            ,'survey_activities' => []
+            ,'survey_engagement_conditions' => []
+            ,'survey_engagement_hours' => []
+            ,'survey_countries' => []
+            ,'tutor_available' => []
+            ,'tutor_access_device' => []
+            ,'tutor_access_type' => []
+            ,'tutor_activities' => []
+            ,'tutor_engagement_conditions' => []
+            ,'tutor_hours' => []
+            ,'created_at' =>  $date->format('Y-m-d H:i:s')
+            ,'updated_at' => ''
+            ,'err_msg' => 'The reference was not found, please contact help@vula.uct.ac.za.'
+        ];    
+
+        $var = [];
+        $where = '';
+        $where_tutor = '';
+
+        if (strtoupper($hash) == "TEST") {
+            // everything
+            $result['course'] = "ALL Results";
+            $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor`)';
+        } else {
+
+            if (preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
+                // this is a course :)
+                $var = [':courseCode' => strtoupper($hash)];
+                $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode = :courseCode)';
+                $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.courseCode = :courseCode)';
+
+                $result['course'] = strtoupper($hash);
+                $result['code'] = strtoupper($hash);
+                $result['is_course'] = 1;                
+
+            } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
+                // faculty
+                $var = [':faculty' => strtoupper($hash)];
+                $where = 'where `cohort`.facultyCode = :faculty';
+                $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.faculty = :faculty)';
+
+                $result['is_faculty'] = 1;
+                try {
+                    $query = "SELECT * FROM timetable.uct_faculty `faculty` where `faculty`.`code` = :faculty";
+
+                    $stmt = $this->dbh->prepare($query);
+                    $stmt->execute($var);
+                    if ($stmt->rowCount() === 0) {
+                        $result = [
+                            'success' => 0,
+                            'err' => 'faculty'];
+                    }
+
+                    $faculty = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    $result['course'] = $faculty[0]['name'];
+                    $result['code'] = $faculty[0]['code'];
+                } catch (\PDOException $e) {
+                    $result = [ 'success' => 0, 'err' => $e->getMessage()];
+                }
+            } else {
+                // so probably a Department
+                $data = $this->getHOD($hash);
+                if ($data['success']) {
+                    $var = [':dept' => "$hash%"];
+                    $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode like :dept)';
+                    $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.dept = :dept)';
+
+                    $data = $data['result'][0];
+                    $result['course'] = trim($data['name']);
+                    $result['code'] = strtoupper($hash);
+                    $result['is_department'] = 1;
+                } else {
+                    $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                }
+            }
+        }
+
+        $result['var'] = $var;
+        $result['where'] = $where;
+        $result['where_tutor'] = $where_tutor;
+        
+        // updated_at
+        try {
+            $query = "SELECT max(`results`.updated_at) as d 
+            FROM studentsurvey.results_valid `results`
+                left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID $where;";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result['success'] = 0;
+                $result['err'] = 'updated_at';
+            }
+
+            $result['updated_at'] = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0]['d'];
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        // cohort_response
+        $result['cohort_response'] = $this->getSurveyResultsExec($var,
+                "SELECT count(*) as cnt, `cohort`.level as lvl
+                    FROM studentsurvey.cohort `cohort`
+                        $where
+                    group by `cohort`.level");
+
+        // survey_response
+        $result['survey_response'] = $this->getSurveyResultsExec($var,
+                "SELECT count(*) as cnt, `cohort`.level as lvl
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                        $where
+                    group by `cohort`.level");
+
+        // survey_access_device
+        $result['survey_access_device'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q3 REGEXP 'Laptop') as Laptop,
+                        sum(`results`.Q3 REGEXP 'Desktop computer') as Desktop,
+                        sum(`results`.Q3 REGEXP 'Smartphone') as Smartphone,
+                        sum(`results`.Q3 REGEXP 'Tablet') as Tablet,
+                        sum(`results`.Q3 REGEXP \"I don't have access to any device\") as Nothing,
+                        count(*) as cnt,
+                        `results`.Q3
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q3
+                    order by `results`.Q3");
+
+        //survey_access_type
+        $result['survey_access_type'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q5 REGEXP 'Mobile data') as Mobile,
+                        sum(`results`.Q5 REGEXP 'Wifi') as Wifi,
+                        sum(`results`.Q5 REGEXP 'Other') as Other,
+                        sum(`results`.Q5 REGEXP 'No access') as Nothing,
+                        count(*) as cnt,
+                        `results`.Q5
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q5
+                    order by `results`.Q5");
+
+        //survey_activities
+        $result['survey_activities'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q8 REGEXP \"Login to Vula, read announcements, join a chatroom\") as login_vula,
+                        sum(`results`.Q8 REGEXP \"Download a reading, notes or presentation from Vula\") as download,
+                        sum(`results`.Q8 REGEXP \"Search for and download learning or research materials online or through UCT Library\") as search,
+                        sum(`results`.Q8 REGEXP \"Download a lecture video\") as download_500,
+                        sum(`results`.Q8 REGEXP \"Play a lecture video online\") as stream,
+                        sum(`results`.Q8 REGEXP \"Voice call\") as voice,
+                        sum(`results`.Q8 REGEXP \"Live video call or meeting\") as video,
+                        sum(`results`.Q8 REGEXP \"I don't know\") as other,
+                        sum(`results`.Q8 = \"\") as n,
+                        count(*) as cnt,
+                        `results`.Q8
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q8
+                    order by `results`.Q8");
+
+        //survey_engagement_conditions
+        $result['survey_engagement_conditions'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer that I can use whenever I need to\") as own_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer but share it with others so it's not always available\") as share_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I share someone else's laptop or desktop computer, so it's not always available\") as borrow_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I don't have a laptop or desktop computer that I can use\") as Nothing,
+                        count(*) as cnt,
+                        `results`.Q4
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q4
+                    order by `results`.Q4");
+
+        //survey_engagement_hours
+        $result['survey_engagement_hours'] = $this->getSurveyResultsExec($var,
+                "SELECT count(`results`.Q7) as cnt, `results`.Q7 as Q
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where
+                    group by `results`.Q7
+                    order by `results`.Q7");        
+
+        //survey_countries
+        $result['survey_countries'] = $this->getSurveyResultsExec($var,
+                "SELECT count(*) as `value`, upper(`country`.country) as `id`
+                    FROM studentsurvey.cohort `cohort` 
+                        left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
+                        left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
+                    $where
+                    group by `country`.country
+                    having `id` is not null
+                    order by `value` desc"); 
+
+        //tutor_available
+        $result['tutor_available'] = $this->getSurveyResultsExec($var,
+                "SELECT count(`results`.Q11) as cnt, `results`.Q11 as Q
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q11
+                    order by `results`.Q11");
+
+        //tutor_access_device
+        $result['tutor_access_device'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q3 REGEXP 'Laptop') as Laptop,
+                        sum(`results`.Q3 REGEXP 'Desktop computer') as Desktop,
+                        sum(`results`.Q3 REGEXP 'Smartphone') as Smartphone,
+                        sum(`results`.Q3 REGEXP 'Tablet') as Tablet,
+                        sum(`results`.Q3 REGEXP \"I don't have access to any device\") as Nothing,
+                        count(*) as cnt,
+                        `results`.Q3
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q3
+                    order by `results`.Q3");    
+
+        //tutor_access_type
+        $result['tutor_access_type'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q5 REGEXP 'Mobile data') as Mobile,
+                        sum(`results`.Q5 REGEXP 'Wifi') as Wifi,
+                        sum(`results`.Q5 REGEXP 'Other') as Other,
+                        sum(`results`.Q5 REGEXP 'No access') as Nothing,
+                        count(*) as cnt,
+                        `results`.Q5
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q5
+                    order by `results`.Q5");
+
+        //tutor_activities
+        $result['tutor_activities'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q8 REGEXP \"Login to Vula, read announcements, join a chatroom\") as login_vula,
+                        sum(`results`.Q8 REGEXP \"Download a reading, notes or presentation from Vula\") as download,
+                        sum(`results`.Q8 REGEXP \"Search for and download learning or research materials online or through UCT Library\") as search,
+                        sum(`results`.Q8 REGEXP \"Download a lecture video\") as download_500,
+                        sum(`results`.Q8 REGEXP \"Play a lecture video online\") as stream,
+                        sum(`results`.Q8 REGEXP \"Voice call\") as voice,
+                        sum(`results`.Q8 REGEXP \"Live video call or meeting\") as video,
+                        sum(`results`.Q8 REGEXP \"I don't know\") as other,
+                        sum(`results`.Q8 = \"\") as n,
+                        count(*) as cnt,
+                        `results`.Q8
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q8
+                    order by `results`.Q8");
+
+        //tutor_engagement_conditions
+        $result['tutor_engagement_conditions'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer that I can use whenever I need to\") as own_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I have a laptop or desktop computer but share it with others so it's not always available\") as share_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I share someone else's laptop or desktop computer, so it's not always available\") as borrow_laptop_desktop,
+                        sum(`results`.Q4 REGEXP \"I don't have a laptop or desktop computer that I can use\") as Nothing,
+                        count(*) as cnt,
+                        `results`.Q4
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q4
+                    order by `results`.Q4");
+
+        //tutor_hours
+        $result['tutor_hours'] = $this->getSurveyResultsExec($var,
+                "SELECT count(`results`.Q12) as cnt, `results`.Q12 as Q
+                    FROM studentsurvey.results_valid `results`
+                        left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID
+                    $where_tutor
+                    group by `results`.Q12
+                    order by `results`.Q12");    
+
+        return $result;
+    }
+
+    public function getRawSurveyResults($in_hash, $is_tutor) {
+
+        $var = [];
+        $where = '';
+        $where_tutor = '';
+        $tutor_columns = '';
+        $hash = $this->decryptHash($in_hash);
+        $result = [ 'success' => 1
+            ,'result' => null
+            ,'code' => $hash
+            ,'hash' => $in_hash
+        ];
+
+        if (strtoupper($hash) == "TEST") {
+            // everything
+            $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor`)';
+        } else {
+
+            if (preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
+                // this is a course :)
+                $var = [':courseCode' => strtoupper($hash)];
+                $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode = :courseCode)';
+                $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.courseCode = :courseCode)';
+            } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
+                // faculty
+                $var = [':faculty' => strtoupper($hash)];
+                $where = 'where `cohort`.facultyCode = :faculty';
+                $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.faculty = :faculty)';
+            } else {
+                // so probably a Department
+                $data = $this->getHOD($hash);
+                if ($data['success']) {
+                    $var = [':dept' => "$hash%"];
+                    $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode like :dept)';
+                    $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.dept = :dept)';
+                } else {
+                    $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                }
+            }
+        }
+
+        if ($is_tutor) {
+            $tutor_columns = "ifnull(`results`.Q9,'') as Q9, 
+                            ifnull(`results`.Q10,'') as Q10, 
+                            ifnull(`results`.Q11,'') as Q11,
+                            ifnull(`results`.Q12,'') as Q12,";
+            $where = $where_tutor;
+        }
+
+        $result['result'] = $this->getSurveyResultsExec($var,
+                "SELECT 
+                        `cohort`.EID as StudentNumber, `cohort`.level, `cohort`.programCode, `cohort`.facultyCode, `cohort`.careerCode, 
+                        ifnull(`results`.recordedDate,'') as recordedDate, 
+                        ifnull(`results`.Q2,'') as Q2 , 
+                        ifnull(`results`.Q3,'') as Q3, 
+                        ifnull(`results`.Q4,'') as Q4, 
+                        ifnull(`results`.Q5,'') as Q5,
+                        ifnull(`results`.Q6,'') as Q6,  
+                        ifnull(`results`.Q7,'') as Q7,
+                        ifnull(`results`.Q8,'') as Q8,
+                        $tutor_columns
+                        ifnull(`country`.country,'') as Country,
+                        ifnull(if(`orientation`.answer = 1, \"ok\", if(`orientation`.answer = 0, \"unsure\",\"\")),'') as OrientationResponse,
+                        ifnull(`orientation`.updated,'') as OrientationUpdated,
+                        ifnull(`week`.devices,'') as OrientationWeekDevices,
+                        ifnull(`week`.`status`,'RED') as OrientationWeekStatus,
+                        ifnull(`week`.updated,'') as OrientationWeekUpdated,
+                        ifnull(`w1`.`DEVICES`,'') as Week1_Devices,
+                        ifnull(`w1`.`STATUS`,'') as Week1_Status,
+                        ifnull(`w1`.`UPDATED`,'') as Week1_Updated
+                        ,ifnull(`w2`.`DEVICES`,'') as Week2_Devices
+                        ,ifnull(`w2`.`STATUS`,'') as Week2_Status
+                        ,ifnull(`w2`.`UPDATED`,'') as Week2_Updated  
+                        -- ,ifnull(`w3`.`DEVICES`,'') as Week2_Devices
+                        -- ,ifnull(`w3`.`STATUS`,'') as Week2_Status
+                        -- ,ifnull(`w3`.`UPDATED`,'') as Week2_Updated                          
+                    FROM studentsurvey.cohort `cohort` 
+                        left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
+                        left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
+                        left join studentsurvey.view_orientation `orientation` on `orientation`.EID = `cohort`.EID
+                        left join studentsurvey.results_orientation_week `week` on `week`.EID = `cohort`.EID
+                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w1` on `w1`.EID = `cohort`.EID and `w1`.`TERM` = 2020 and `w1`.`WEEK` = 17
+                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w2` on `w2`.EID = `cohort`.EID and `w2`.`TERM` = 2020 and `w2`.`WEEK` = 18
+                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w3` on `w3`.EID = `cohort`.EID and `w3`.`TERM` = 2020 and `w3`.`WEEK` = 19
+                    $where
+                    order by `cohort`.EID;");
+        return $result;
+    }
+
+    public function getSurveyForEmail($in_hash) {
+
+        $hash = $this->decryptHash($in_hash);
+        $result = [
+            'success' => 1
+            ,'updated_at' => ""
+            ,'title' => ""
+            ,'name' => ""
+            ,'email' => ""
+            ,'code' => $hash
+            ,'hash' => $in_hash
+            ,'link' => 'https://srvslscet001.uct.ac.za/optout/survey/'. $in_hash
+            ,'is_course' => 0
+            ,'is_department' => 0
+            ,'is_faculty' => 0
+        ];
+        $var = [];
+        $where = '';
+
+        if (strtoupper($hash) == "TEST") {
+            // everything
+        } else {
+
+            if (preg_match("/^[A-Z]{3}[\d]{4}[A-Z]{1}$/", strtoupper($hash))) {
+                // this is a course :)
+                $var = [':courseCode' => strtoupper($hash)];
+                $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode = :courseCode)';
+                
+                try {
+                    $query = "select A.course_code, A.title, A.dept,
+                    ifnull(C.convenor_name, A.convenor_name) as convenor_name,
+                    ifnull(C.convenor_eid, A.convenor_eid) as convenor_eid,
+                    ifnull(C.convenor_email, (select E.email from timetable.view_sakai_users E where C.convenor_eid = E.eid or (C.convenor_eid is null and A.convenor_eid = E.eid))) as email
+                        from timetable.ps_courses A
+                        left join timetable.course_updates C on A.course_code = C.course_code and C.year = 2020 and C.workflow_id = 4
+                    where A.term = 2020 and A.start_date < '2020-06-01' and A.course_code in (select distinct courseCode from studentsurvey.cohort_class)
+                    and A.course_code = :courseCode";
+
+                    $stmt = $this->dbh->prepare($query);
+                    $stmt->execute($var);
+                    if ($stmt->rowCount() === 0) {
+                        $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                    }
+
+                    $course = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    $result['title'] = $course[0]['course_code'];
+                    $result['name'] = $course[0]['convenor_name'];
+                    $result['email'] = $course[0]['email'];
+                    $result['eid'] = $course[0]['convenor_eid'];
+                    $result['is_course'] = 1;
+
+                    // Get Firstname and lastname from EID 
+                    if ($course[0]['convenor_eid'] != '') {
+                        $user = (new User($course[0]['convenor_eid']))->getDetails();
+                        $result['name'] = $user['first_name'] .' '. $user['last_name'];
+                        $result['email'] = $user['email'];
+                    }
+
+                    if ($result['email'] == '') {
+                        // empty course convenor
+                        $data = $this->getHOD($course[0]['dept']);
+                        if ($data['success']) {
+                            $data = $data['result'][0];
+                            $result['name'] = trim($data['user']);
+                            $result['email'] = trim($data['email']);
+                            // $result['is_department'] = 1;
+                        } else {
+                            $result = $data;
+                        }
+                    }
+                } catch (\PDOException $e) {
+                    $result = [ 'success' => 0, 'err' => $e->getMessage()];
+                }
+                
+            } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI"])) {
+                // faculty
+                $var = [':faculty' => strtoupper($hash)];
+                $where = 'where `cohort`.facultyCode = :faculty';
+
+                $result['is_faculty'] = 1;
+                try {
+                    $query = "SELECT * FROM timetable.uct_faculty `faculty` where `faculty`.`code` = :faculty";
+
+                    $stmt = $this->dbh->prepare($query);
+                    $stmt->execute($var);
+                    if ($stmt->rowCount() === 0) {
+                        $result = [
+                            'success' => 0,
+                            'err' => 'faculty'];
+                    }
+
+                    $faculty = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    $result['title'] = $faculty[0]['name'];
+                } catch (\PDOException $e) {
+                    $result = [ 'success' => 0, 'err' => $e->getMessage()];
+                }
+            } else {
+                // so probably a Department
+                $var = [':dept' => "$hash%"];
+                $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode like :dept)';
+
+                $data = $this->getHOD($hash);
+                if ($data['success']) {
+                    $data = $data['result'][0];
+                    $result['title'] = trim($data['name']);
+                    $result['name'] = trim($data['user']);
+                    $result['email'] = trim($data['email']);
+                    $result['is_department'] = 1;
+                } else {
+                    $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                }
+            }
+        }
+
+        $state = 0;
+        try {
+            $query = "SELECT `state` FROM timetable.results_notification_emails where mail_to = :mail and code = :code limit 1;";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute([':code' => strtoupper($hash), ':mail' => $result['email']]);
+            if ($stmt->rowCount() === 0) {
+                $state = 0;
+            } else {
+                $state = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0]['state'];
+            }
+        } catch (\Exception $e) {
+            $state = 0;
+        }
+        $result['state'] = $state;
+
+
+        // updated_at
+        try {
+            $query = "SELECT max(`results`.updated_at) as d 
+            FROM studentsurvey.results_valid `results`
+                left join studentsurvey.cohort `cohort` on `cohort`.EID = `results`.Q1_EID $where;";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result['success'] = 0;
+                $result['err'] = 'updated_at';
+            }
+
+            $result['updated_at'] = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0]['d'];
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        return $result;
+    }
+
+    public function getHOD($dept) {
+        $result = [ 'success' => 1, 'err' => '', 'result' => []];
+
+        try {
+            $var = [':dept' => strtoupper($dept)];
+            // $where = 'where `cohort`.facultyCode = :faculty';
+
+            $query = "SELECT `dept`,`name`, concat(firstname,' ',lastname) as `user`, email FROM timetable.uct_dept where dept = :dept";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute($var);
+            if ($stmt->rowCount() === 0) {
+                $result = [ 'success' => 0, 'err' => "Invalid reference."];
+            }
+
+            $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+        
+        return $result;
+    }
+
+    public function encryptHash($hash) {
+                
+        // Store the cipher method 
+        $ciphering = "AES-128-CTR"; 
+        
+        // Use OpenSSl Encryption method 
+        $iv_length = openssl_cipher_iv_length($ciphering); 
+        $options = 0; 
+        
+        // Non-NULL Initialization Vector for encryption 
+        $encryption_iv = '7767875091113121'; 
+        
+        // Store the encryption key 
+        $encryption_key = "AbstractOrganisationalEntity"; 
+        
+        // Use openssl_encrypt() function to encrypt the data 
+        return openssl_encrypt($hash, $ciphering, $encryption_key, $options, $encryption_iv); 
+    }
+
+    public function decryptHash($val) {
+        // Store the cipher method 
+        $ciphering = "AES-128-CTR"; 
+        
+        // Use OpenSSl Encryption method 
+        $iv_length = openssl_cipher_iv_length($ciphering); 
+        $options = 0; 
+
+        // Non-NULL Initialization Vector for decryption 
+        $decryption_iv = '7767875091113121'; 
+        
+        // Store the decryption key 
+        $decryption_key = "AbstractOrganisationalEntity"; 
+        
+        // Use openssl_decrypt() function to decrypt the data 
+        return openssl_decrypt ($val, $ciphering, $decryption_key, $options, $decryption_iv); 
+    }
+
+    public function generateResultEmails() {
+        $done = [ 'count' => 0, 'pass' => 0, 'mail' => 0];
+
+        $faculties = array("TEST","COM","EBE","HUM","LAW","MED","SCI");
+        foreach ($faculties as &$hash) {
+
+            $data = $this->getSurveyForEmail($this->encryptHash($hash));
+
+            if ($data['success']) {
+                if ($data['state'] == 0) {
+                    $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $hash, "faculty", $data['state']) ? 1 : 0;
+                } else {
+                    $done['pass'] ++;
+                }
+            }
+        }
+
+        try {
+            $query = "select substr(courseCode,1,3) as code from studentsurvey.cohort_class group by substr(courseCode,1,3);";
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute();
+            while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+
+                $data = $this->getSurveyForEmail($this->encryptHash($line['code']));
+
+                if ($data['success']) {
+                    if ($data['state'] == 0) {
+                        $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['code'], "dept", $data['state']) ? 1 : 0;
+                    } else {
+                        $done['pass'] ++;
+                    }
+                }
+            }
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }        
+        
+        try {
+            $query = "select A.course_code
+                        from timetable.ps_courses A
+                    where A.term = 2020 and A.start_date < '2020-06-01' 
+                    and A.course_code in (SELECT `cls`.courseCode FROM studentsurvey.cohort `cohort`
+                                            left join studentsurvey.cohort_class `cls` on `cls`.EID = `cohort`.EID
+                                            where `cohort`.careerCode not in ('PDOC','NDGP') 
+                                                and NOT(`cls`.courseCode regexp '(.*)[S]$') and NOT(`cls`.courseCode regexp '^[A-Z]{3}9'))";
+                    //and A.course_code not in (select `code` from timetable.results_notification_emails);"; // only if they don't already exist
+
+            $stmt = $this->dbh->prepare($query);
+            $stmt->execute();
+            while ($line = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+
+                $data = $this->getSurveyForEmail($this->encryptHash($line['course_code']));
+
+                if ($data['success']) {
+                    if ($data['state'] == 0) {
+                        $done['mail'] += $this->addResultEmails($data['hash'], $data['name'], $data['email'], '', $line['course_code'], "course", $data['state']) ? 1 : 0;
+                    } else {
+                        $done['pass'] ++;
+                    }
+                }
+            }
+        } catch (\PDOException $e) {
+            $result = [ 'success' => 0, 'err' => $e->getMessage()];
+        }    
+
+        return $done;
+    }
+
+    public function addResultEmails($hash, $name, $mail_to, $mail_cc, $code, $type, $state) {
+
+        $insertQry = "replace into timetable.results_notification_emails (hash, name, mail_to, mail_cc, state, code, type)
+                        VALUES (:hash, :name, :mail_to, :mail_cc, :state, :code, :type)";
+
+        if (trim($mail_to) === '') {
+            $name = 'Stephen Marquard';
+            $mail_to = 'stephen.marquard@uct.ac.za';
+        }
+
+        try {
+            $insertStmt = $this->dbh->prepare($insertQry);
+            $bind = [
+                ':hash' => $hash,
+                ':code' => $code,
+                ':type' => $type,
+                ':name' => $name,
+                ':mail_to' => $mail_to,
+                ':mail_cc' => $mail_cc,
+                ':state' => $state
+            ];
+            $insertStmt->execute($bind);
+            if ($insertStmt->rowCount() === 0) {
+                return FALSE;
+            }
+        } catch (\PDOException $e) {
+            return 'ERR:'. $e->getMessage();
+        }
+
+        return TRUE;
+    }
+
     // Function to check string starting with given substring
-    function startsWith ($string, $startString)
-    {
+    function startsWith ($string, $startString) {
         $len = strlen($startString);
         return (substr($string, 0, $len) === $startString);
     }
