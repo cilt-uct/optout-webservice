@@ -1076,9 +1076,12 @@ class Utilities
                         ,ifnull(`w2`.`DEVICES`,'') as Week2_Devices
                         ,ifnull(`w2`.`STATUS`,'') as Week2_Status
                         ,ifnull(`w2`.`UPDATED`,'') as Week2_Updated  
-                        -- ,ifnull(`w3`.`DEVICES`,'') as Week2_Devices
-                        -- ,ifnull(`w3`.`STATUS`,'') as Week2_Status
-                        -- ,ifnull(`w3`.`UPDATED`,'') as Week2_Updated                          
+                        ,ifnull(`w3`.`DEVICES`,'') as Week3_Devices
+                        ,ifnull(`w3`.`STATUS`,'') as Week3_Status
+                        ,ifnull(`w3`.`UPDATED`,'') as Week3_Updated
+                        -- ,ifnull(`w4`.`DEVICES`,'') as Week4_Devices
+                        -- ,ifnull(`w4`.`STATUS`,'') as Week4_Status
+                        -- ,ifnull(`w4`.`UPDATED`,'') as Week4_Updated                    
                     FROM studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
@@ -1087,6 +1090,7 @@ class Utilities
                         left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w1` on `w1`.EID = `cohort`.EID and `w1`.`TERM` = 2020 and `w1`.`WEEK` = 17
                         left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w2` on `w2`.EID = `cohort`.EID and `w2`.`TERM` = 2020 and `w2`.`WEEK` = 18
                         left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w3` on `w3`.EID = `cohort`.EID and `w3`.`TERM` = 2020 and `w3`.`WEEK` = 19
+                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w4` on `w4`.EID = `cohort`.EID and `w4`.`TERM` = 2020 and `w4`.`WEEK` = 20
                     $where
                     order by `cohort`.EID;");
         return $result;
