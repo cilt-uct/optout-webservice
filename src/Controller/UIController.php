@@ -1086,6 +1086,7 @@ class UIController extends Controller
 
         $utils = new Utilities();
         $data = $utils->getRawSurveyResults($hash, $is_tutor);
+        // return new Response(json_encode($data), 201);
         
         if (!$data['success']) {
             return $this->render('results_error.html.twig', ['err' => $data['result']['err']]);

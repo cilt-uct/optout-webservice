@@ -1052,6 +1052,26 @@ class Utilities
             $where = $where_tutor;
         }
 
+        $week_cols = [];
+        $week_join = [];
+        try {
+            $week_stmt = $this->dbh->prepare("SELECT `term`, `week` FROM vula_archive.Weeks 
+                                    WHERE `week` >= 2 and `week` <= 50 and `start_date` >= '2020-04-26' and `start_date` <= NOW()");
+            $week_stmt->execute();
+            foreach ($week_stmt->fetchAll(\PDO::FETCH_ASSOC) as $r => $row) {
+                $w_name = ($r+1);
+                array_push($week_cols, "ifnull(`w".$r."`.`DEVICES`,'') as Week_". $w_name ."_Devices");
+                array_push($week_cols, "ifnull(`w".$r."`.`STATUS`,'')  as Week_". $w_name ."_Status");
+                array_push($week_cols, "ifnull(`w".$r."`.`UPDATED`,'') as Week_". $w_name ."_Updated");
+                array_push($week_join, "left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w".$r."` on `w".$r."`.EID = `cohort`.EID and `w".$r."`.`TERM` = ". $row['term'] ." and `w".$r."`.`WEEK` = ". $row['week']);
+            }
+        } catch (\PDOException $e) {
+            return [ 'success' => 0, 'err' => $e->getMessage()];
+        }
+
+        $select_week = count($week_cols) > 0 ? ','. implode(',', $week_cols) : '';
+        $join_week = count($week_join) > 0 ? implode(' ', $week_join) : '';
+
         $result['result'] = $this->getSurveyResultsExec($var,
                 "SELECT 
                         `cohort`.EID as StudentNumber, `cohort`.level, `cohort`.programCode, `cohort`.facultyCode, `cohort`.careerCode, 
@@ -1069,32 +1089,14 @@ class Utilities
                         ifnull(`orientation`.updated,'') as OrientationUpdated,
                         ifnull(`week`.devices,'') as OrientationWeekDevices,
                         ifnull(`week`.`status`,'RED') as OrientationWeekStatus,
-                        ifnull(`week`.updated,'') as OrientationWeekUpdated,
-                        ifnull(`w1`.`DEVICES`,'') as Week1_Devices,
-                        ifnull(`w1`.`STATUS`,'') as Week1_Status,
-                        ifnull(`w1`.`UPDATED`,'') as Week1_Updated
-                        ,ifnull(`w2`.`DEVICES`,'') as Week2_Devices
-                        ,ifnull(`w2`.`STATUS`,'') as Week2_Status
-                        ,ifnull(`w2`.`UPDATED`,'') as Week2_Updated  
-                        ,ifnull(`w3`.`DEVICES`,'') as Week3_Devices
-                        ,ifnull(`w3`.`STATUS`,'') as Week3_Status
-                        ,ifnull(`w3`.`UPDATED`,'') as Week3_Updated
-                        ,ifnull(`w4`.`DEVICES`,'') as Week4_Devices
-                        ,ifnull(`w4`.`STATUS`,'') as Week4_Status
-                        ,ifnull(`w4`.`UPDATED`,'') as Week4_Updated           
-                        -- ,ifnull(`w5`.`DEVICES`,'') as Week5_Devices
-                        -- ,ifnull(`w5`.`STATUS`,'') as Week5_Status
-                        -- ,ifnull(`w5`.`UPDATED`,'') as Week5_Updated                                    
+                        ifnull(`week`.updated,'') as OrientationWeekUpdated
+                        $select_week                                    
                     FROM studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
                         left join studentsurvey.view_orientation `orientation` on `orientation`.EID = `cohort`.EID
                         left join studentsurvey.results_orientation_week `week` on `week`.EID = `cohort`.EID
-                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w1` on `w1`.EID = `cohort`.EID and `w1`.`TERM` = 2020 and `w1`.`WEEK` = 17
-                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w2` on `w2`.EID = `cohort`.EID and `w2`.`TERM` = 2020 and `w2`.`WEEK` = 18
-                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w3` on `w3`.EID = `cohort`.EID and `w3`.`TERM` = 2020 and `w3`.`WEEK` = 19
-                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w4` on `w4`.EID = `cohort`.EID and `w4`.`TERM` = 2020 and `w4`.`WEEK` = 20
-                        left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w5` on `w5`.EID = `cohort`.EID and `w5`.`TERM` = 2020 and `w5`.`WEEK` = 21
+                        $join_week
                     $where
                     order by `cohort`.EID;");
         return $result;
