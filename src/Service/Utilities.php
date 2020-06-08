@@ -1055,13 +1055,17 @@ class Utilities
         $week_cols = [];
         $week_join = [];
         try {
-            $week_stmt = $this->dbh->prepare("SELECT `term`, `week` FROM vula_archive.Weeks 
+            $week_stmt = $this->dbh->prepare("SELECT `term`, `week`, `start_date`, `end_date`,
+                                    ADDDATE(`start_date`, INTERVAL 3 DAY) as `wed`, 
+                                    ADDDATE(`start_date`, INTERVAL 3 DAY) <= now() as `week_active`
+                                    FROM vula_archive.Weeks 
                                     WHERE `week` >= 2 and `week` <= 50 and `start_date` >= '2020-04-26' and `start_date` <= NOW()");
             $week_stmt->execute();
             foreach ($week_stmt->fetchAll(\PDO::FETCH_ASSOC) as $r => $row) {
                 $w_name = ($r+1);
+                $w_active = $row['week_active'];
                 array_push($week_cols, "ifnull(`w".$r."`.`DEVICES`,'') as Week_". $w_name ."_Devices");
-                array_push($week_cols, "ifnull(`w".$r."`.`STATUS`,'')  as Week_". $w_name ."_Status");
+                array_push($week_cols, "ifnull(`w".$r."`.`STATUS`,'". ($w_active ? "RED" : "") ."')  as Week_". $w_name ."_Status");
                 array_push($week_cols, "ifnull(`w".$r."`.`UPDATED`,'') as Week_". $w_name ."_Updated");
                 array_push($week_join, "left join vula_archive.STUDENT_WEEK_CLASSIFICATION `w".$r."` on `w".$r."`.EID = `cohort`.EID and `w".$r."`.`TERM` = ". $row['term'] ." and `w".$r."`.`WEEK` = ". $row['week']);
             }
@@ -1074,7 +1078,11 @@ class Utilities
 
         $result['result'] = $this->getSurveyResultsExec($var,
                 "SELECT 
-                        `cohort`.EID as StudentNumber, `cohort`.level, `cohort`.programCode, `cohort`.facultyCode, `cohort`.careerCode, 
+                        `cohort`.EID as StudentNumber,
+                        `cohort`.firstName as 'Name',
+                        `cohort`.lastName as Surname,
+                        `cohort`.level, `cohort`.programCode, `cohort`.facultyCode, `cohort`.careerCode, 
+                        ifnull(studentsurvey.getCoursesFromEID(`cohort`.EID),'') as courseCodes,
                         ifnull(`results`.recordedDate,'') as recordedDate, 
                         ifnull(`results`.Q2,'') as Q2 , 
                         ifnull(`results`.Q3,'') as Q3, 
@@ -1090,7 +1098,7 @@ class Utilities
                         ifnull(`week`.devices,'') as OrientationWeekDevices,
                         ifnull(`week`.`status`,'RED') as OrientationWeekStatus,
                         ifnull(`week`.updated,'') as OrientationWeekUpdated
-                        $select_week                                    
+                        $select_week                          
                     FROM studentsurvey.cohort `cohort` 
                         left join studentsurvey.results_valid `results` on `results`.Q1_EID = `cohort`.EID
                         left join studentsurvey.results_country `country` on `country`.EID = `cohort`.EID
