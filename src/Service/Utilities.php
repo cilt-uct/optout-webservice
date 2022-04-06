@@ -730,7 +730,7 @@ class Utilities
             ,'updated_at' => ''
             ,'err_msg' => 'The reference was not found, please contact help@vula.uct.ac.za.'
         ];    
-
+                
         $var = [];
         $where = '';
         $where_tutor = '';
@@ -751,7 +751,7 @@ class Utilities
                 $result['code'] = strtoupper($hash);
                 $result['is_course'] = 1;                
 
-            } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI","TEST"])) {
+            } elseif (in_array(strtoupper($hash), ["COM","EBE","HUM","LAW","MED","SCI"])) {
                 // faculty
                 $var = [':faculty' => strtoupper($hash)];
                 $where = 'where `cohort`.facultyCode = :faculty';
@@ -788,7 +788,8 @@ class Utilities
                     $result['code'] = strtoupper($hash);
                     $result['is_department'] = 1;
                 } else {
-                    $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                    $result['success'] = 0;
+                    $result['err'] = "Invalid reference.";
                 }
             }
         }
@@ -796,7 +797,9 @@ class Utilities
         $result['var'] = $var;
         $result['where'] = $where;
         $result['where_tutor'] = $where_tutor;
-        
+        $result['encryptHash'] = $this->encryptHash($hash);
+        // return $result;
+
         // updated_at
         try {
             $query = "SELECT max(`results`.updated_at) as d 
@@ -1039,7 +1042,8 @@ class Utilities
                     $where = 'where `cohort`.EID in (select EID from studentsurvey.cohort_class where courseCode like :dept)';
                     $where_tutor = 'where `cohort`.EID in (select `tutor`.EID from studentsurvey.results_tutors `tutor` where `tutor`.dept = :dept)';
                 } else {
-                    $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                    $result['success'] = 0;
+                    $result['err'] = "Invalid reference.";
                 }
             }
         }
@@ -1151,7 +1155,8 @@ class Utilities
                     $stmt = $this->dbh->prepare($query);
                     $stmt->execute($var);
                     if ($stmt->rowCount() === 0) {
-                        $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                        $result['success'] = 0;
+                        $result['err'] = "Invalid reference.";
                     }
 
                     $course = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -1219,7 +1224,8 @@ class Utilities
                     $result['email'] = trim($data['email']);
                     $result['is_department'] = 1;
                 } else {
-                    $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                    $result['success'] = 0;
+                    $result['err'] = "Invalid reference.";
                 }
             }
         }
@@ -1274,7 +1280,8 @@ class Utilities
             $stmt = $this->dbh->prepare($query);
             $stmt->execute($var);
             if ($stmt->rowCount() === 0) {
-                $result = [ 'success' => 0, 'err' => "Invalid reference."];
+                $result['success'] = 0;
+                $result['err'] = "Invalid reference.";
             }
 
             $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -1305,6 +1312,11 @@ class Utilities
     }
 
     public function decryptHash($val) {
+
+        if (strtoupper($val) == "TEST") {    
+            return $val;
+        }
+
         // Store the cipher method 
         $ciphering = "AES-128-CTR"; 
         

@@ -7,6 +7,12 @@
             <div class="row post-body">
                 <div class="col-md-12 post-title">
                     <h3><span style="color: #5caad2;">Student Access Survey:</span> Overview</h3>
+                    <!--p>{{authenticated|json_encode()}}</p-->
+                     {% if (authenticated.z) %}
+                        {% if (authenticated.z.type == "admin") %}
+                            <a class="nav-link" href="https://srvslscet001.uct.ac.za/optout/survey_test/kWJdsA==">ALL</a>
+                        {% endif %}
+                    {% endif %}
                     <br/>
                     <div id="main-table" class="workflow-details">
                         <!--p>{{authenticated|json_encode()}}</p-->

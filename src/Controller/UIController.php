@@ -43,6 +43,13 @@ class UIController extends Controller
                         $session = $request->hasSession() ? $request->getSession() : new Session();
                         $session->set('username', $details[0]['cn']);
                         $authenticated['a'] = true;
+                        $z = $utils->getAuthorizedUsers($details[0]['cn']);
+                        if ($z) {
+                            if ($z['success']) {
+                                $authenticated['z'] = $z['result'][0];
+                                $authenticated['z']['success'] = 1;
+                            }
+                        }
                     } else {
                         $authenticated['z'] = 'Invalid username/password combination';
                     }
@@ -60,6 +67,14 @@ class UIController extends Controller
             default:
                 $session = $request->hasSession() ? $request->getSession() : new Session();
                 $authenticated['a'] = $session->get('username') ? true : false;
+
+                $z = $utils->getAuthorizedUsers($session->get('username'));
+                if ($z) {
+                    if ($z['success']) {
+                        $authenticated['z'] = $z['result'][0];
+                        $authenticated['z']['success'] = 1;
+                    }
+                }
             break;
         }
         //return new Response(json_encode($data), 201);
@@ -581,7 +596,13 @@ class UIController extends Controller
                 $session = $request->hasSession() ? $request->getSession() : new Session();
                 $authenticated['a'] = $session->get('username') ? true : false;
                 if ($session->get('username')) {
-                    $authenticated['z'] = $utils->getAuthorizedUsers($session->get('username'));
+                    $z = $utils->getAuthorizedUsers($session->get('username'));
+                    if ($z) {
+                        if ($z['success']) {
+                            $authenticated['z'] = $z['result'][0];
+                            $authenticated['z']['success'] = 1;
+                        }
+                    }
                 }
             break;
         }
@@ -654,7 +675,13 @@ class UIController extends Controller
                 $session = $request->hasSession() ? $request->getSession() : new Session();
                 $authenticated['a'] = $session->get('username') ? true : false;
                 if ($session->get('username')) {
-                    $authenticated['z'] = $utils->getAuthorizedUsers($session->get('username'));
+                    $z = $utils->getAuthorizedUsers($session->get('username'));
+                    if ($z) {
+                        if ($z['success']) {
+                            $authenticated['z'] = $z['result'][0];
+                            $authenticated['z']['success'] = 1;
+                        }
+                    }
                 }
             break;
         }
@@ -707,6 +734,7 @@ class UIController extends Controller
                         if ($z) {
                             if ($z['success']) {
                                 $authenticated['z'] = $z['result'][0];
+                                $authenticated['z']['success'] = 1;
                             }
                         }
                     } else {
@@ -731,6 +759,7 @@ class UIController extends Controller
                 if ($z) {
                     if ($z['success']) {
                         $authenticated['z'] = $z['result'][0];
+                        $authenticated['z']['success'] = 1;
                     }
                 }
             break;
@@ -968,17 +997,23 @@ class UIController extends Controller
                         $session = $request->hasSession() ? $request->getSession() : new Session();
                         $session->set('username', $details[0]['cn']);
                         $authenticated['a'] = true;
-                        $authenticated['z'] = $utils->getAuthorizedUsers($details[0]['cn']);
+                        $z = $utils->getAuthorizedUsers($details[0]['cn']);
+                        if ($z) {
+                            if ($z['success']) {
+                                $authenticated['z'] = $z['result'][0];
+                                $authenticated['z']['success'] = 1;
+                            }
+                        }
                     } else {
-                        $authenticated['z']['err'] = 'Invalid username/password combination';
+                        $authenticated['err'] = 'Invalid username/password combination';
                     }
                 } catch (\Exception $e) {
                     switch ($e->getMessage()) {
                         case 'no such user':
-                            $authenticated['z']['err'] = 'No such user';
+                            $authenticated['err'] = 'No such user';
                         break;
                         case 'invalid id':
-                            $authenticated['z']['err'] = 'Please use your official UCT staff number';
+                            $authenticated['err'] = 'Please use your official UCT staff number';
                         break;
                     }
                 }
@@ -986,8 +1021,13 @@ class UIController extends Controller
             default:
                 $session = $request->hasSession() ? $request->getSession() : new Session();
                 $authenticated['a'] = $session->get('username') ? true : false;
-                if ($session->get('username')) {
-                    $authenticated['z'] = $utils->getAuthorizedUsers($session->get('username'));
+
+                $z = $utils->getAuthorizedUsers($session->get('username'));
+                if ($z) {
+                    if ($z['success']) {
+                        $authenticated['z'] = $z['result'][0];
+                        $authenticated['z']['success'] = 1;
+                    }
                 }
             break;
         }
@@ -995,6 +1035,8 @@ class UIController extends Controller
         $data = [
             'authenticated' => $authenticated
         ];
+        
+        // return new Response(json_encode($data), 201);
 
         if ($authenticated['z']['success']) {
             return $this->render('results_overview.html.twig', $data);
@@ -1115,7 +1157,7 @@ class UIController extends Controller
      * @Route("/survey/{hash}")
      */
     public function surveyFromHash($hash, Request $request) {
-        $authenticated = ['a' => false, 'z' => 'none'];
+        $authenticated = ['a' => false, 'z' => 'none', 'err' => 'none'];
 
         $now = new \DateTime();
         $utils = new Utilities();
@@ -1132,16 +1174,23 @@ class UIController extends Controller
                         $session = $request->hasSession() ? $request->getSession() : new Session();
                         $session->set('username', $details[0]['cn']);
                         $authenticated['a'] = true;
+                        $z = $utils->getAuthorizedUsers($details[0]['cn']);
+                        if ($z) {
+                            if ($z['success']) {
+                                $authenticated['z'] = $z['result'][0];
+                                $authenticated['z']['success'] = 1;
+                            }
+                        }
                     } else {
-                        $authenticated['z'] = 'Invalid username/password combination';
+                        $authenticated['err'] = 'Invalid username/password combination';
                     }
                 } catch (\Exception $e) {
                     switch ($e->getMessage()) {
                         case 'no such user':
-                            $authenticated['z'] = 'No such user';
+                            $authenticated['err'] = 'No such user';
                         break;
                         case 'invalid id':
-                            $authenticated['z'] = 'Please use your official UCT staff number';
+                            $authenticated['err'] = 'Please use your official UCT staff number';
                         break;
                     }
                 }
@@ -1149,15 +1198,23 @@ class UIController extends Controller
             default:
                 $session = $request->hasSession() ? $request->getSession() : new Session();
                 $authenticated['a'] = $session->get('username') ? true : false;
+
+                $z = $utils->getAuthorizedUsers($session->get('username'));
+                if ($z) {
+                    if ($z['success']) {
+                        $authenticated['z'] = $z['result'][0];
+                        $authenticated['z']['success'] = 1;
+                    }
+                }
             break;
         }
-        // return new Response(json_encode($data), 201);
-
+        
         $data = [
             'hash' => $hash,
             'result' => ['course' => $hash],
             'authenticated' => $authenticated,
-            'err' => $authenticated['z'],
+            'success' => $authenticated['err'] == 'none' ? 1 : 0,
+            'err' => $authenticated['err'],
             'out_link' => '/optout/survey/'. $hash
         ];
 
@@ -1165,8 +1222,16 @@ class UIController extends Controller
         if ($authenticated['a'] === false) {
             return $this->render('results.html.twig', $data);
         } else {
-            $data['err'] = '';
+            if (!isset($authenticated['z'])) {
+                $authenticated['z'] = ['type' => 'normal'];
+            } else {
+                if (!isset($authenticated['z']['type'])) {
+                    $authenticated['z']['type'] = 'normal';
+                }
+            }
         }
+        $data['authenticated'] = $authenticated;
+        // return new Response(json_encode($data), 201);
 
         $data['result'] = $utils->getSurveyResults($hash);
         $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey/'. $hash .'?t='. time();
@@ -1185,7 +1250,7 @@ class UIController extends Controller
      * @Route("/survey_test/{hash}")
      */
     public function surveyFromHashTest($hash, Request $request) {
-        $authenticated = ['a' => false, 'z' => 'none'];
+        $authenticated = ['a' => false, 'z' => 'none', 'err' => 'none'];
 
         $now = new \DateTime();
         $utils = new Utilities();
@@ -1202,16 +1267,23 @@ class UIController extends Controller
                         $session = $request->hasSession() ? $request->getSession() : new Session();
                         $session->set('username', $details[0]['cn']);
                         $authenticated['a'] = true;
+                        $z = $utils->getAuthorizedUsers($details[0]['cn']);
+                        if ($z) {
+                            if ($z['success']) {
+                                $authenticated['z'] = $z['result'][0];
+                                $authenticated['z']['success'] = 1;
+                            }
+                        }
                     } else {
-                        $authenticated['z'] = 'Invalid username/password combination';
+                        $authenticated['err'] = 'Invalid username/password combination';
                     }
                 } catch (\Exception $e) {
                     switch ($e->getMessage()) {
                         case 'no such user':
-                            $authenticated['z'] = 'No such user';
+                            $authenticated['err'] = 'No such user';
                         break;
                         case 'invalid id':
-                            $authenticated['z'] = 'Please use your official UCT staff number';
+                            $authenticated['err'] = 'Please use your official UCT staff number';
                         break;
                     }
                 }
@@ -1219,15 +1291,23 @@ class UIController extends Controller
             default:
                 $session = $request->hasSession() ? $request->getSession() : new Session();
                 $authenticated['a'] = $session->get('username') ? true : false;
+
+                $z = $utils->getAuthorizedUsers($session->get('username'));
+                if ($z) {
+                    if ($z['success']) {
+                        $authenticated['z'] = $z['result'][0];
+                        $authenticated['z']['success'] = 1;
+                    }
+                }
             break;
         }
-        // return new Response(json_encode($data), 201);
-
+        
         $data = [
             'hash' => $hash,
             'result' => ['course' => $hash],
             'authenticated' => $authenticated,
-            'err' => $authenticated['z'],
+            'success' => $authenticated['err'] == 'none' ? 1 : 0,
+            'err' => $authenticated['err'],
             'out_link' => '/optout/survey/'. $hash
         ];
 
@@ -1235,8 +1315,16 @@ class UIController extends Controller
         if ($authenticated['a'] === false) {
             return $this->render('results.html.twig', $data);
         } else {
-            $data['err'] = '';
+            if (!isset($authenticated['z'])) {
+                $authenticated['z'] = ['type' => 'normal'];
+            } else {
+                if (!isset($authenticated['z']['type'])) {
+                    $authenticated['z']['type'] = 'normal';
+                }
+            }
         }
+        $data['authenticated'] = $authenticated;
+        // return new Response(json_encode($data), 201);
 
         $data['result'] = $utils->getSurveyResults($hash);
         $data['out_link'] = 'https://srvslscet001.uct.ac.za/optout/downloadsurvey/'. $hash .'?t='. time();
