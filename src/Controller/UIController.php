@@ -743,10 +743,10 @@ class UIController extends Controller
                 } catch (\Exception $e) {
                     switch ($e->getMessage()) {
                         case 'no such user':
-                            $authenticated['z'] = 'No such user';
+                            $authenticated['z']['err'] = 'No such user';
                         break;
                         case 'invalid id':
-                            $authenticated['z'] = 'Please use your official UCT staff number';
+                            $authenticated['z']['err'] = 'Please use your official UCT staff number';
                         break;
                     }
                 }
@@ -767,6 +767,7 @@ class UIController extends Controller
 
         // Require logged in user
         if (!$authenticated['a']) {
+            //return new Response(json_encode($authenticated), 201);
             return $this->render('series_view_login.html.twig', ['hash' => $data['hash'], 'success' => $authenticated['z']['success'], 'err' => $authenticated['z']['err']]);
         } else {
             if (!isset($authenticated['z'])) {

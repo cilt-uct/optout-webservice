@@ -81,9 +81,9 @@ class LDAPService
     }
 
     public function authenticate($username, $password) {
-        if (!is_numeric($username)) {
-          throw new \Exception('invalid id');
-        }
+        // if (!is_numeric($username)) {
+        //   throw new \Exception('invalid id');
+        // }
         try {
             $searchUser = ($this->match($username))[0];
             //Match Exact?! shouldn't infer from $username. Needs to be staff number
