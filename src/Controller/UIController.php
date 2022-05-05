@@ -577,7 +577,13 @@ class UIController extends Controller
                         $session = $request->hasSession() ? $request->getSession() : new Session();
                         $session->set('username', $details[0]['cn']);
                         $authenticated['a'] = true;
-                        $authenticated['z'] = $utils->getAuthorizedUsers($details[0]['cn']);
+                        $z = $utils->getAuthorizedUsers($details[0]['cn']);
+                        if ($z) {
+                            if ($z['success']) {
+                                $authenticated['z'] = $z['result'][0];
+                                $authenticated['z']['success'] = 1;
+                            }
+                        }
                     } else {
                         $authenticated['z']['err'] = 'Invalid username/password combination';
                     }
@@ -656,7 +662,13 @@ class UIController extends Controller
                         $session = $request->hasSession() ? $request->getSession() : new Session();
                         $session->set('username', $details[0]['cn']);
                         $authenticated['a'] = true;
-                        $authenticated['z'] = $utils->getAuthorizedUsers($details[0]['cn']);
+                        $z = $utils->getAuthorizedUsers($details[0]['cn']);
+                        if ($z) {
+                            if ($z['success']) {
+                                $authenticated['z'] = $z['result'][0];
+                                $authenticated['z']['success'] = 1;
+                            }
+                        }
                     } else {
                         $authenticated['z']['err'] = 'Invalid username/password combination';
                     }

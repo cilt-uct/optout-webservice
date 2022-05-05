@@ -244,7 +244,8 @@
                                 {% else %}
                                 <p>Hi,</p>
                                 {% endif %}
-                                <p>Following our email notification{% if last_email_date is not empty %} on <strong>{{last_email_date|date("l, d F Y")}}</strong>{% endif %}, the recorings in <strong>{{title}}</strong> will only expire on <strong>{{expiry_date|date("l, d F Y")}}</strong>.
+                                <br/>
+                                <p>Following our email notification{% if last_email_date is not empty %} on <strong>{{last_email_date|date("l, d F Y")}}</strong>{% endif %}, the recordings in <strong>{{title}}</strong> will only expire on <strong>{{expiry_date|date("l, d F Y")}}</strong>, after which it will be removed from the Lecture Recording system.
                                 <p>To view the recordings please click the button below:</p>
                             </td>
                         </tr>
