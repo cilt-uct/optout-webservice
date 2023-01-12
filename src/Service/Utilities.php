@@ -150,7 +150,7 @@ class Utilities
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Automated Setup of Lecture Recording (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                    'err' => 'The reference was not found, please contact <a href="mailto:cilt-helpdesk@uct.ac.za?subject=Automated Setup of Lecture Recording (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Cilt Help Desk">cilt-helpdesk@uct.ac.za</a>.'];
             }
 
             $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -450,7 +450,7 @@ class Utilities
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                    'err' => 'The reference was not found, please contact <a href="mailto:cilt-helpdesk@uct.ac.za?subject=Series Details (REF: '.$hash.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$hash.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Cilt Help Desk">cilt-helpdesk@uct.ac.za</a>.'];
             }
 
             $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -474,7 +474,7 @@ class Utilities
             if ($stmt->rowCount() === 0) {
                 $result = [
                     'success' => 0,
-                    'err' => 'The reference was not found, please contact <a href="mailto:help@vula.uct.ac.za?subject=Series Details (REF: '.$series_id.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$series_id.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Help at Vula">help@vula.uct.ac.za</a>.'];
+                    'err' => 'The reference was not found, please contact <a href="mailto:cilt-helpdesk@uct.ac.za?subject=Series Details (REF: '.$series_id.')&body=Hi Vula Help Team,%0D%0A%0D%0AThe view page with the reference ('.$series_id.') returns an error.%0D%0A%0D%0APlease fix this and get back to me.%0D%0A%0D%0AThanks you,%0D%0A" title="Cilt Help Desk">cilt-helpdesk@uct.ac.za</a>.'];
             }
 
             $result['result'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -728,7 +728,7 @@ class Utilities
             ,'tutor_hours' => []
             ,'created_at' =>  $date->format('Y-m-d H:i:s')
             ,'updated_at' => ''
-            ,'err_msg' => 'The reference was not found, please contact help@vula.uct.ac.za.'
+            ,'err_msg' => 'The reference was not found, please contact cilt-helpdesk@uct.ac.za.'
         ];    
                 
         $var = [];
