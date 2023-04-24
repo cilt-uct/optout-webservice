@@ -1443,7 +1443,7 @@ class Utilities
 
     private function connectLocally() {
         $dotenv = new DotEnv();
-        $dotenv->load('.env');
+        $dotenv->load('../.env');
 
         $dbhost = getenv('DB_HOST');
         $dbname = getenv('DB_NAME');
