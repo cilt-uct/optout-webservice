@@ -50,17 +50,26 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
             $this->connectLocally();
         }
 
-        $qry = "select A.*, B.year, B.is_optout from uct_dept A left join dept_optout B on A.dept = B.dept where A.exists = 1 and A.dept = :dept and B.year = :year order by year desc limit 1";
+        $qry = "select A.*, B.year, B.is_optout from uct_dept A 
+                left join dept_optout B on A.dept = B.dept 
+                where A.exists = 1 and A.dept = :dept and B.year = :year order by year desc limit 1";
         $stmt = $this->dbh->prepare($qry);
-        $stmt->execute([':dept' => $this->entityCode, ':year' => $this->year]);
-        if ($stmt->rowCount() === 0) {
-            throw new \Exception("no such dept [". $this->entityCode ."][". $this->year ."]");
+        $yearData = $this->detDepartmentdata($this->entityCode);
+        if(!empty($yearData[0]['year'])){
+            $courseyear = $yearData[0]['year'];
         }
+        $stmt->execute([':dept' => $this->entityCode, ':year' => $courseyear]);
+
+        if ($stmt->rowCount() === 0) {
+            throw new \Exception("no such dept [". $this->entityCode ."][". $courseyear ."]");
+        }
+
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         $this->fullHash = hash('sha256', $this->entityCode . "." . $result[0]['secret']);
         if (!$this->skipHashCheck && substr(hash('sha256', $this->entityCode . "." . $result[0]['secret']), 0, 6) !== $this->hash) {
             throw new \Exception("invalid hash");
         }
+
         $this->deptName = $result[0]['name'];
         $this->hod = implode(' ',
                        array_filter([$result[0]['firstname'], $result[0]['lastname']], function($val) {
@@ -72,6 +81,22 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
         $this->isOptOut = $result[0]['is_optout'] === '1' ? true : false;
     }
 
+    
+    /**
+    * Return data based on entity id from dept_optout table
+    * for now just return year tot test 
+    */
+    public function detDepartmentdata($entityid){
+        try {
+            $stmt = $this->dbh->prepare("select year from dept_optout where dept = :dept order by year desc limit 1");
+            $stmt->execute([':dept' => $this->entityCode]);
+            $result = $stmt->fetchAll();
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+        
+        return $result;
+    }
     public function fetchCourses($authorizeREST = false) {
         if (!$this->dbh) {
             $this->connectLocally();

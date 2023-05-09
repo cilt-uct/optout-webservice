@@ -7,7 +7,7 @@ Encore
     .setOutputPath('public/build/')
 
     // the public path used by the web server to access the previous directory
-    .setPublicPath('./')
+    .setPublicPath('/')
 
     .setManifestKeyPrefix('webpack/')
 
@@ -39,13 +39,16 @@ Encore
     // allow sass/scss files to be processed
     // .enableSassLoader()
 
-    .addPlugin(new CopyWebpackPlugin([
-        { from: './assets/images', to: 'images' },
-        { from: './assets/js', to: 'js' },
-        { from: './assets/bootstrap/js/', to: 'js' },
-        { from: './assets/amcharts4/', to: 'amcharts4' }
-    ]))
-;
+    .addPlugin(new CopyWebpackPlugin(
+        {
+            patterns: [
+                { from: './assets/images/', to: 'images' },
+                { from: './assets/js', to: 'js' },
+                { from: './assets/bootstrap/js/', to: 'js' },
+                { from: './assets/amcharts4/', to: 'amcharts4' }
+            ]
+        }
+        ));
 
 // export the final configuration
 module.exports = Encore.getWebpackConfig();

@@ -4,7 +4,9 @@
   "description": "opt out webservice pacakges",
   "main": "index.php",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "webpack --watch",
+    "dev": "webpack"
   },
   "repository": {
     "type": "git",
@@ -23,12 +25,14 @@
   },
   "homepage": "https://github.com/cilt-uct/optout-webservice#readme",
   "devDependencies": {
-    "@symfony/webpack-encore": "^0.27.0",
+    "@symfony/webpack-encore": "^4.3.0",
     "@webcomponents/webcomponentsjs": "^2.4.3",
-    "copy-webpack-plugin": "^5.1.1",
+    "copy-webpack-plugin": "^11.0.0",
     "jquery": "^3.4.1",
     "moment": "^2.24.0",
-    "webpack-notifier": "^1.8.0"
+    "webpack": "^5.82.0",
+    "webpack-notifier": "^1.8.0",
+    "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
     "@vaadin/vaadin-button": "^2.2.2",

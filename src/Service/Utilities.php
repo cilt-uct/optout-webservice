@@ -168,7 +168,7 @@ class Utilities
 
         $result = [ 'success' => true, 'result' => null ];
         try {
-            $query = "select A.*, A.hod_eid as eid, B.*,
+            $query = "select C.firstname as namebackup, C.lastname as lastnamebackup, C.hod_eid as eidbackup, A.*, B.*, A.hod_eid as eid,
                     (SELECT count(distinct(`ps`.course_code))
                         FROM timetable.ps_courses `ps`
                             join timetable.course_optout `out` on `ps`.course_code = `out`.course_code and `ps`.term = `out`.year
@@ -204,11 +204,10 @@ class Utilities
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 1 and `type` = 'notification' and course REGEXP '". Course::SEM2 ."') as s2_mail_sent_note,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 1 and `type` = 'confirm' and course REGEXP '". Course::SEM2 ."') as s2_mail_sent_confirm,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 2 and course REGEXP '". Course::SEM2 ."') as s2_mail_err
-                from timetable.uct_dept A left join timetable.dept_optout B on A.dept = B.dept
+                from timetable.uct_dept A left join timetable.dept_optout B on A.dept = B.dept join timetable.uct_dept_2 C on A.dept = C.dept
                 where B.year = :year and A.exists = 1";
 
             $stmt = $this->dbh->prepare($query);
-
             if ($stmt->execute([':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']])) {
                 if ($stmt->rowCount() === 0) {
                     $result = [ 'success' => false, 'err' => 'Query is empty', ':year' => $worfklow_details['year'], ':workflow_id' => $worfklow_details['oid']];
@@ -223,6 +222,11 @@ class Utilities
 
                 $d = new Department($row['dept'], null, $worfklow_details['year'], true);
                 $dept = $row;
+                if(empty($dept['eid']) || empty($dept['firstname']) || empty($dept['lastname'])) {
+                    $dept['eid'] = $dept['hod_eid'] ?: $dept['eidbackup'];
+                    $dept['firstname'] = $dept['firstname'] ?: $dept['namebackup'];
+                    $dept['lastname'] = $dept['lastname'] ?: $dept['lastnamebackup'];
+                }
                 $dept['hash'] = $d->getHash();
                 unset($dept['secret']);
                 $dept['mails'] = $this->getDepartmentMails($worfklow_details['oid'], $row['dept']);
@@ -232,7 +236,7 @@ class Utilities
         } catch (\PDOException $e) {
             $result = [ 'success' => false, 'err' => $e->getMessage()];
         }
-
+        
         return $result;
     }
 
@@ -1444,7 +1448,6 @@ class Utilities
     private function connectLocally() {
         $dotenv = new DotEnv();
         $dotenv->load('.env');
-
         $dbhost = getenv('DB_HOST');
         $dbname = getenv('DB_NAME');
         $dbuser = getenv('DB_USER');
