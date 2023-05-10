@@ -168,7 +168,10 @@ class Utilities
 
         $result = [ 'success' => true, 'result' => null ];
         try {
-            $query = "select C.firstname as namebackup, C.lastname as lastnamebackup, C.hod_eid as eidbackup, A.*, B.*, A.hod_eid as eid,
+            $query = "select  A.*, B.*, 
+                    IF(A.hod_eid IS NULL or A.hod_eid = '', C.hod_eid, A.hod_eid) as eid,
+                    IF(A.firstname IS NULL or A.firstname = '', C.firstname, A.firstname) as firstname,
+                    IF(A.lastname IS NULL or A.lastname = '', C.lastname, A.lastname) as lastname,      
                     (SELECT count(distinct(`ps`.course_code))
                         FROM timetable.ps_courses `ps`
                             join timetable.course_optout `out` on `ps`.course_code = `out`.course_code and `ps`.term = `out`.year
@@ -222,11 +225,7 @@ class Utilities
 
                 $d = new Department($row['dept'], null, $worfklow_details['year'], true);
                 $dept = $row;
-                if(empty($dept['eid']) || empty($dept['firstname']) || empty($dept['lastname'])) {
-                    $dept['eid'] = $dept['hod_eid'] ?: $dept['eidbackup'];
-                    $dept['firstname'] = $dept['firstname'] ?: $dept['namebackup'];
-                    $dept['lastname'] = $dept['lastname'] ?: $dept['lastnamebackup'];
-                }
+
                 $dept['hash'] = $d->getHash();
                 unset($dept['secret']);
                 $dept['mails'] = $this->getDepartmentMails($worfklow_details['oid'], $row['dept']);

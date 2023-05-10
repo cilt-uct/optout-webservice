@@ -201,7 +201,7 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
         }
         $updateQry = "update uct_dept A
                         set $field = :to, updated_by = :user
-                        where A.dept = :dept and (A.$field = :from or A.$field is null)";
+                        where A.dept = :dept and (A.$field = :from or A.$field is null or A.$field <> '')";
 
         try {
             $updateStmt = $this->dbh->prepare($updateQry);
