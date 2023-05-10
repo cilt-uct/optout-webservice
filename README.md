@@ -11,41 +11,12 @@ install composer globally on windows (also add to the PATH system environment va
 install node js https://nodejs.org/en/download 
 
 ## inside the local optout repo 
-for the local env setup, copy convert-to-docker/.env.template to root folder rename as .env
+```
+cp .env.template .env
 composer install 
-make sure in composer.json, the php version matches your local php version, aslo adding the symphony required package
-composer require symfony/webpack-encore-bundle
-
-npm install webpack --save-dev 
-```
- "require": {
-        "php": "[php version],
-        ...
-```
-run composer update if changes made to composer.json file to install/update changes
-```
-run npm install from inside project folder
 ```
 ```
-update webpack.config.js 
-from
-.addPlugin(new CopyWebpackPlugin([
-        { from: './assets/images', to: 'images' },
-        { from: './assets/js', to: 'js' },
-        { from: './assets/bootstrap/js/', to: 'js' },
-        { from: './assets/amcharts4/', to: 'amcharts4' }
-    ]))
-To:
-.addPlugin(new CopyWebpackPlugin(
-        {
-            patterns: [
-                { from: './assets/images/', to: 'images' },
-                { from: './assets/js', to: 'js' },
-                { from: './assets/bootstrap/js/', to: 'js' },
-                { from: './assets/amcharts4/', to: 'amcharts4' }
-            ]
-        }
-        ));
+npm install from inside project folder
 ```
 ```
 # Compile assets once
@@ -57,3 +28,16 @@ To:
 # Compile assets, but also minify & optimize them
 ./node_modules/.bin/encore production
 ```
+
+# How to update
+make sure in composer.json, the php version matches your local php version, aslo adding the symphony required package
+composer require symfony/webpack-encore-bundle
+
+npm install webpack --save-dev 
+```
+ "require": {
+        "php": "[php version],
+        ...
+```
+```
+composer update

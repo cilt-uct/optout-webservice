@@ -168,10 +168,7 @@ class Utilities
 
         $result = [ 'success' => true, 'result' => null ];
         try {
-            $query = "select  A.*, B.*, 
-                    IF(A.hod_eid IS NULL or A.hod_eid = '', C.hod_eid, A.hod_eid) as eid,
-                    IF(A.firstname IS NULL or A.firstname = '', C.firstname, A.firstname) as firstname,
-                    IF(A.lastname IS NULL or A.lastname = '', C.lastname, A.lastname) as lastname,      
+            $query = "select  A.*, B.*, A.hod_eid as eid,
                     (SELECT count(distinct(`ps`.course_code))
                         FROM timetable.ps_courses `ps`
                             join timetable.course_optout `out` on `ps`.course_code = `out`.course_code and `ps`.term = `out`.year
@@ -207,7 +204,7 @@ class Utilities
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 1 and `type` = 'notification' and course REGEXP '". Course::SEM2 ."') as s2_mail_sent_note,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 1 and `type` = 'confirm' and course REGEXP '". Course::SEM2 ."') as s2_mail_sent_confirm,
                 (SELECT count(*) FROM timetable.uct_workflow_email mail where mail.dept=A.dept and mail.term=:year and mail.state = 2 and course REGEXP '". Course::SEM2 ."') as s2_mail_err
-                from timetable.uct_dept A left join timetable.dept_optout B on A.dept = B.dept join timetable.uct_dept_2 C on A.dept = C.dept
+                from timetable.uct_dept A left join timetable.dept_optout B on A.dept = B.dept
                 where B.year = :year and A.exists = 1";
 
             $stmt = $this->dbh->prepare($query);

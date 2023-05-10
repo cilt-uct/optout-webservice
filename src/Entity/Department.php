@@ -81,11 +81,16 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
         $this->isOptOut = $result[0]['is_optout'] === '1' ? true : false;
     }
 
-    
     /**
-    * Return data based on entity id from dept_optout table
-    * for now just return year tot test 
-    */
+     * Return department data
+     *
+     * Get all the departments data based on a passed entity id param
+     *
+     * @param int $entityid id of department
+     *
+     * @return array
+     */
+
     public function detDepartmentdata($entityid){
         try {
             $stmt = $this->dbh->prepare("select year from dept_optout where dept = :dept order by year desc limit 1");
@@ -97,6 +102,20 @@ class Department extends AbstractOrganisationalEntity implements HashableInterfa
         
         return $result;
     }
+    
+    /**
+     * Return courses data
+     *
+     * Get all the courses data
+     *
+     * @param bool $authorizeREST default false
+     *
+     * @return array
+     */
+
+    /**
+    * Fetch courses, return results set as array
+    */
     public function fetchCourses($authorizeREST = false) {
         if (!$this->dbh) {
             $this->connectLocally();
