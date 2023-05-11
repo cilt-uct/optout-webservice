@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-class LDAPService
+class LDAPService_backup
 {
 
     //TODO: add ldap variables to .env, e.g. o=uct as base dn
