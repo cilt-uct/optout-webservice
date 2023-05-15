@@ -3,7 +3,7 @@
 /.env
 /public/bundles/
 /var/
-
+/vendor_8028/
 ###< symfony/framework-bundle ###
 .env.dist
 composer.lock
