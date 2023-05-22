@@ -18,7 +18,7 @@ class LDAPService
 
     public function __construct($host = '', $user = '', $pass = '') {
         if (empty($host)) {
-            $this->ldapConn = \ldap_connect('ldaps://ldap.uct.ac.za', 636);
+            $this->ldapConn = \ldap_connect('ldaps://MSLDAP.wf.uct.ac.za', 636);
         }
         else {
             $this->ldapConn = \ldap_connect($host, 636);

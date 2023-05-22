@@ -1,13 +1,24 @@
-FROM php:8.2.4-fpm
+# Use the official PHP image on alpine distro stripped down
+FROM php:8-fpm-alpine
 
-RUN apt-get update \
-    && apt-get install -y \
-        apt-utils \
-    && apt-get install -y \
-        libpq-dev \
-        libzip-dev \
-    && pecl install xdebug \
-    && docker-php-ext-enable xdebug \
-    && docker-php-ext-install -j$(nproc) zip \
-    && docker-php-ext-install -j$(nproc) pdo \
-    && docker-php-ext-install -j$(nproc) pdo_mysql
+#Working Directory
+WORKDIR /var/www/html
+
+#run commands on alpine distro and install stuffies
+RUN apk update && apk add \
+	build-base \
+	vim 
+
+# RUN apt-get install -y apache2
+
+#RUN install 
+RUN docker-php-ext-install pdo_mysql 
+
+RUN addgroup -g 1000 -S www && \
+	adduser -u 1000 -S www -G www
+
+USER www
+
+COPY --chown=www:www . /var/www/html
+
+EXPOSE 9000 

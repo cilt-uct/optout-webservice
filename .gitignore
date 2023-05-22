@@ -1,4 +1,3 @@
-
 ###> symfony/framework-bundle ###
 /.env
 /public/bundles/
@@ -15,3 +14,8 @@ public/
 *.swp
 node_modules
 package-lock.json
+
+###> symfony/web-server-bundle ###
+/.web-server-pid
+###< symfony/web-server-bundle ###
+.lh

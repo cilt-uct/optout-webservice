@@ -362,14 +362,24 @@ class Workflow
         $dotenv = new DotEnv();
         $dotenv->load('.env');
 
-        $dbhost = getenv('DB_HOST');
-        $dbname = getenv('DB_NAME');
-        $dbuser = getenv('DB_USER');
-        $dbpass = getenv('DB_PASS');
-        $dbport = getenv('DB_PORT');
+        // $dbhost = getenv('DB_HOST');
+        // $dbname = getenv('DB_NAME');
+        // $dbuser = getenv('DB_USER');
+        // $dbpass = getenv('DB_PASS');
+        // $dbport = getenv('DB_PORT');
+
+        
+        $servername = "optoutwebservicedb";
+        $username = "root";
+        $password = "r00tadmin";
+        $dbname = "timeline";
+        $port = "3306";
+ 
+
         $dbopts = [
             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
         ];
-        $this->dbh = new \PDO("mysql:host=$dbhost;dbname=$dbname;port=$dbport;charset=utf8mb4", $dbuser, $dbpass, $dbopts);
+        // $this->dbh = new \PDO("mysql:host=$dbhost;dbname=$dbname;port=$dbport;charset=utf8mb4", $dbuser, $dbpass, $dbopts);
+        $this->dbh = new \PDO("mysql:host=$servername;port=$port;dbname=$dbname",$username,$password, $dbopts);
     }
 }

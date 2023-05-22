@@ -546,7 +546,9 @@ class UIController extends Controller
      */
     public function defaultMain(Request $request) {
 	    $pathInfo = $request->getPathInfo();
-        $requestUri = $request->getRequestUri();
+        //$requestUri = $request->getRequestUri();
+
+        $requestUri = 'http://localhost:8080';
 
         $url = $requestUri .'admin';
 

@@ -1443,13 +1443,14 @@ class Utilities
 
     private function connectLocally() {
         $dotenv = new DotEnv();
-        $dotenv->load('../.env');
+        $dotenv->load('.env');
 
         $dbhost = getenv('DB_HOST');
         $dbname = getenv('DB_NAME');
         $dbuser = getenv('DB_USER');
         $dbpass = getenv('DB_PASS');
         $dbport = getenv('DB_PORT');
+
         $dbopts = [
             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
         ];
