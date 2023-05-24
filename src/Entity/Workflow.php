@@ -360,7 +360,7 @@ class Workflow
 
     private function connectLocally() {
         $dotenv = new DotEnv();
-        $dotenv->load('.env');
+        //$dotenv->load('.env');
 
         // $dbhost = getenv('DB_HOST');
         // $dbname = getenv('DB_NAME');
@@ -368,18 +368,17 @@ class Workflow
         // $dbpass = getenv('DB_PASS');
         // $dbport = getenv('DB_PORT');
 
-        
-        $servername = "optoutwebservicedb";
-        $username = "root";
-        $password = "r00tadmin";
-        $dbname = "timeline";
-        $port = "3306";
- 
+        // testing
+        $dbhost = 'https://srvubuclt001.uct.ac.za';
+        $dbname = 'timetable';
+        $dbuser = 'timetabler';
+        $dbpass = '7akHjm2Hzj_RNL3KA';
+        $dbport = '3306';
 
         $dbopts = [
             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
         ];
-        // $this->dbh = new \PDO("mysql:host=$dbhost;dbname=$dbname;port=$dbport;charset=utf8mb4", $dbuser, $dbpass, $dbopts);
-        $this->dbh = new \PDO("mysql:host=$servername;port=$port;dbname=$dbname",$username,$password, $dbopts);
+        //$this->dbh = new \PDO("mysql:host=$dbhost;dbname=$dbname;port=$dbport;charset=utf8mb4", $dbuser, $dbpass, $dbopts);
+        $this->dbh = new \PDO('mysql:dbname=timetable;host=srvubuclt001','timetabler','7akHjm2Hzj_RNL3KA'); 
     }
 }

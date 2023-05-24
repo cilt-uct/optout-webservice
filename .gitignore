@@ -9,7 +9,7 @@ composer.lock
 symfony.lock
 bin/
 src/Controller/.gitignore
-public/
+#public/
 .DS_Store
 *.swp
 node_modules

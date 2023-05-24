@@ -24,19 +24,3 @@ services:
       - ./docker/nginx/:/etc/nginx/conf.d/
     depends_on:
         - web
-        - optoutwebservicedb
-  
-  optoutwebservicedb:
-    image: mysql:5.7.22
-    container_name: optoutwebservicedb
-    environment:
-      MYSQL_DATABASE: timeline
-      MYSQL_ROOT_PASSWORD: 7akHjm2Hzj_RNL3KA
-    ports:
-      - "3306:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-
-volumes:
-  dbdata:
-    driver: local

@@ -10,7 +10,7 @@ if (in_array(PHP_SAPI, ['cli', 'phpdbg'], true)) {
 }
 
 require dirname(__DIR__, 3).'/vendor/autoload.php';
-require __DIR__.'/ContainerNkkpgBc/srcApp_KernelDevDebugContainer.php';
+require __DIR__.'/Container4hlAU9T/srcApp_KernelDevDebugContainer.php';
 
 $classes = [];
 $classes[] = 'Symfony\Bundle\FrameworkBundle\FrameworkBundle';
@@ -20,8 +20,6 @@ $classes[] = 'Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle';
 $classes[] = 'Symfony\Bundle\WebServerBundle\WebServerBundle';
 $classes[] = 'Symfony\Bundle\FrameworkBundle\Controller\ControllerNameParser';
 $classes[] = 'Symfony\Bundle\FrameworkBundle\EventListener\ResolveControllerNameSubscriber';
-$classes[] = 'App\Controller\ApiController';
-$classes[] = 'App\Controller\UIController';
 $classes[] = 'Symfony\Bundle\FrameworkBundle\Controller\RedirectController';
 $classes[] = 'Symfony\Bundle\FrameworkBundle\Controller\TemplateController';
 $classes[] = 'Doctrine\Common\Annotations\AnnotationReader';
@@ -122,10 +120,6 @@ $classes[] = 'Sensio\Bundle\FrameworkExtraBundle\EventListener\TemplateListener'
 $classes[] = 'Sensio\Bundle\FrameworkExtraBundle\Templating\TemplateGuesser';
 $classes[] = 'Symfony\Component\DependencyInjection\ContainerInterface';
 $classes[] = 'Symfony\Component\HttpKernel\DependencyInjection\ServicesResetter';
-$classes[] = 'Symfony\Component\HttpFoundation\Session\Session';
-$classes[] = 'Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage';
-$classes[] = 'Symfony\Component\HttpFoundation\Session\Storage\MetadataBag';
-$classes[] = 'Symfony\Component\HttpKernel\EventListener\SessionListener';
 $classes[] = 'Symfony\Component\HttpKernel\EventListener\StreamedResponseListener';
 $classes[] = 'Symfony\Bundle\SwiftmailerBundle\Command\DebugCommand';
 $classes[] = 'Symfony\Bundle\SwiftmailerBundle\Command\NewEmailCommand';
@@ -133,11 +127,16 @@ $classes[] = 'Symfony\Bundle\SwiftmailerBundle\Command\SendEmailCommand';
 $classes[] = 'Symfony\Bundle\SwiftmailerBundle\EventListener\EmailSenderListener';
 $classes[] = 'Swift_Mailer';
 $classes[] = 'Swift_Plugins_MessageLogger';
+$classes[] = 'Swift_Transport_EsmtpTransport';
+$classes[] = 'Swift_Transport_StreamBuffer';
+$classes[] = 'Swift_StreamFilters_StringReplacementFilterFactory';
+$classes[] = 'Swift_Transport_Esmtp_AuthHandler';
+$classes[] = 'Swift_Transport_Esmtp_Auth_CramMd5Authenticator';
+$classes[] = 'Swift_Transport_Esmtp_Auth_LoginAuthenticator';
+$classes[] = 'Swift_Transport_Esmtp_Auth_PlainAuthenticator';
+$classes[] = 'Swift_Transport_Esmtp_Auth_NTLMAuthenticator';
 $classes[] = 'Swift_Events_SimpleEventDispatcher';
-$classes[] = 'Swift_Transport';
-$classes[] = 'Symfony\Bundle\SwiftmailerBundle\DependencyInjection\SwiftmailerTransportFactory';
-$classes[] = 'Swift_Transport_SpoolTransport';
-$classes[] = 'Swift_MemorySpool';
+$classes[] = 'Symfony\Bundle\SwiftmailerBundle\DependencyInjection\SmtpTransportConfigurator';
 $classes[] = 'Twig\Environment';
 $classes[] = 'Symfony\Bundle\TwigBundle\Loader\NativeFilesystemLoader';
 $classes[] = 'Symfony\Bridge\Twig\Extension\ProfilerExtension';

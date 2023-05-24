@@ -32,8 +32,11 @@
     "webpack-notifier": "^1.8.0"
   },
   "dependencies": {
+    "12": "^1.0.2",
+    "@babel/core": "^7.21.8",
     "@vaadin/vaadin-button": "^2.2.2",
     "@vaadin/vaadin-grid": "^5.5.3",
-    "@vaadin/vaadin-text-field": "^2.5.5"
+    "@vaadin/vaadin-text-field": "^2.5.5",
+    "node": "^20.2.0"
   }
 }
