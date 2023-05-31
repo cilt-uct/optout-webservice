@@ -9,6 +9,7 @@ services:
     restart: unless-stopped
     volumes:
       - .:/var/www/html
+
   
   optoutwebservicewebserver:
     build:
@@ -18,9 +19,15 @@ services:
     container_name: optoutwebserver
     restart: unless-stopped
     ports:
-      - "95:80"
+      - "8080:80"
     volumes: 
       - .:/var/www/html
       - ./docker/nginx/:/etc/nginx/conf.d/
+    environment:
+            DB_PORT: 3306
+            DB_HOST: 127.0.0.1
+            DB_DATABASE: timetable
+            DB_USERNAME: root
+            DB_PASSWORD: 
     depends_on:
         - web

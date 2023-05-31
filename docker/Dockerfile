@@ -24,7 +24,7 @@ RUN apk update && apk add \
 
 #RUN install 
 RUN docker-php-ext-install pdo_mysql ldap \
-		&& docker-php-ext-enable  ldap
+		&& docker-php-ext-enable  ldap pdo_mysql
 
 RUN addgroup -g 1000 -S www && \
 	adduser -u 1000 -S www -G www

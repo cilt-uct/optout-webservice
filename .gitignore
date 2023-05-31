@@ -9,7 +9,6 @@ composer.lock
 symfony.lock
 bin/
 src/Controller/.gitignore
-#public/
 .DS_Store
 *.swp
 node_modules
@@ -19,3 +18,5 @@ package-lock.json
 /.web-server-pid
 ###< symfony/web-server-bundle ###
 .lh
+# ignore public/build specific folders below: WIP public
+public/build/amcharts4/

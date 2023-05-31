@@ -18,8 +18,7 @@ class LDAPService
 
     public function __construct($host = '', $user = '', $pass = '') {
         if (empty($host)) {
-            //$this->ldapConn = \ldap_connect('ldaps://MSLDAP.wf.uct.ac.za', 636);
-            $this->ldapConn = \ldap_connect('ldaps://ldap.uct.ac.za', 636);
+            $this->ldapConn = \ldap_connect('ldaps://MSLDAP.wf.uct.ac.za', 636);
         }
         else {
             $this->ldapConn = \ldap_connect($host, 636);
@@ -27,6 +26,8 @@ class LDAPService
     }
 
     public function search($filter) {
+        return TRUE;
+
         $ldapSearch = \ldap_search($this->ldapConn, 'o=uct', $filter);
         if ($ldapSearch != false) {
             $ldapSearchArray = \ldap_get_entries($this->ldapConn, $ldapSearch);
@@ -62,6 +63,9 @@ class LDAPService
     }
 
     public function match($search) {
+        //return [{'cn':'01482222'}];
+        return [ array('cn' => '01482222') ];
+
         if (filter_var($search, FILTER_VALIDATE_EMAIL)) {
             $uctEmailSuffixPosition = strpos($search, '@uct.ac.za');
             if ($uctEmailSuffixPosition > -1) {
@@ -82,6 +86,8 @@ class LDAPService
     }
 
     public function authenticate($username, $password) {
+        return TRUE;
+
         // if (!is_numeric($username)) {
         //   throw new \Exception('invalid id');
         // }

@@ -135,15 +135,15 @@
         </div>
     </div>
     {% if (authenticated.a) %}
-    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
-    <script src="{{ asset('assets/js/tmpl.js') }}"></script>
-    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
-    <script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('assets/amcharts4/core.js') }}"></script>
-    <script src="{{ asset('assets/amcharts4/charts.js') }}"></script>
-    <script src="{{ asset('assets/amcharts4/maps.js') }}"></script>
-    <script src="{{ asset('assets/amcharts4/geodata/worldLow.js') }}"></script>
-    <script src="{{ asset('assets/amcharts4/themes/animated.js') }}"></script>
+    <script src="{{ asset('build/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('build/js/tmpl.js') }}"></script>
+    <script src="{{ asset('build/js/moment.min.js') }}"></script>
+    <script src="{{ asset('build/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('build/amcharts4/core.js') }}"></script>
+    <script src="{{ asset('build/amcharts4/charts.js') }}"></script>
+    <script src="{{ asset('build/amcharts4/maps.js') }}"></script>
+    <script src="{{ asset('build/amcharts4/geodata/worldLow.js') }}"></script>
+    <script src="{{ asset('build/amcharts4/themes/animated.js') }}"></script>
     <script>
         function getObj(id, arr, key) { key = key || 'id'; var o = null; $.each(arr, function (i, el) { if (el[key] == id) { o=el; return; } }); return o; };
         Array.prototype.sum = function (prop) {

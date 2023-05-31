@@ -1443,7 +1443,7 @@ class Utilities
 
     private function connectLocally() {
         $dotenv = new DotEnv();
-        //$dotenv->load('.env');
+        $dotenv->load('.env');
 
         // $dbhost = getenv('DB_HOST');
         // $dbname = getenv('DB_NAME');
@@ -1451,17 +1451,37 @@ class Utilities
         // $dbpass = getenv('DB_PASS');
         // $dbport = getenv('DB_PORT');
 
-        // testing
-        $dbhost = 'https://srvubuclt001.uct.ac.za';
-        $dbname = 'timetable';
-        $dbuser = 'timetabler';
-        $dbpass = '7akHjm2Hzj_RNL3KA';
-        $dbport = '3306';
 
+        $servername = getenv("DB_HOST");
+        $host = getenv("DATABASE_URL");
+        $username = getenv("DB_USER");
+        $password = getenv("DB_PASS");
+        $dbname = getenv("DB_NAME");
+        $dbport = getenv("DB_PORT");
+
+        // print_r('<pre>');
+        // print_r('$servername: ' . $servername . '$username: ' . $username . '$password: ' . $password . ' $dbname: ' . $dbname . '$dbport: ' . $dbport);
+        // print_r('</pre>');
+        // print_r('<br>');
+        // var_dump($host);die();
+        // $query ="SELECT * FROM timetable.course_optout";
+        // $stmt = $this->dbh->prepare($query);
+        //     $stmt->execute();
+        // $stmt = $this->dbh->prepare($query);
+
+        // $servername = "host.docker.internal";
+        // $username = "root";
+        // $password = "";
+        // $dbname = "timetable";
+        // $dbport = "3306";
+        // print_r('<pre>');
+        // print_r('$servername: ' . $servername . '$username: ' . $username . '$password: ' . $password . ' $dbname: ' . $dbname . '$dbport: ' . $dbport);
+        // print_r('</pre>');
+        // print_r('<br>');
+        // die();
         $dbopts = [
             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
         ];
-        //$this->dbh = new \PDO("mysql:host=$dbhost;dbname=$dbname;port=$dbport;charset=utf8mb4", $dbuser, $dbpass, $dbopts);
-        $this->dbh = new \PDO('mysql:dbname=timetable;host=srvubuclt001','timetabler','7akHjm2Hzj_RNL3KA'); 
+       $this->dbh = new \PDO("mysql:host=$servername;dbname=$dbname;port=$dbport;", $username, $password, $dbopts);
     }
 }
